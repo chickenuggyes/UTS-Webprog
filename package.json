@@ -1,0 +1,24 @@
+{
+  "name": "uts-webprog",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx @tailwindcss/cli -i ./src/input.css -o ./dist/style.css --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chickenuggyes/UTS-Webprog.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chickenuggyes/UTS-Webprog/issues"
+  },
+  "homepage": "https://github.com/chickenuggyes/UTS-Webprog#readme",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.13",
+    "tailwindcss": "^4.1.13"
+  }
+}
