@@ -20,5 +20,10 @@ app.use("/report", reportRoutes);
 import { dashboard } from "./controllers/report.js";
 app.get("/dashboard", dashboard);
 
+app.get("/", (req, res) => { 
+  res.redirect("/items"); 
+});
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`API ready at http://localhost:${PORT}`));
