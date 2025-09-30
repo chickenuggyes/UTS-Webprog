@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Olin Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="flex h-screen">
+   <!-- Sidebar (same as dashboard) -->
+    <aside class="w-64 bg-white shadow-lg flex flex-col">
+      <div class="p-6 text-2xl font-bold text-blue-600">Olin</div>
+      <nav class="flex-1 px-4 space-y-2">
+        <!-- Keep links identical to dashboard -->
+        <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-blue-100 text-gray-800 font-medium">
+          <img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5"/>
+          Dashboard
+        </a>
+        <a href="products.html" class="flex items-center p-2 rounded-lg bg-blue-100 text-gray-800 font-medium">
+          <img src="https://img.icons8.com/color/24/parcel.png" class="mr-3 w-5 h-5"/>
+          Products
+        </a>
+        <a href="add.html" class="flex items-center p-2 rounded-lg hover:bg-blue-100 text-gray-800 font-medium">
+          <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5"/>
+          Add Product
+        </a>
+      </nav>
+      <div class="p-4 border-t">
+        <a href="#" class="flex items-center text-red-600 hover:underline">
+          <span class="mr-2">↩</span> Sign Out
+        </a>
+  </div>
+</aside>
+
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 overflow-y-auto">
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Dashboard</h1>
+        <button class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center">
+          👤
+        </button>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white p-4 rounded-lg shadow">
+          <p class="text-gray-500">Total Products</p>
+          <h2 class="text-3xl font-bold">124</h2>
+          <p class="text-sm text-blue-600">+12% from last month</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow">
+          <p class="text-gray-500">Total Sales</p>
+          <h2 class="text-3xl font-bold">$45,231</h2>
+          <p class="text-sm text-blue-600">+23% from last month</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow">
+          <p class="text-gray-500">Orders</p>
+          <h2 class="text-3xl font-bold">342</h2>
+          <p class="text-sm text-blue-600">+8% from last month</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow">
+          <p class="text-gray-500">Revenue Growth</p>
+          <h2 class="text-3xl font-bold">18%</h2>
+          <p class="text-sm text-blue-600">+5% from last month</p>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

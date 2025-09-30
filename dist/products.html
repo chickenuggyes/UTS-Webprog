@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Olin — Products</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="flex h-screen">
+    <!-- Sidebar (same as dashboard) -->
+    <aside class="w-64 bg-white shadow-lg flex flex-col">
+      <div class="p-6 text-2xl font-bold text-blue-600">Olin</div>
+      <nav class="flex-1 px-4 space-y-2">
+        <!-- Keep links identical to dashboard -->
+        <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-blue-100 text-gray-800 font-medium">
+          <img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5"/>
+          Dashboard
+        </a>
+        <a href="products.html" class="flex items-center p-2 rounded-lg bg-blue-100 text-gray-800 font-medium">
+          <img src="https://img.icons8.com/color/24/parcel.png" class="mr-3 w-5 h-5"/>
+          Products
+        </a>
+        <a href="add.html" class="flex items-center p-2 rounded-lg hover:bg-blue-100 text-gray-800 font-medium">
+          <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5"/>
+          Add Product
+        </a>
+      </nav>
+      <div class="p-4 border-t">
+        <a href="#" class="flex items-center text-red-600 hover:underline">
+          <span class="mr-2">↩</span> Sign Out
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 overflow-y-auto">
+      <!-- Header (same spacing as dashboard) -->
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Products</h1>
+        <button class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center">👤</button>
+      </div>
+
+      <!-- Search -->
+      <div class="mb-6">
+        <div class="relative max-w-xl">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔎</span>
+          <input id="searchInput" type="text" placeholder="Search products..."
+                 class="w-full pl-9 pr-3 py-2 rounded-lg border bg-white shadow focus:outline-none focus:ring-2 focus:ring-blue-200" />
+        </div>
+      </div>
+
+      <!-- Products Grid -->
+      <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- JS will render product cards here -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Page Script -->
+  <script>
+    // Dummy data
+    const PRODUCTS = [
+      { id:1, name:"Wireless Headphones", category:"Electronics", price:79.99, stock:45, img:"https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4e6.svg" },
+      { id:2, name:"Smart Watch",         category:"Electronics", price:199.99, stock:23, img:"https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4e6.svg" },
+      { id:3, name:"Running Shoes",       category:"Sports",      price:99.00, stock:12, img:"https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f45f.svg" },
+      { id:4, name:"Coffee Beans 1kg",    category:"Groceries",   price:14.50, stock:120,img:"https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/2615.svg" },
+      { id:5, name:"USB-C Cable 1m",      category:"Accessories", price:8.99,  stock:300,img:"https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4bb.svg" },
+      { id:6, name:"Mechanical Keyboard", category:"Electronics", price:129.0, stock:8,  img:"https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/2328.svg" }
+    ];
+
+    const fmt = new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"});
+
+    const grid = document.getElementById("grid");
+    const search = document.getElementById("searchInput");
+
+    function card(p){
+      return `
+      <article class="bg-white rounded-lg shadow border overflow-hidden">
+        <div class="bg-gray-50 h-48 grid place-items-center">
+          <img src="${p.img}" alt="${p.name}" class="h-20 w-20 object-contain"/>
+        </div>
+        <div class="p-4 relative">
+          <span class="absolute -top-3 right-4 bg-blue-600 text-white text-xs px-3 py-1 rounded-full shadow">${p.stock} in stock</span>
+          <h3 class="text-lg font-semibold">${p.name}</h3>
+          <p class="text-sm text-gray-500">${p.category}</p>
+          <p class="text-2xl font-bold text-blue-700 mt-2">${fmt.format(p.price)}</p>
+          <div class="pt-4 flex gap-3">
+            <button onclick="editProduct(${p.id})" class="flex-1 border rounded-lg px-3 py-2 hover:bg-gray-50">Edit</button>
+            <button onclick="viewProduct(${p.id})" class="flex-1 bg-blue-600 text-white rounded-lg px-3 py-2 hover:bg-blue-700">View Details</button>
+          </div>
+        </div>
+      </article>`;
+    }
+
+    function render(list){ grid.innerHTML = list.map(card).join(""); }
+    function applySearch(){
+      const q = (search.value || "").toLowerCase().trim();
+      const filtered = q ? PRODUCTS.filter(p =>
+        [p.name,p.category].some(s => s.toLowerCase().includes(q))) : PRODUCTS;
+      render(filtered);
+    }
+
+    function editProduct(id){ alert("Edit product ID: " + id); }
+    function viewProduct(id){ alert("View details for product ID: " + id); }
+
+    search.addEventListener("input", applySearch);
+    render(PRODUCTS);
+  </script>
+</body>
+</html>
