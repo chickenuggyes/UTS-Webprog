@@ -134,5 +134,13 @@
     "keterangan": "21 cc",
     "hargaSatuan": 7500,
     "stok": 61
+  },
+  {
+    "id": 18,
+    "namaItem": "Stapler",
+    "quantity": "1",
+    "keterangan": "Sedang",
+    "hargaSatuan": 27500,
+    "stok": 81
   }
 ]
