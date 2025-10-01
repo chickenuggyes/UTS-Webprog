@@ -12,9 +12,10 @@
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.1.13",
-    "tailwindcss": "^4.1.13",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "node.js": "^0.0.1-security",
+    "tailwindcss": "^4.1.13"
   }
 }

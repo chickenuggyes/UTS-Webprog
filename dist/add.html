@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Product</title>
+  <link rel="stylesheet" href="../src/input.css">
+  <style>
+    body {
+      background: #f5f6fa;
+      font-family: 'Poppins', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+    }
+    .sidebar {
+      width: 260px;
+      min-height: 100vh;
+      background: #fff;
+      color: #2d3436;
+      padding: 32px 24px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #eaeaea;
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 10;
+      box-sizing: border-box;
+    }
+    .sidebar-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar nav {
+      flex: 1;
+      margin-bottom: 2rem;
+    }
+    .sidebar .signout {
+      margin-top: auto;
+      color: #e74c3c;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 1.08rem;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+    .container {
+      margin-left: 260px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: #f5f6fa;
+    }
+    .sidebar {
+      width: 260px;
+      background: #fff;
+      color: #2d3436;
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-right: 1px solid #eaeaea;
+    }
+    .sidebar .title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+      color: #2d98da;
+    }
+    .sidebar .greeting {
+      font-size: 1.1rem;
+      margin-bottom: 2.2rem;
+      color: #222;
+    }
+    .sidebar nav {
+      flex: 1;
+    }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      color: #222;
+      text-decoration: none;
+      margin-bottom: 1.1rem;
+      font-size: 1.08rem;
+      font-weight: 500;
+      padding: 0.4rem 0.7rem;
+      border-radius: 6px;
+      transition: background 0.2s;
+      gap: 0.7rem;
+    }
+    .sidebar nav a.active, .sidebar nav a:hover {
+      background: #eaf4ff;
+      color: #2d98da;
+    }
+    .sidebar nav a img {
+      width: 22px;
+      height: 22px;
+    }
+    .sidebar .signout {
+      margin-top: 2.5rem;
+      color: #e74c3c;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 1.08rem;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .main {
+      flex: 1;
+      padding: 40px 48px;
+      display: flex;
+      flex-direction: column;
+      background: #f5f6fa;
+      min-height: 100vh;
+    }
+    .main-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2.2rem;
+    }
+    .main-header h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0;
+      color: #222;
+    }
+    .main-header .username {
+      font-size: 1.1rem;
+      color: #222;
+      font-weight: 600;
+      background: #eaf4ff;
+      padding: 0.5rem 1.2rem;
+      border-radius: 20px;
+      border: 1px solid #2d98da;
+    }
+    .form {
+      display: flex;
+      gap: 32px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(44,62,80,0.08);
+      padding: 32px 32px 32px 32px;
+      margin-top: 0.5rem;
+    }
+    .form-fields {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+    .form-fields label {
+      font-weight: 500;
+      margin-bottom: 0.3rem;
+    }
+    .form-fields input, .form-fields select {
+      width: 100%;
+      padding: 0.7rem;
+      border: 1px solid #eaeaea;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: #f5f6fa;
+      transition: border 0.2s;
+    }
+    .form-fields input:focus, .form-fields select:focus {
+      border-color: #2d98da;
+      outline: none;
+      background: #fff;
+    }
+    .form-display {
+      width: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.2rem;
+    }
+    .form-display .photo-box {
+      width: 180px;
+      height: 180px;
+      background: #f5f6fa;
+      border: 2px dashed #2d98da;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #aaa;
+      font-size: 1.1rem;
+      margin-bottom: 0.7rem;
+      overflow: hidden;
+    }
+    .form-display img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 12px;
+    }
+    .form-display input[type="file"] {
+      display: none;
+    }
+    .form-display label {
+      cursor: pointer;
+      color: #2d98da;
+      font-weight: 500;
+      text-decoration: underline;
+      font-size: 0.98rem;
+    }
+    .form-display .add-btn {
+      width: 100%;
+      padding: 0.8rem;
+      background: #2d98da;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1.2rem;
+      box-shadow: 0 2px 8px rgba(45,152,218,0.08);
+      transition: background 0.2s;
+    }
+    .form-display .add-btn:hover {
+      background: #217dbb;
+    }
+    @media (max-width: 900px) {
+      .container {
+        flex-direction: column;
+        width: 98vw;
+      }
+      .main {
+        padding: 24px 12px;
+      }
+      .form {
+        flex-direction: column;
+        gap: 16px;
+      }
+      .form-display {
+        width: 100%;
+        flex-direction: row;
+        gap: 16px;
+        justify-content: flex-start;
+      }
+      .form-display .photo-box {
+        width: 120px;
+        height: 120px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <div class="sidebar-content">
+        <div class="title" style="display:flex;align-items:center;gap:0.7rem;">
+          <img src="https://img.icons8.com/color/32/combo-chart--v1.png" style="width:32px;height:32px;">
+          Olin
+        </div>
+        <nav>
+          <a href="dashboard.html"><img src="https://img.icons8.com/color/24/combo-chart--v1.png">Dashboard</a>
+          <a href="products.html"><img src="https://img.icons8.com/color/24/parcel.png">Products</a>
+          <a href="add.html" class="active"><img src="https://img.icons8.com/color/24/plus.png">Add Product</a>
+        </nav>
+      </div>
+      <a href="#" class="signout"><img src="https://img.icons8.com/color/24/exit.png">Sign Out</a>
+    </aside>
+    <main class="main">
+      <div class="main-header">
+        <h2 style="margin-bottom:0;">Add New</h2>
+        <button style="width:40px;height:40px;border-radius:50%;background:#eaf4ff;border:none;display:flex;align-items:center;justify-content:center;">
+          <img src="https://img.icons8.com/ios-filled/28/2d98da/user-male-circle.png" alt="User">
+        </button>
+      </div>
+      <form class="form" id="addProductForm">
+        <div class="form-fields">
+          <div>
+            <label for="namaBarang">Nama Barang</label>
+            <input type="text" id="namaBarang" name="namaBarang" required>
+          </div>
+          <div>
+            <label for="quantity">Quantity</label>
+            <input type="text" id="quantity" name="quantity" placeholder="Contoh: 1, 10" required>
+          </div>
+          <div>
+            <label for="keterangan">Keterangan</label>
+            <input type="text" id="keterangan" name="keterangan" placeholder="Contoh: 80 ml/200 gr" required>
+          </div>
+          <div>
+            <label for="hargaSatuan">Harga Satuan</label>
+            <input type="number" id="hargaSatuan" name="hargaSatuan" required>
+          </div>
+          <div>
+            <label for="stok">Stok</label>
+            <input type="number" id="stok" name="stok" required>
+          </div>
+        </div>
+        <div class="form-display">
+          <div class="photo-box" id="photoBox">foto.</div>
+          <label for="fotoInput">Upload Foto</label>
+          <input type="file" id="fotoInput" name="foto" accept="image/*">
+          <button type="submit" class="add-btn">ADD</button>
+        </div>
+      </form>
+    </main>
+  </div>
+  <script>
+    // Preview foto
+    const fotoInput = document.getElementById('fotoInput');
+    const photoBox = document.getElementById('photoBox');
+    fotoInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          photoBox.innerHTML = `<img src="${e.target.result}" alt="Foto">`;
+        }
+        reader.readAsDataURL(this.files[0]);
+      } else {
+        photoBox.textContent = 'foto.';
+      }
+    });
+  </script>
+  <script src="addProduct.js"></script>
+</body>
+</html>
