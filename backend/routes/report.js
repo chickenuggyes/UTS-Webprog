@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { report } from "../controllers/report.js";
+import { report, reportPdf } from "../controllers/report.controller.js";
+
 const router = Router();
 
-// filter sederhana: ?q=...&minHarga=...&maxHarga=...
 router.get("/", report);
+router.get("/pdf", reportPdf);
 
 export default router;
