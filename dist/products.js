@@ -16,9 +16,9 @@ function card(p){
         <p class="text-sm text-gray-500">${p.keterangan}</p>
         <p class="text-2xl font-bold text-blue-700 mt-2">${fmt.format(p.hargaSatuan)}</p>
         <div class="pt-4 flex gap-3">
-          <button onclick="editProduct(${p.id})" class="flex-1 border rounded-lg px-3 py-2 hover:bg-gray-50">Edit</button>
-          <button onclick="viewProduct(${p.id})" class="flex-1 bg-blue-600 text-white rounded-lg px-3 py-2 hover:bg-blue-700">View Details</button>
-        </div>
+        <button onclick="editProduct(${p.id})" class="flex-1 border rounded-lg px-3 py-2 hover:bg-gray-50">Edit</button>
+        <button onclick="deleteProduct(${p.id})" class="flex-1 bg-red-600 text-white rounded-lg px-3 py-2 hover:bg-red-700">Delete</button>
+      </div>
       </div>
     </article>
   `;
@@ -33,7 +33,23 @@ function applySearch(){
 }
 
 function editProduct(id){ alert("Edit product ID: " + id); }
-function viewProduct(id){ alert("View details for product ID: " + id); }
+async function deleteProduct(id) {
+  if (!confirm("Yakin mau hapus produk ini?")) return;
+
+  try {
+    const res = await fetch(`http://localhost:3000/items/${id}`, {
+      method: "DELETE"
+    });
+    if (!res.ok) throw new Error("Gagal hapus produk");
+    alert("Produk berhasil dihapus!");
+
+    // refresh data setelah delete
+    applySearch();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
 
 search.addEventListener("input", applySearch);
 

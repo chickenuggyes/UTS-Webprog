@@ -10,7 +10,12 @@
   <div class="flex h-screen">
    <!-- Sidebar (same as dashboard) -->
     <aside class="w-64 bg-white shadow-lg flex flex-col">
-      <div class="p-6 text-2xl font-bold text-blue-600">Olin</div>
+      <div class="p-6 flex items-center justify-between">
+      <div class="text-2xl font-bold text-blue-600">Admin</div>
+      <button class="w-10 h-10 rounded-full bg-blue-600 text-white grid place-items-center" title="Profile">
+        👤
+      </button>
+    </div>
       <nav class="flex-1 px-4 space-y-2">
         <!-- Keep links identical to dashboard -->
         <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-blue-100 text-gray-800 font-medium">
@@ -38,11 +43,10 @@
     <main class="flex-1 p-6 overflow-y-auto">
       <!-- Header -->
       <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold">Dashboard</h1>
-        <button class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center">
-          👤
-        </button>
-      </div>
+  <h1 class="text-2xl font-bold">Dashboard</h1>
+  <div class="text-xl font-semibold text-slate-700">Nama Toko</div>
+</div>
+
 
       <!-- Stats Grid -->
       <div id="dashboardError" class="text-red-600 mb-4"></div>
@@ -60,6 +64,17 @@
           <h2 id="totalHarga" class="text-3xl font-bold">...</h2>
         </div>
       </div>
+      <!-- Product List (vertical) -->
+     <div class="mt-10 mb-3 flex items-center justify-between">
+  <h2 class="text-lg font-semibold">Products</h2>
+  <button onclick="window.print()" 
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow">
+    Print
+  </button>
+</div>
+
+<ul id="listProducts" class="space-y-3"></ul>
+
     </main>
   </div>
   <script src="dashboard.js"></script>
