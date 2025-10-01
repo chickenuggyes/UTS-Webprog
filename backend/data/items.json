@@ -114,15 +114,24 @@
   {
     "namaItem": "Pensil Warna Pendek",
     "quantity": "1",
-    "keterangan": "isi 12",    
+    "keterangan": "isi 12",
     "hargaSatuan": 15000,
     "stok": 72
   },
   {
     "namaItem": "Lem Castol",
     "quantity": "1",
-    "keterangan": "21 cc", 
+    "keterangan": "21 cc",
     "hargaSatuan": 7500,
     "stok": 61
+  },
+  {
+    "id": 1,
+    "namaItem": "kopi",
+    "quantity": "12",
+    "keterangan": "serenceng",
+    "hargaSatuan": 3000,
+    "stok": 12,
+    "foto": ""
   }
 ]

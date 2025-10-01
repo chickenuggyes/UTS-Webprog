@@ -9,12 +9,17 @@
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.1.13",
-    "tailwindcss": "^4.1.13",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+<<<<<<< HEAD
     "express": "^4.19.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
+=======
+    "express": "^4.19.2",
+    "node.js": "^0.0.1-security",
+    "tailwindcss": "^4.1.13"
+>>>>>>> dc81da19c26a8f8a8303e45bb000ca8f8ef9506d
   }
 }

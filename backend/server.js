@@ -17,6 +17,10 @@ app.use("/items", itemsRoutes);
 app.use("/report", reportRoutes);
 
 // shortcut dashboard = ringkasan report
+<<<<<<< HEAD
+=======
+// shortcut dashboard = ringkasan report
+>>>>>>> dc81da19c26a8f8a8303e45bb000ca8f8ef9506d
 import { dashboard } from "./controllers/report.js";
 app.get("/dashboard", dashboard);
 

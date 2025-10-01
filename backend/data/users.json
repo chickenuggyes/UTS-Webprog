@@ -8,5 +8,10 @@
     "id": 2,
     "username": "lysia",
     "password": "semangatutswebprog"
+  },
+  {
+    "id": 3,
+    "username": "jessica",
+    "password": "123456"
   }
 ]

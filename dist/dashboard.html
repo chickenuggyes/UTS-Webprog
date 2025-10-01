@@ -45,29 +45,23 @@
       </div>
 
       <!-- Stats Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div id="dashboardError" class="text-red-600 mb-4"></div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white p-4 rounded-lg shadow">
-          <p class="text-gray-500">Total Products</p>
-          <h2 class="text-3xl font-bold">124</h2>
-          <p class="text-sm text-blue-600">+12% from last month</p>
+          <p class="text-gray-500">Total Item</p>
+          <h2 id="totalItem" class="text-3xl font-bold">...</h2>
         </div>
         <div class="bg-white p-4 rounded-lg shadow">
-          <p class="text-gray-500">Total Sales</p>
-          <h2 class="text-3xl font-bold">$45,231</h2>
-          <p class="text-sm text-blue-600">+23% from last month</p>
+          <p class="text-gray-500">Total Stok</p>
+          <h2 id="totalStok" class="text-3xl font-bold">...</h2>
         </div>
         <div class="bg-white p-4 rounded-lg shadow">
-          <p class="text-gray-500">Orders</p>
-          <h2 class="text-3xl font-bold">342</h2>
-          <p class="text-sm text-blue-600">+8% from last month</p>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-          <p class="text-gray-500">Revenue Growth</p>
-          <h2 class="text-3xl font-bold">18%</h2>
-          <p class="text-sm text-blue-600">+5% from last month</p>
+          <p class="text-gray-500">Total Harga</p>
+          <h2 id="totalHarga" class="text-3xl font-bold">...</h2>
         </div>
       </div>
     </main>
   </div>
+  <script src="dashboard.js"></script>
 </body>
 </html>
