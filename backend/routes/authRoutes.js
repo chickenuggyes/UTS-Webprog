@@ -1,10 +1,13 @@
+// backend/routes/authRoutes.js
 import { Router } from "express";
-import { login } from "../controllers/auth.js";
+import { login, register } from "../controllers/auth.js";
+
 const router = Router();
 
+// Login endpoint
 router.post("/", login);
 
 // Register endpoint
-import { register } from "../controllers/auth.js";
 router.post("/register", register);
+
 export default router;

@@ -23,6 +23,15 @@ function nextId(list) {
   return maxId + 1;
 }
 
+export function generateUserId() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let id = "";
+  for (let i = 0; i < 4; i++) {
+    id += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return id;
+}
+
 export const db = {
   readUsers: () => readJson("users.json"),
   writeUsers: (data) => writeJson("users.json", data),
