@@ -4,7 +4,6 @@ document.getElementById('showSignup').addEventListener('click', function(e) {
     document.getElementById('loginForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'block';
     document.querySelector('.signup-link').style.display = 'none';
-    // Hilangkan error login saat pindah ke signup
     document.getElementById('error').style.display = 'none';
 });
 
@@ -13,10 +12,8 @@ document.getElementById('showLogin').addEventListener('click', function(e) {
     document.getElementById('loginForm').style.display = 'block';
     document.getElementById('registerForm').style.display = 'none';
     document.querySelector('.signup-link').style.display = 'block';
-    // Hilangkan error login saat pindah ke login
     document.getElementById('error').style.display = 'none';
 });
-// login.js
 
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -52,7 +49,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     }
 });
 
-// Register event
 document.getElementById('registerForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const username = document.getElementById('regUsername').value.trim();
@@ -75,7 +71,6 @@ document.getElementById('registerForm').addEventListener('submit', async functio
             body: JSON.stringify({ username, password })
         });
         if (response.ok) {
-            // Registrasi berhasil, langsung login otomatis
             const loginResponse = await fetch('http://localhost:3000/login', {
                 method: 'POST',
                 headers: {

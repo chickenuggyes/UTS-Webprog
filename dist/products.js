@@ -1,6 +1,3 @@
-// products.js
-// Ambil data produk dari backend dan render ke products.html
-
 const grid = document.getElementById("grid");
 const search = document.getElementById("searchInput");
 let PRODUCTS = [];
@@ -40,7 +37,6 @@ function viewProduct(id){ alert("View details for product ID: " + id); }
 
 search.addEventListener("input", applySearch);
 
-// Ambil data dari backend
 fetch("http://localhost:3000/items")
   .then(res => res.json())
   .then(data => {

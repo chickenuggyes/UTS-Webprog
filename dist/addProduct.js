@@ -1,5 +1,3 @@
-// addProduct.js
-
 document.getElementById('addProductForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   const namaItem = document.getElementById('namaBarang').value.trim();
@@ -11,7 +9,6 @@ document.getElementById('addProductForm').addEventListener('submit', async funct
   let foto = '';
 
   if (fotoInput.files && fotoInput.files[0]) {
-    // Convert image to base64
     const reader = new FileReader();
     reader.onload = async function(e) {
       foto = e.target.result;

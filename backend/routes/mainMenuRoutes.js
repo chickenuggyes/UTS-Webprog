@@ -14,7 +14,7 @@ router.post("/",
   itemsController.create
 );
 
-// update
+// update/edit
 router.put("/:id", itemsController.update);
 
 // delete

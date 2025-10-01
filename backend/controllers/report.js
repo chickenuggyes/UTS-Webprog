@@ -1,7 +1,6 @@
 import { db } from "../services/jsonDB.js";
 import PDFDocument from "pdfkit";
 
-// Helper format rupiah
 const rupiah = (n) =>
   new Intl.NumberFormat("id-ID", { 
     style: "currency", 
@@ -9,10 +8,7 @@ const rupiah = (n) =>
     maximumFractionDigits: 0 
   }).format(Number(n || 0));
 
-/**
- * GET /report
- * Bisa pakai query ?q=keyword&minHarga=1000&maxHarga=5000
- */
+// GET /report
 export function report(req, res) {
   const q = (req.query.q || "").toLowerCase();
   const minHarga = Number(req.query.minHarga || 0);
@@ -34,10 +30,7 @@ export function report(req, res) {
   res.json({ count: items.length, items });
 }
 
-/**
- * GET /dashboard
- * Ringkasan total
- */
+//GET /dashboard
 export function dashboard(req, res) {
   const items = db.readItems();
   const totalItem  = items.length;
@@ -50,14 +43,11 @@ export function dashboard(req, res) {
   res.json({ totalItem, totalStok, totalHarga });
 }
 
-/**
- * GET /report/pdf
- * Generate laporan barang dalam bentuk PDF
- */
+//GET /report/pdf
+
 export function reportPdf(req, res) {
   const q = (req.query.q || "").toLowerCase();
 
-  // Ambil & filter data
   let items = db.readItems();
   if (q) items = items.filter(it => String(it.namaItem || "").toLowerCase().includes(q));
 
@@ -65,32 +55,27 @@ export function reportPdf(req, res) {
   const totalStok  = items.reduce((a, it) => a + Number(it.stok || 0), 0);
   const totalHarga = items.reduce((a, it) => a + Number(it.hargaSatuan || 0) * Number(it.stok || 0), 0);
 
-  // Set header response PDF
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", `attachment; filename="laporan-barang.pdf"`);
 
   const doc = new PDFDocument({ size: "A4", margin: 40 });
   doc.pipe(res);
 
-  // Judul
-  doc.fontSize(16).text("Laporan Daftar Barang", { align: "center" });
+  doc.fontSize(16).text("Laporan Daftar Barang Toko Gembira", { align: "center" });
   doc.moveDown(0.2);
   doc.fontSize(10).fillColor("#555")
      .text(`Dicetak: ${new Date().toLocaleString("id-ID")}`, { align: "center" });
   doc.moveDown(1);
   doc.fillColor("#000");
 
-  // Ringkasan
   doc.fontSize(11).text(`Total Item: ${totalItem}`);
   doc.text(`Total Stok: ${totalStok}`);
   doc.text(`Total Nilai Persediaan: ${rupiah(totalHarga)}`);
   doc.moveDown(0.5);
 
-  // Garis
   doc.moveTo(40, doc.y).lineTo(555, doc.y).strokeColor("#999").stroke().strokeColor("#000");
   doc.moveDown(0.5);
 
-  // Header tabel
   const cols = [
     { key: "no",          label: "#",           width: 30,  align: "left" },
     { key: "namaItem",    label: "Nama",        width: 160, align: "left" },
@@ -119,7 +104,6 @@ export function reportPdf(req, res) {
 
   drawHeader();
 
-  // Isi tabel
   items.forEach((it, idx) => {
     const subtotal = Number(it.hargaSatuan || 0) * Number(it.stok || 0);
     let x = startX;
@@ -144,7 +128,6 @@ export function reportPdf(req, res) {
     y += 2;
   });
 
-  // Total akhir
   doc.moveDown(1);
   doc.font("Helvetica-Bold");
   doc.text("TOTAL:", startX + 400, y, { width: 70, align: "right" });

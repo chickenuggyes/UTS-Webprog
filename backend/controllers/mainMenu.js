@@ -1,6 +1,5 @@
 import { db } from "../services/jsonDB.js";
 
-// items.json berisi: namaItem, quantity, keterangan, hargaSatuan, stok :contentReference[oaicite:8]{index=8}
 export const itemsController = {
   list(req, res) {
     const q = (req.query.q || "").toLowerCase();
