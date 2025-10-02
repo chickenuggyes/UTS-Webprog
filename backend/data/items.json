@@ -11,7 +11,7 @@
     "id": 2,
     "namaItem": "Buku Kwarto",
     "quantity": "1",
-    "keterangan": "100 lbr",
+    "keterangan": "16 cm x 20.5 cm 100 lbr",
     "hargaSatuan": 12500,
     "stok": 11
   },
@@ -19,7 +19,7 @@
     "id": 3,
     "namaItem": "Buku Folio",
     "quantity": "1",
-    "keterangan": "200 lbr",
+    "keterangan": "21 cm x 31 cm 200 lbr",
     "hargaSatuan": 20000,
     "stok": 90
   },
