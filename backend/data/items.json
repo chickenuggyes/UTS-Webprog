@@ -142,5 +142,13 @@
     "keterangan": "Sedang",
     "hargaSatuan": 27500,
     "stok": 81
+  },
+  {
+    "id": 19,
+    "namaItem": "kopi",
+    "quantity": "1",
+    "keterangan": "serenteng",
+    "hargaSatuan": 5000,
+    "stok": 10
   }
 ]

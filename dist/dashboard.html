@@ -84,6 +84,11 @@
       e.preventDefault();
       window.location.href = '../src/login.html';
     });
+    const API = "http://localhost:3000"; // backend kamu
+    document.getElementById('btnPrintPdf').addEventListener('click', () => {
+      // buka PDF tabel dari backend
+      window.open(`${API}/report/pdf`, "_blank");
+    });
   </script>
   <script>
   const currentPage = location.pathname.split("/").pop();
