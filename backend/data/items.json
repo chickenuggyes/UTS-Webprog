@@ -1,2 +1,11 @@
 [
+  {
+    "id": 1,
+    "namaItem": "Minyak Singer",
+    "quantity": "1",
+    "keterangan": "80 ml",
+    "hargaSatuan": 7000,
+    "stok": 25,
+    "foto": "/uploads/item-1759393131265.jpg"
+  }
 ]
