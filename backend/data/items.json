@@ -7,5 +7,14 @@
     "hargaSatuan": 7000,
     "stok": 25,
     "foto": "/uploads/item-1759393131265.jpg"
+  },
+  {
+    "id": 2,
+    "namaItem": "Buku Kwarto",
+    "quantity": "1",
+    "keterangan": "16cm x 20,5cm 100 lbr",
+    "hargaSatuan": 12500,
+    "stok": 11,
+    "foto": "/uploads/item-1759393269444.jpg"
   }
 ]
