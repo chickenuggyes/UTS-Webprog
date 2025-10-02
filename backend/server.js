@@ -17,5 +17,8 @@ app.use("/items", itemsRoutes);
 app.use("/report", reportRoutes);
 app.get("/dashboard", dashboard);
 
+app.use(express.json({ limit: "5mb" })); // atau 10mb kalau perlu
+app.use(cors());
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`API ready at http://localhost:${PORT}`));
