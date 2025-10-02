@@ -142,13 +142,5 @@
     "keterangan": "Sedang",
     "hargaSatuan": 27500,
     "stok": 81
-  },
-  {
-    "id": 19,
-    "namaItem": "kopi",
-    "quantity": "1",
-    "keterangan": "200gr",
-    "hargaSatuan": 13000,
-    "stok": 20
   }
 ]
