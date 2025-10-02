@@ -1,29 +1,30 @@
-const express = require('express');
-const fs = require('fs');
+import express from "express";
+import fs from "fs";
+import path from "path";
+
 const app = express();
 const PORT = 3000;
 
 function loadData() {
-  const raw = fs.readFileSync('data.json');
+  const raw = fs.readFileSync(path.join(process.cwd(), "backend", "data.json"));
   return JSON.parse(raw);
 }
 
-app.get('/dashboard', (req, res) => {
-  const data = loadData();
+app.get("/dashboard", (req, res) => {
+  const items = loadData();
 
-  const totalProduk = data.length;
-
-  const totalStok = data.reduce((sum, item) => sum + item.stok, 0);
-
-  const hargaTotal = data.reduce(
-    (sum, item) => sum + (item.hargaSatuan * item.stok),
+  const totalProduk = items.length;
+  const totalStok = items.reduce((sum, item) => sum + (item.stok || 0), 0);
+  const hargaTotal = items.reduce(
+    (sum, item) => sum + ((item.hargaSatuan || 0) * (item.stok || 0)),
     0
   );
 
   res.json({
     totalProduk,
     totalStok,
-    hargaTotal
+    hargaTotal,
+    items // <---- kirim juga list produk supaya frontend bisa render gambar
   });
 });
 
