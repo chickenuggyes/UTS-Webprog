@@ -49,19 +49,18 @@ app.use("/report", reportRoutes);
 // Ringkasan dashboard
 app.get("/dashboard", dashboard);
 
-// (opsional) health check / redirect root
-app.get("/", (req, res) => res.json({ ok: true, service: "uts-webprog-api" }));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../src/login.html"));
+});
 
 /* ---------- Error handler (paling akhir) ---------- */
 app.use((err, req, res, next) => {
-  console.error("❌ Server error:", err);
+  console.error("Server error:", err);
   // jika error dari multer (limit size, file type, dll) akan masuk ke sini juga
   res.status(500).json({ message: err.message || "Internal Server Error" });
 });
 
-/* ---------- Start server ---------- */
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`API ready at http://localhost:${PORT}`);
-  open("http://localhost:3000/src/login.html");
 });

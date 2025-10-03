@@ -79,7 +79,6 @@ export function reportPdf(req, res) {
   const cols = [
     { key: "no",          label: "#",           width: 30,  align: "left" },
     { key: "namaItem",    label: "Nama",        width: 160, align: "left" },
-    { key: "quantity",    label: "Qty",         width: 50,  align: "left" },
     { key: "keterangan",  label: "Keterangan",  width: 120, align: "left" },
     { key: "hargaSatuan", label: "Harga",       width: 80,  align: "right" },
     { key: "stok",        label: "Stok",        width: 45,  align: "right" },
@@ -110,7 +109,6 @@ export function reportPdf(req, res) {
     const cells = [
       String(idx + 1),
       String(it.namaItem ?? "-"),
-      String(it.quantity ?? "-"),
       String(it.keterangan ?? "-"),
       rupiah(it.hargaSatuan || 0),
       String(it.stok ?? 0),

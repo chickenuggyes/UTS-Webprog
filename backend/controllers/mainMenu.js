@@ -25,7 +25,6 @@ export const itemsController = {
 
       const {
         namaItem = "",
-        quantity = "",
         keterangan = "",
         hargaSatuan = 0,
         stok = 0,
@@ -34,7 +33,6 @@ export const itemsController = {
       if (!String(namaItem).trim()) {
         return res.status(400).json({ message: "namaItem wajib diisi" });
       }
-
       const harga = Number(hargaSatuan);
       const stokNum = Number(stok);
       if (Number.isNaN(harga) || harga < 0) {
@@ -50,7 +48,6 @@ export const itemsController = {
       const newItem = {
         id,
         namaItem: String(namaItem),
-        quantity: String(quantity),
         keterangan: String(keterangan),
         hargaSatuan: harga,
         stok: stokNum,
@@ -79,7 +76,6 @@ export const itemsController = {
       const up = { ...items[idx] };
 
       if (p.namaItem !== undefined) up.namaItem = String(p.namaItem);
-      if (p.quantity !== undefined) up.quantity = String(p.quantity);
       if (p.keterangan !== undefined) up.keterangan = String(p.keterangan);
 
       if (p.hargaSatuan !== undefined) {

@@ -6,7 +6,6 @@ document.getElementById("addProductForm").addEventListener("submit", async (e) =
 
   // ambil elemen
   const namaItem    = document.getElementById("namaBarang").value.trim();
-  const quantity    = document.getElementById("quantity").value.trim();
   const keterangan  = document.getElementById("keterangan").value.trim();
   const hargaSatuan = document.getElementById("hargaSatuan").value.trim();
   const stok        = document.getElementById("stok").value.trim();
@@ -15,7 +14,6 @@ document.getElementById("addProductForm").addEventListener("submit", async (e) =
   // bangun FormData (multipart/form-data)
   const fd = new FormData();
   fd.append("namaItem", namaItem);
-  fd.append("quantity", quantity);
   fd.append("keterangan", keterangan);
   fd.append("hargaSatuan", hargaSatuan);
   fd.append("stok", stok);

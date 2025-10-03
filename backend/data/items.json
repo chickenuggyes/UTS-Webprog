@@ -2,7 +2,6 @@
   {
     "id": 1,
     "namaItem": "Minyak Singer",
-    "quantity": "1",
     "keterangan": "80 ml",
     "hargaSatuan": 7000,
     "stok": 25,
@@ -11,7 +10,6 @@
   {
     "id": 2,
     "namaItem": "Buku Kwarto",
-    "quantity": "1",
     "keterangan": "16cm x 20,5cm 100 lbr",
     "hargaSatuan": 12500,
     "stok": 11,
@@ -20,7 +18,6 @@
   {
     "id": 3,
     "namaItem": "Buku Folio",
-    "quantity": "1",
     "keterangan": "21cm x 31 cm 200 lbr",
     "hargaSatuan": 20000,
     "stok": 90,
@@ -29,7 +26,6 @@
   {
     "id": 4,
     "namaItem": "Lem stik UHU",
-    "quantity": "1",
     "keterangan": "8.2 gr",
     "hargaSatuan": 12500,
     "stok": 29,
@@ -38,7 +34,6 @@
   {
     "id": 5,
     "namaItem": "Stabillo Boss",
-    "quantity": "1",
     "keterangan": "5 mm",
     "hargaSatuan": 15000,
     "stok": 75,
@@ -47,7 +42,6 @@
   {
     "id": 6,
     "namaItem": "Pena Faster",
-    "quantity": "1",
     "keterangan": "Hitam",
     "hargaSatuan": 2500,
     "stok": 41,
@@ -56,7 +50,6 @@
   {
     "id": 7,
     "namaItem": "Correction Tape",
-    "quantity": "1",
     "keterangan": "Kertas",
     "hargaSatuan": 7500,
     "stok": 63,
@@ -65,7 +58,6 @@
   {
     "id": 8,
     "namaItem": "Pensil",
-    "quantity": "1",
     "keterangan": "2B",
     "hargaSatuan": 5000,
     "stok": 27,
@@ -74,7 +66,6 @@
   {
     "id": 9,
     "namaItem": "Solasi Nachi",
-    "quantity": "1",
     "keterangan": "½ x 72y",
     "hargaSatuan": 6000,
     "stok": 19,
@@ -83,7 +74,6 @@
   {
     "id": 10,
     "namaItem": "Lakban Coklat",
-    "quantity": "1",
     "keterangan": "2 inch",
     "hargaSatuan": 15000,
     "stok": 89,
@@ -92,7 +82,6 @@
   {
     "id": 11,
     "namaItem": "Double tape Nachi",
-    "quantity": "1",
     "keterangan": "1 inch",
     "hargaSatuan": 7500,
     "stok": 34,
@@ -101,7 +90,6 @@
   {
     "id": 12,
     "namaItem": "Stapler",
-    "quantity": "1",
     "keterangan": "Kecil",
     "hargaSatuan": 10000,
     "stok": 42,
@@ -110,7 +98,6 @@
   {
     "id": 13,
     "namaItem": "Stapler Sedang",
-    "quantity": "1",
     "keterangan": "Sedang",
     "hargaSatuan": 27500,
     "stok": 81,
@@ -119,8 +106,7 @@
   {
     "id": 14,
     "namaItem": "Push Pin",
-    "quantity": "30",
-    "keterangan": "1 Dus",
+    "keterangan": "1 Dus isi 30 pcs",
     "hargaSatuan": 7500,
     "stok": 56,
     "foto": "/uploads/item-1759394370076.jpg"
@@ -128,8 +114,7 @@
   {
     "id": 15,
     "namaItem": "Clip trigonal",
-    "quantity": "60",
-    "keterangan": "1 Dus",
+    "keterangan": "1 Dus isi 60 pcs",
     "hargaSatuan": 4000,
     "stok": 17,
     "foto": "/uploads/item-1759394392857.jpg"
@@ -137,7 +122,6 @@
   {
     "id": 16,
     "namaItem": "Pensil Warna Pendek",
-    "quantity": "1",
     "keterangan": "isi 12",
     "hargaSatuan": 15000,
     "stok": 72,
@@ -146,7 +130,6 @@
   {
     "id": 17,
     "namaItem": "Lem Castol",
-    "quantity": "1",
     "keterangan": "21 cc",
     "hargaSatuan": 7500,
     "stok": 61,
