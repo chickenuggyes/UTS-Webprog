@@ -24,14 +24,14 @@ function generateUniqueUserId(existingUsers, maxTry = 100) {
 export function login(req, res) {
   const { username, password } = req.body || {};
   if (!username?.trim() || !password?.trim()) {
-    return res.status(400).json({ message: "Username dan password wajib diisi" });
+    return res.status(400).json({ message: "Username and password are required" });
   }
 
   const users = db.readUsers();
   const user = users.find(u => u.username === username && u.password === password);
-  if (!user) return res.status(401).json({ message: "Login gagal" });
+  if (!user) return res.status(401).json({ message: "Login failed" });
   return res.json({
-    message: "Login sukses",
+    message: "Login successful",
     user: { id: user.id, username: user.username }
   });
 }
@@ -40,17 +40,17 @@ export function login(req, res) {
 export function register(req, res) {
   const { username, password } = req.body || {};
   if (!username?.trim() || !password?.trim()) {
-    return res.status(400).json({ message: "Username dan password wajib diisi" });
+    return res.status(400).json({ message: "Username and password are required" });
   }
 
   if (password.length < 4) {
-    return res.status(400).json({ message: "Password minimal 4 karakter" });
+    return res.status(400).json({ message: "Password must be at least 4 characters" });
   }
 
   const users = db.readUsers();
 
   if (users.find(u => u.username === username)) {
-    return res.status(409).json({ message: "Username sudah terdaftar" });
+    return res.status(409).json({ message: "Username is already registered" });
   }
 
   const newUser = {
@@ -63,7 +63,7 @@ export function register(req, res) {
   db.writeUsers(users);
 
   return res.status(201).json({
-    message: "Registrasi berhasil",
+    message: "Registration successful",
     user: { id: newUser.id, username: newUser.username }
   });
 }

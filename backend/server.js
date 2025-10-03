@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import path from "path";
+import open from "open";
 import { fileURLToPath } from "url";
 import fs from "fs";
 
@@ -34,6 +35,12 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 // Static files untuk gambar yang di-upload
 app.use("/uploads", express.static(uploadsDir));
 
+// Static files untuk halaman login dan asset di src
+app.use("/src", express.static(path.join(__dirname, "../src")));
+
+// Static files untuk halaman dashboard dan asset di dist
+app.use("/dist", express.static(path.join(__dirname, "../dist")));
+
 /* ---------- Routes ---------- */
 app.use("/login", authRoutes);
 app.use("/items", itemsRoutes);
@@ -56,4 +63,5 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`API ready at http://localhost:${PORT}`);
+  open("http://localhost:3000/src/login.html");
 });

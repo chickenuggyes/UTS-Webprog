@@ -3,37 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Olin Dashboard</title>
+  <title id="dynamicTitle">Olin Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 font-sans">
-  <div class="flex h-screen">
+  <div class="flex h-screen bg-pink-50">
    <!-- Sidebar (same as dashboard) -->
-    <aside class="w-64 bg-white shadow-lg flex flex-col">
+  <aside class="w-64 bg-pink-100 shadow-lg flex flex-col">
       <div class="p-6 flex items-center justify-between">
-      <div class="text-2xl font-bold text-blue-600">Admin</div>
-      <button class="w-10 h-10 rounded-full bg-blue-600 text-white grid place-items-center" title="Profile">
-        👤
-      </button>
-    </div>
+        <div class="flex flex-col">
+          <div id="sidebarUsername" class="text-2xl font-bold text-pink-600">Admin</div>
+          <div class="text-xs text-gray-500 mt-1">Admin</div>
+        </div>
+  <button class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center" title="Profile">
+          👤
+        </button>
+      </div>
       <nav class="flex-1 px-4 space-y-2">
         <!-- Keep links identical to dashboard -->
-       <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-blue-100 text-gray-800 font-medium">
+  <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
       <img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5"/>
       Dashboard
       </a>
-      <a href="products.html" class="flex items-center p-2 rounded-lg hover:bg-blue-100 text-gray-800 font-medium">
-        <img src="https://img.icons8.com/color/24/parcel.png" class="mr-3 w-5 h-5"/>
+  <a href="products.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+        <img src="https://img.icons8.com/color/24/box--v1.png" class="mr-3 w-5 h-5"/>
         Products
       </a>
-      <a href="add.html" class="flex items-center p-2 rounded-lg hover:bg-blue-100 text-gray-800 font-medium">
+  <a href="add.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
         <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5"/>
         Add Product
       </a>
 
       </nav>
       <div class="p-4 border-t">
-        <a href="#" id="logoutBtn" class="flex items-center text-red-600 hover:underline">
+        <a href="#" id="logoutBtn" class="flex items-center text-pink-600 hover:underline">
           <span class="mr-2">↩</span> Sign Out
         </a>
   </div>
@@ -41,7 +44,7 @@
 
 
     <!-- Main Content -->
-    <main class="flex-1 p-6 overflow-y-auto">
+  <main class="flex-1 p-6 overflow-y-auto bg-pink-50">
       <!-- Header -->
       <div class="flex justify-between items-center mb-6">
   <h1 class="text-2xl font-bold">Dashboard</h1>
@@ -69,7 +72,7 @@
      <div class="mt-10 mb-3 flex items-center justify-between">
   <h2 class="text-lg font-semibold">Products</h2>
   <button onclick="window.print()" 
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow">
+          class="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 shadow">
     Print
   </button>
 </div>
@@ -80,15 +83,30 @@
   </div>
   <script src="dashboard.js"></script>
   <script>
+    // Set judul website: username Dashboard
+    const userTitle = JSON.parse(localStorage.getItem('user') || '{}');
+    if (userTitle.username) {
+      document.title = userTitle.username + ' Dashboard';
+    }
+  </script>
+  <script>
+    // Set username in sidebar
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const sidebarUsername = document.getElementById('sidebarUsername');
+    if (sidebarUsername && user.username) {
+      sidebarUsername.textContent = user.username;
+    }
     document.getElementById('logoutBtn').addEventListener('click', function(e) {
       e.preventDefault();
+      localStorage.removeItem('user');
       window.location.href = '../src/login.html';
     });
     const API = "http://localhost:3000"; // backend kamu
-    document.getElementById('btnPrintPdf').addEventListener('click', () => {
-      // buka PDF tabel dari backend
-      window.open(`${API}/report/pdf`, "_blank");
-    });
+    if (document.getElementById('btnPrintPdf')) {
+      document.getElementById('btnPrintPdf').addEventListener('click', () => {
+        window.open(`${API}/report/pdf`, "_blank");
+      });
+    }
   </script>
   <script>
   const currentPage = location.pathname.split("/").pop();
@@ -97,9 +115,9 @@
   sidebarLinks.forEach(link => {
     const href = link.getAttribute("href");
     if (href === currentPage) {
-      link.classList.add("bg-blue-600", "text-white", "shadow");
+      link.classList.add("bg-pink-400", "text-white", "shadow");
     } else {
-      link.classList.remove("bg-blue-600", "text-white", "shadow");
+      link.classList.remove("bg-pink-400", "text-white", "shadow");
     }
   });
 </script>
