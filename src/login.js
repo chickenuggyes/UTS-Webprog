@@ -37,6 +37,9 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             body: JSON.stringify({ username, password })
         });
         if (response.ok) {
+            const data = await response.json();
+            // Store user data in localStorage
+            localStorage.setItem('user', JSON.stringify(data.user));
             window.location.href = '../dist/dashboard.html';
         } else {
             const data = await response.json();
@@ -79,6 +82,9 @@ document.getElementById('registerForm').addEventListener('submit', async functio
                 body: JSON.stringify({ username, password })
             });
             if (loginResponse.ok) {
+                const loginData = await loginResponse.json();
+                // Store user data in localStorage
+                localStorage.setItem('user', JSON.stringify(loginData.user));
                 window.location.href = '../dist/dashboard.html';
             } else {
                 errorDiv.textContent = 'Registrasi berhasil, tapi gagal login.';

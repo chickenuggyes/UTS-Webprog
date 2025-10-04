@@ -20,7 +20,7 @@ function card(p) {
     <article class="bg-white rounded-lg shadow border overflow-hidden">
       <div class="bg-gray-50 h-48 grid place-items-center">
         <img src="${imgSrc}" alt="${p.namaItem ?? "-"}"
-             class="h-20 w-20 object-contain"
+             class="h-40 w-40 object-contain"
              onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4e6.svg';"/>
       </div>
       <div class="p-4 relative">
