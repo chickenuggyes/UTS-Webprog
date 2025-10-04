@@ -18,9 +18,6 @@ function generateUniqueUserId(existingUsers, maxTry = 100) {
   return `${Date.now()}`.slice(-4);
 }
 
-/* ===================== AUTH CONTROLLERS ===================== */
-
-// POST /login
 export function login(req, res) {
   const { username, password } = req.body || {};
   if (!username?.trim() || !password?.trim()) {
@@ -36,7 +33,6 @@ export function login(req, res) {
   });
 }
 
-// POST /register
 export function register(req, res) {
   const { username, password } = req.body || {};
   if (!username?.trim() || !password?.trim()) {

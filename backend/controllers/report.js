@@ -8,7 +8,6 @@ const rupiah = (n) =>
     maximumFractionDigits: 0 
   }).format(Number(n || 0));
 
-// GET /report
 export function report(req, res) {
   const q = (req.query.q || "").toLowerCase();
   const minHarga = Number(req.query.minHarga || 0);
@@ -30,7 +29,6 @@ export function report(req, res) {
   res.json({ count: items.length, items });
 }
 
-//GET /dashboard
 export function dashboard(req, res) {
   const items = db.readItems();
   const totalItem  = items.length;
@@ -42,8 +40,6 @@ export function dashboard(req, res) {
 
   res.json({ totalItem, totalStok, totalHarga });
 }
-
-//GET /report/pdf
 
 export function reportPdf(req, res) {
   const q = (req.query.q || "").toLowerCase();

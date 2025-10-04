@@ -1,25 +1,21 @@
-// addProduct.js
 const API = "http://localhost:3000";
 
 document.getElementById("addProductForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // ambil elemen
   const namaItem    = document.getElementById("namaBarang").value.trim();
   const keterangan  = document.getElementById("keterangan").value.trim();
   const hargaSatuan = document.getElementById("hargaSatuan").value.trim();
   const stok        = document.getElementById("stok").value.trim();
   const file        = document.getElementById("fotoInput").files[0];
 
-  // bangun FormData (multipart/form-data)
   const fd = new FormData();
   fd.append("namaItem", namaItem);
   fd.append("keterangan", keterangan);
   fd.append("hargaSatuan", hargaSatuan);
   fd.append("stok", stok);
-  if (file) fd.append("foto", file); // <-- penting: nama field harus "foto"
+  if (file) fd.append("foto", file); 
 
-  // UX kecil
   const btn = e.target.querySelector('button[type="submit"]');
   btn.disabled = true;
   const prevText = btn.textContent;
@@ -28,7 +24,7 @@ document.getElementById("addProductForm").addEventListener("submit", async (e) =
   try {
     const res = await fetch(`${API}/items`, {
       method: "POST",
-      body: fd // JANGAN set headers Content-Type
+      body: fd 
     });
 
     if (!res.ok) {

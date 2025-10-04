@@ -5,57 +5,64 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title id="dynamicTitle">Olin Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      #printArea { display: block !important; }
+      #printArea table { width: 100%; border-collapse: collapse; font-size: 12pt; }
+      #printArea th, #printArea td { border: 1px solid #ddd; padding: 8px; }
+      #printArea thead th { background: #f3f4f6; }
+      body { background: #fff !important; }
+    }
+  </style>
 </head>
 <body class="bg-gray-100 font-sans">
   <div class="flex h-screen bg-pink-50">
-   <!-- Sidebar (same as dashboard) -->
-  <aside class="w-64 bg-pink-100 shadow-lg flex flex-col">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-pink-100 shadow-lg flex flex-col no-print">
       <div class="p-6 flex items-center justify-between">
         <div class="flex flex-col">
           <div id="sidebarUsername" class="text-2xl font-bold text-pink-600">Loading...</div>
           <div class="text-xs text-gray-500 mt-1">Admin</div>
         </div>
-  <button class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center" title="Profile">
-          👤
-        </button>
+        <button class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center" title="Profile">👤</button>
       </div>
       <nav class="flex-1 px-4 space-y-2">
-        <!-- Keep links identical to dashboard -->
-  <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-      <img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5"/>
-      Dashboard
-      </a>
-  <a href="products.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-        <img src="https://img.icons8.com/color/24/box--v1.png" class="mr-3 w-5 h-5"/>
-        Products
-      </a>
-  <a href="add.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-        <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5"/>
-        Add Product
-      </a>
-
+        <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+          <img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5"/>
+          Dashboard
+        </a>
+        <a href="products.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+          <img src="https://img.icons8.com/color/24/box--v1.png" class="mr-3 w-5 h-5"/>
+          Products
+        </a>
+        <a href="add.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+          <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5"/>
+          Add Product
+        </a>
       </nav>
       <div class="p-4 border-t">
         <a href="#" id="logoutBtn" class="flex items-center p-2 rounded-lg hover:bg-red-100 text-red-600 hover:text-red-700 font-medium transition-colors">
           <img src="https://img.icons8.com/color/24/exit.png" class="mr-3 w-5 h-5"/>
           Sign Out
         </a>
-  </div>
-</aside>
-
+      </div>
+    </aside>
 
     <!-- Main Content -->
-  <main class="flex-1 p-6 overflow-y-auto bg-pink-50">
+    <main class="flex-1 p-6 overflow-y-auto bg-pink-50">
       <!-- Header -->
-      <div class="flex justify-between items-center mb-6">
-  <h1 class="text-2xl font-bold">Dashboard</h1>
-  <div class="text-xl font-semibold text-slate-700">Toko Gembira</div>
-</div>
+      <div class="flex justify-between items-center mb-6 no-print">
+        <h1 class="text-2xl font-bold">Dashboard</h1>
+        <div class="text-xl font-semibold text-slate-700">Toko Gembira</div>
+      </div>
 
+      <!-- Error -->
+      <div id="dashboardError" class="text-red-600 mb-4 no-print"></div>
 
       <!-- Stats Grid -->
-      <div id="dashboardError" class="text-red-600 mb-4"></div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
         <div class="bg-white p-4 rounded-lg shadow">
           <p class="text-gray-500">Total Item</p>
           <h2 id="totalItem" class="text-3xl font-bold">...</h2>
@@ -69,58 +76,82 @@
           <h2 id="totalHarga" class="text-3xl font-bold">...</h2>
         </div>
       </div>
-      <!-- Product List (vertical) -->
-     <div class="mt-10 mb-3 flex items-center justify-between">
-  <h2 class="text-lg font-semibold">Products</h2>
-  <button onclick="window.print()" 
-          class="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 shadow">
-    Print
-  </button>
-</div>
 
-<ul id="listProducts" class="space-y-3"></ul>
+      <!-- Products header + Print button -->
+      <div class="mt-10 mb-3 flex items-center justify-between no-print">
+        <h2 class="text-lg font-semibold">Products</h2>
+        <button onclick="handlePrint()"
+                class="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 shadow">
+          Print
+        </button>
+      </div>
 
+      <!-- List (tampilan layar) -->
+      <ul id="listProducts" class="space-y-3 no-print"></ul>
+
+      <!-- Area khusus untuk PRINT (hanya muncul saat print) -->
+      <section id="printArea" class="hidden">
+        <h1 class="text-xl font-bold mb-2">Daftar Produk — Toko Gembira</h1>
+
+        <!-- RINGKASAN untuk print -->
+        <table class="w-full border-collapse mb-4">
+          <tbody>
+            <tr>
+              <th class="border px-3 py-2 text-left">Total Item</th>
+              <td id="pTotalItem" class="border px-3 py-2">-</td>
+            </tr>
+            <tr>
+              <th class="border px-3 py-2 text-left">Total Stok</th>
+              <td id="pTotalStok" class="border px-3 py-2">-</td>
+            </tr>
+            <tr>
+              <th class="border px-3 py-2 text-left">Total Harga</th>
+              <td id="pTotalHarga" class="border px-3 py-2">-</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- TABEL PRODUK -->
+        <table id="printTable" class="w-full border-collapse">
+          <thead>
+            <tr>
+              <th class="border px-3 py-2 text-left">No</th>
+              <th class="border px-3 py-2 text-left">Nama</th>
+              <th class="border px-3 py-2 text-left">Keterangan</th>
+              <th class="border px-3 py-2 text-left">Harga</th>
+              <th class="border px-3 py-2 text-left">Stok</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
     </main>
   </div>
+
+  <!-- Script utama -->
   <script src="dashboard.js"></script>
+
+  <!-- Script kecil untuk judul & auth -->
   <script>
-    // Set judul website: username Dashboard
     const userTitle = JSON.parse(localStorage.getItem('user') || '{}');
-    if (userTitle.username) {
-      document.title = userTitle.username + ' Dashboard';
-    }
-  </script>
-  <script>
-    // Set username in sidebar
+    if (userTitle.username) document.title = userTitle.username + ' Dashboard';
+
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const sidebarUsername = document.getElementById('sidebarUsername');
-    if (sidebarUsername && user.username) {
-      sidebarUsername.textContent = user.username;
-    }
-    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+    if (sidebarUsername && user.username) sidebarUsername.textContent = user.username;
+
+    document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
       e.preventDefault();
       localStorage.removeItem('user');
       window.location.href = '../src/login.html';
     });
-    const API = "http://localhost:3000"; // backend kamu
-    if (document.getElementById('btnPrintPdf')) {
-      document.getElementById('btnPrintPdf').addEventListener('click', () => {
-        window.open(`${API}/report/pdf`, "_blank");
-      });
-    }
-  </script>
-  <script>
-  const currentPage = location.pathname.split("/").pop();
-  const sidebarLinks = document.querySelectorAll("aside nav a");
 
-  sidebarLinks.forEach(link => {
-    const href = link.getAttribute("href");
-    if (href === currentPage) {
-      link.classList.add("bg-pink-400", "text-white", "shadow");
-    } else {
-      link.classList.remove("bg-pink-400", "text-white", "shadow");
-    }
-  });
-</script>
+    const currentPage = location.pathname.split("/").pop();
+    document.querySelectorAll("aside nav a").forEach(link => {
+      const href = link.getAttribute("href");
+      if (href === currentPage) link.classList.add("bg-pink-400","text-white","shadow");
+      else link.classList.remove("bg-pink-400","text-white","shadow");
+    });
+  </script>
 </body>
 </html>

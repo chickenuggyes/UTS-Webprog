@@ -58,7 +58,7 @@ function applySearch() {
 }
 
 function editProduct(id) {
-  alert("Edit product ID: " + id);
+  window.location.href = `edit.html?id=${encodeURIComponent(id)}`;
 }
 
 async function reloadProducts() {

@@ -1,7 +1,6 @@
 import { db } from "../services/jsonDB.js";
 
 export const itemsController = {
-  // GET /items?q=keyword
   list(req, res) {
     const q = (req.query.q || "").toLowerCase();
     let items = db.readItems();
@@ -17,7 +16,6 @@ export const itemsController = {
     res.json({ count: items.length, items });
   },
 
-  // POST /items  (multipart/form-data; field file = "foto")
   async create(req, res) {
     try {
       const items = db.readItems();
@@ -42,7 +40,6 @@ export const itemsController = {
         return res.status(400).json({ message: "stok harus bilangan bulat ≥ 0" });
       }
 
-      // multer isi req.file jika ada upload
       const foto = req.file ? `/uploads/${req.file.filename}` : "";
 
       const newItem = {
@@ -51,7 +48,7 @@ export const itemsController = {
         keterangan: String(keterangan),
         hargaSatuan: harga,
         stok: stokNum,
-        foto, // "" jika tanpa upload
+        foto,
       };
 
       items.push(newItem);
@@ -64,7 +61,6 @@ export const itemsController = {
     }
   },
 
-  // PUT /items/:id  (boleh multipart untuk ganti foto)
   async update(req, res) {
     try {
       const id = Number(req.params.id);
@@ -92,9 +88,8 @@ export const itemsController = {
         up.stok = s;
       }
 
-      // ganti foto jika ada file baru
       if (req.file) up.foto = `/uploads/${req.file.filename}`;
-      // hapus foto jika eksplisit kirim foto=""
+     
       if (p.foto === "") up.foto = "";
 
       items[idx] = up;
@@ -106,7 +101,6 @@ export const itemsController = {
     }
   },
 
-  // DELETE /items/:id
   remove(req, res) {
     const id = Number(req.params.id);
     const items = db.readItems();
