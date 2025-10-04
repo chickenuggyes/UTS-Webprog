@@ -50,7 +50,7 @@ app.use("/report", reportRoutes);
 app.get("/dashboard", dashboard);
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../src/login.html"));
+  res.redirect("/src/login.html");
 });
 
 /* ---------- Error handler (paling akhir) ---------- */
