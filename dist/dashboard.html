@@ -6,16 +6,45 @@
   <title id="dynamicTitle">Olin Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <style>
-    @media print {
-      .no-print { display: none !important; }
-      #printArea { display: block !important; }
-      #printArea table { width: 100%; border-collapse: collapse; font-size: 12pt; }
-      #printArea th, #printArea td { border: 1px solid #ddd; padding: 8px; }
-      #printArea thead th { background: #f3f4f6; }
-      body { background: #fff !important; }
+<style>
+  @media print {
+    /* 1) Biarkan browser yang tentukan orientasi (portrait/landscape) */
+    @page {
+      size: auto;        /* <— ini kunci: jangan paksa portrait/landscape */
+      margin: 12mm;
     }
-  </style>
+
+    /* 2) Matikan tinggi & overflow yang bikin scroll/fake scrollbar */
+    html, body { height: auto !important; background: #fff !important; }
+    .flex, .h-screen { height: auto !important; }
+    main, #printArea { overflow: visible !important; height: auto !important; }
+    #printArea * { overflow: visible !important; }
+
+    /* 3) Sembunyikan UI non-print, tampilkan area print */
+    .no-print { display: none !important; }
+    #printArea { display: block !important; }
+
+    /* 4) Tabel rapi, muat lebar halaman, dan bisa pecah ke halaman berikutnya */
+    #printArea table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;          /* bantu muat di lebar halaman */
+      font-size: 12pt;
+      word-break: break-word;
+      white-space: normal;
+    }
+    #printArea th, #printArea td { border: 1px solid #ddd; padding: 8px; }
+    #printArea thead th { background: #f3f4f6; }
+
+    thead { display: table-header-group; }
+    tfoot { display: table-footer-group; }
+    tr { page-break-inside: avoid; }
+    table { page-break-inside: auto; }
+
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+
 </head>
 <body class="bg-gray-100 font-sans">
   <div class="flex h-screen bg-pink-50">
