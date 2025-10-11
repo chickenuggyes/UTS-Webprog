@@ -6,147 +6,120 @@
     <title>Login Page</title>
     <link rel="stylesheet" href="input.css">
     <style>
-        body {
-            min-height: 100vh;
-            margin: 0;
-            font-family: 'Poppins', Arial, sans-serif;
-            background: #f5f6fa;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .container {
-            display: flex;
-            width: 800px;
-            height: 500px;
-            background: #fff;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(44,62,80,0.12);
-            overflow: hidden;
-        }
-        .welcome {
-            flex: 1;
-            background: linear-gradient(135deg, #a770ef 0%, #f6d365 100%, #f6d365 100%);
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-        .login-section {
-            flex: 1;
-            padding: 48px 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .login-section h2 {
-            font-size: 2rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #222;
-        }
-        .login-section p {
-            color: #888;
-            margin-bottom: 2rem;
-        }
-        .form-group {
-            margin-bottom: 1.2rem;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 0.7rem;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            background: #f8f8f8;
-            transition: border 0.2s;
-        }
-        .form-group input:focus {
-            border-color: #a770ef;
-            outline: none;
-        }
-        .btn {
-            width: 100%;
-            padding: 0.9rem;
-            background: #a770ef;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 0.5rem;
-            box-shadow: 0 2px 8px rgba(167,112,239,0.08);
-            transition: background 0.2s;
-        }
-        .btn:hover {
-            background: #7f53ac;
-        }
-        .error {
-            color: #e74c3c;
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-        .extra {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.2rem;
-            font-size: 0.95rem;
-            color: #888;
-        }
-        .extra label {
-            display: flex;
-            align-items: center;
-        }
-        .extra input[type="checkbox"] {
-            margin-right: 0.4rem;
-        }
-        .signup-link {
-            text-align: center;
-            margin-top: 1.2rem;
-            font-size: 1rem;
-        }
-        .signup-link a {
-            color: #a770ef;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        .signup-link a:hover {
-            text-decoration: underline;
-        }
-        @media (max-width: 900px) {
-            .container {
-                flex-direction: column;
-                width: 95vw;
-                height: auto;
-            }
-            .welcome {
-                min-height: 180px;
-                font-size: 2rem;
-            }
-        }
-    </style>
+    body {
+        min-height: 100vh;
+        margin: 0;
+        font-family: 'Poppins', Arial, sans-serif;
+        background-image: url('../uploads/background.jpg'); /* pakai background pemandangan */
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .container {
+        width: 380px;
+        padding: 40px 35px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.55); /* lebih solid */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #333; /* ganti ke gelap biar kebaca */
+        text-align: center;
+    }
+
+
+    .container h2,
+    .container p {
+        color: #333;
+    }
+
+    .form-group {
+        margin-bottom: 1.3rem;
+        text-align: left;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.9rem;
+        margin-bottom: 0.4rem;
+        color: #444; /* lebih gelap biar jelas */
+        font-weight: 600;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.7rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        background: rgba(255, 255, 255, 0.8); /* lebih solid */
+        color: #333;
+        outline: none;
+    }
+
+
+    .form-group input::placeholder {
+        color: #777;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 0.8rem;
+        margin-top: 0.8rem;
+        background: linear-gradient(135deg, #a770ef, #f6d365);
+        border: none;
+        border-radius: 10px;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+        opacity: 0.9;
+        transform: scale(1.02);
+    }
+
+    .extra {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        margin-top: 1rem;
+        color: #ccc;
+    }
+
+    .signup-link {
+        margin-top: 1.5rem;
+        font-size: 0.9rem;
+        color: #333;
+    }
+
+    .signup-link a {
+        color: #a770ef;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .signup-link a:hover {
+        text-decoration: underline;
+    }
+</style>
+
 </head>
 <body>
     <div class="container">
-        <div class="welcome">
-            Welcome<br>Back!
-        </div>
         <div class="login-section">
-            <h2>Login</h2>
-            <p>Welcome back! Please login to your account.</p>
             <div id="error" class="error" style="display:none;"></div>
             <form id="loginForm">
+                <h2>Login</h2>
+                <p>Welcome back! Please login to your account.</p>
                 <div class="form-group">
                     <label for="username">User Name</label>
                     <input type="text" id="username" name="username" required>
@@ -162,6 +135,7 @@
             </div>
             <form id="registerForm" style="display:none; margin-top:1rem;">
                 <h2 style="font-size:1.3rem; margin-bottom:0.5rem; color:#222;">Sign Up</h2>
+                <p style="margin-bottom:1rem; color:#666; font-size:0.9rem;">Create your account to get started!</p>
                 <div class="form-group">
                     <label for="regUsername">User Name</label>
                     <input type="text" id="regUsername" name="regUsername" required>
@@ -170,7 +144,7 @@
                     <label for="regPassword">Password</label>
                     <input type="password" id="regPassword" name="regPassword" required>
                 </div>
-                <button type="submit" class="btn" style="background:#20bf6b; margin-top:0.5rem;">Register</button>
+                <button type="submit" class="btn">Register</button>
                 <div class="signup-link" style="margin-top:0.5rem; position:relative; z-index:1;">
                     Sudah punya akun? <a href="#" id="showLogin">Login</a>
                 </div>
