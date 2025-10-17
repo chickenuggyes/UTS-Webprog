@@ -26,7 +26,6 @@ export const itemsController = {
     try {
       const {
         namaItem = "",
-        quantity = "",
         keterangan = "",
         hargaSatuan = 0,
         stok = 0,
@@ -48,9 +47,9 @@ export const itemsController = {
       const foto = req.file ? `/uploads/${req.file.filename}` : "";
 
       const [result] = await db.query(
-        `INSERT INTO items (namaItem, quantity, keterangan, hargaSatuan, stok, foto)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [namaItem, quantity, keterangan, harga, stokNum, foto]
+        `INSERT INTO items (namaItem, keterangan, hargaSatuan, stok, foto)
+         VALUES (?, ?, ?, ?, ?)`,
+        [namaItem, keterangan, harga, stokNum, foto]
       );
 
       const insertedId = result.insertId;
@@ -77,7 +76,6 @@ export const itemsController = {
       const p = req.body || {};
 
       let namaItem = p.namaItem ?? current.namaItem;
-      let quantity = p.quantity ?? current.quantity;
       let keterangan = p.keterangan ?? current.keterangan;
       let hargaSatuan = p.hargaSatuan ?? current.hargaSatuan;
       let stok = p.stok ?? current.stok;
@@ -98,9 +96,9 @@ export const itemsController = {
 
       await db.query(
         `UPDATE items 
-         SET namaItem=?, quantity=?, keterangan=?, hargaSatuan=?, stok=?, foto=?
+         SET namaItem=?, keterangan=?, hargaSatuan=?, stok=?, foto=?
          WHERE id=?`,
-        [namaItem, quantity, keterangan, hargaNum, stokNum, foto, id]
+        [namaItem, keterangan, hargaNum, stokNum, foto, id]
       );
 
       const [updated] = await db.query("SELECT * FROM items WHERE id = ?", [id]);

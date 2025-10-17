@@ -9,12 +9,9 @@ export function requireFields(fields) {
 }
 
 export function validateItem(req, res, next) {
-  const { namaItem, quantity, keterangan, hargaSatuan, stok } = req.body;
+  const { namaItem, keterangan, hargaSatuan, stok } = req.body;
   if (typeof namaItem !== "string" || !namaItem.trim()) {
     return res.status(400).json({ message: "Nama Item tidak boleh kosong" });
-  }
-  if (typeof quantity !== "string" || !quantity.trim()) {
-    return res.status(400).json({ message: "Contoh '1' atau '10'" });
   }
   if (typeof keterangan !== "string") {
     return res.status(400).json({ message: "Keterangan misalnya 80 ml/200 gr" });

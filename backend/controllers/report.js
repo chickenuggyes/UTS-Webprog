@@ -127,7 +127,6 @@ export async function reportPdf(req, res) {
       const cells = [
         String(idx + 1),
         String(it.namaItem ?? "-"),
-        String(it.quantity ?? "-"),
         String(it.keterangan ?? "-"),
         rupiah(it.hargaSatuan || 0),
         String(it.stok ?? 0),
