@@ -1,4 +1,4 @@
-import { db } from "../services/jsonDB.js";
+import { db } from "../services/sqlDB.js"; // ganti dari jsonDB.js ke sqlDB.js
 
 function generateUserId() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -9,8 +9,8 @@ function generateUserId() {
   return id;
 }
 
-function generateUniqueUserId(existingUsers, maxTry = 100) {
-  const used = new Set((existingUsers || []).map(u => String(u.id)));
+function generateUniqueUserId(existingIds, maxTry = 100) {
+  const used = new Set(existingIds.map(String));
   for (let i = 0; i < maxTry; i++) {
     const id = generateUserId();
     if (!used.has(id)) return id;
@@ -18,48 +18,76 @@ function generateUniqueUserId(existingUsers, maxTry = 100) {
   return `${Date.now()}`.slice(-4);
 }
 
-export function login(req, res) {
-  const { username, password } = req.body || {};
-  if (!username?.trim() || !password?.trim()) {
-    return res.status(400).json({ message: "Username and password are required" });
-  }
+/* ===================== AUTH CONTROLLERS ===================== */
 
-  const users = db.readUsers();
-  const user = users.find(u => u.username === username && u.password === password);
-  if (!user) return res.status(401).json({ message: "Login failed" });
-  return res.json({
-    message: "Login successful",
-    user: { id: user.id, username: user.username }
-  });
+// POST /login
+export async function login(req, res) {
+  try {
+    const { username, password } = req.body || {};
+    if (!username?.trim() || !password?.trim()) {
+      return res.status(400).json({ message: "Username dan password wajib diisi" });
+    }
+
+    const [rows] = await db.query(
+      "SELECT id, username, password FROM users WHERE username = ? AND password = ?",
+      [username, password]
+    );
+
+    if (rows.length === 0) {
+      return res.status(401).json({ message: "Login gagal" });
+    }
+
+    const user = rows[0];
+    return res.json({
+      message: "Login sukses",
+      user: { id: user.id, username: user.username }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Terjadi kesalahan server" });
+  }
 }
 
-export function register(req, res) {
-  const { username, password } = req.body || {};
-  if (!username?.trim() || !password?.trim()) {
-    return res.status(400).json({ message: "Username and password are required" });
+// POST /register
+export async function register(req, res) {
+  try {
+    const { username, password } = req.body || {};
+    if (!username?.trim() || !password?.trim()) {
+      return res.status(400).json({ message: "Username dan password wajib diisi" });
+    }
+
+    if (password.length < 4) {
+      return res.status(400).json({ message: "Password minimal 4 karakter" });
+    }
+
+    const [existingUser] = await db.query(
+      "SELECT username FROM users WHERE username = ?",
+      [username]
+    );
+
+    if (existingUser.length > 0) {
+      return res.status(409).json({ message: "Username sudah terdaftar" });
+    }
+
+    // ambil semua ID dari database
+    const [allUsers] = await db.query("SELECT id FROM users");
+    const existingIds = allUsers.map(u => u.id);
+
+    // generate ID unik
+    const id = generateUniqueUserId(existingIds);
+
+    // insert user baru
+    await db.query(
+      "INSERT INTO users (id, username, password) VALUES (?, ?, ?)",
+      [id, username, password]
+    );
+
+    return res.status(201).json({
+      message: "Registrasi berhasil",
+      user: { id, username }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Terjadi kesalahan server" });
   }
-
-  if (password.length < 4) {
-    return res.status(400).json({ message: "Password must be at least 4 characters" });
-  }
-
-  const users = db.readUsers();
-
-  if (users.find(u => u.username === username)) {
-    return res.status(409).json({ message: "Username is already registered" });
-  }
-
-  const newUser = {
-    id: generateUniqueUserId(users), 
-    username,
-    password
-  };
-
-  users.push(newUser);
-  db.writeUsers(users);
-
-  return res.status(201).json({
-    message: "Registration successful",
-    user: { id: newUser.id, username: newUser.username }
-  });
 }
