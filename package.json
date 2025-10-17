@@ -7,17 +7,17 @@
     "start": "node backend/server.js",
     "dev": "nodemon backend/server.js"
   },
+  "engines": { "node": ">=18" },
   "dependencies": {
-    "@tailwindcss/cli": "^4.1.13",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "multer": "^2.0.2",
-    "open": "^10.2.0",
-    "pdfkit": "^0.17.2",
-    "tailwindcss": "^4.1.13"
+    "pdfkit": "^0.17.2"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.1.13",
+    "tailwindcss": "^4.1.13",
     "nodemon": "^3.1.10"
   }
 }
