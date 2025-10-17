@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "npx @tailwindcss/cli -i ./src/input.css -o ./dist/style.css",
+    "build": "npx @tailwindcss/cli -i ./src/input.css -o ./dist/style.css --watch",
     "start": "node backend/server.js",
     "dev": "nodemon backend/server.js"
   },
@@ -19,8 +19,5 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
-  },
-  "engines": {
-    "node": ">=18"
   }
 }
