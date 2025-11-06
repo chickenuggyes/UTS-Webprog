@@ -1,0 +1,19 @@
+# Node.js dependencies
+node_modules/
+dist/
+
+# Environment & secrets
+.env
+backend/aiven.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Uploads (optional, kalau nggak mau ke Git)
+backend/uploads/
