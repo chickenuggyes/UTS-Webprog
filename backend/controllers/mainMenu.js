@@ -5,7 +5,7 @@ export const itemsController = {
   async list(req, res) {
     try {
       const q = (req.query.q || "").toLowerCase();
-      let sql = "SELECT * FROM items";
+      let sql = "SELECT * FROM products";
       let params = [];
 
       if (q) {
