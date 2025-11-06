@@ -1,0 +1,111 @@
+Pengembangan Website Manajemen Data Toko ATK
+Menggunakan Node.js dan Database JSON
+
+LAPORAN PENGERJAAN
+diajukan untuk prasyarat pengerjaan Ujian Tengah Semester
+Mata Kuliah IF451-FL Advanced Web Programming – LAB
+
+Diajukan Oleh:
+Lysia Callysta Dharmawan (NIM: 00000124423)
+Caroline Sandra Chen (NIM: 00000126916)
+Jessica Clairine (NIM: 00000121971)
+Vilbert Nusantara (NIM: 00000124618)
+
+UNIVERSITAS MULTIMEDIA NUSANTARA
+
+
+A. Website address (website link) :
+http://tokogembira-kelompok2-production.up.railway.app
+
+	- Cek Database : 
+	USERS
+	https://tokogembira-kelompok2-production.up.railway.app/debug/users?key=happyshop
+
+	ITEMS
+	https://tokogembira-kelompok2-production.up.railway.app/debug/items?key=happyshop
+
+	Data disimpan di JSON dan bukan di database server, sehingga tidak bisa diakses lewat GUI
+	atau query. Railway tidak memberikan izin akses langsung ke file demi keamanan (file system
+	bersifat tertutup). Route /debug digunakan untuk membaca isi file dan mengirimkannya ke
+	client. Satu-satunya cara untuk melihat data JSON dari luar adalah dengan parameter
+	?key=happyshop agar hanya admin yang bisa mengakses data.
+
+
+B. Link Kodingan (GitHub) :
+
+https://github.com/chickenuggyes/TokoGembira-Kelompok2.git
+
+C. Username login and password :
+	1. username: lys
+	password: cobaaja
+	2. username: vilbert
+	password: 12345
+	3. username: Jessica
+	password: 123456
+	4. username: olin
+	password: olin93
+
+
+D. Duties or roles of each group member
+	1. Lysia Callysta : Mengerjakan bagian Backend
+	Auth login dan register (ID user acak), Meminta data dari mitra, Report Module, Dashboard
+	ringkasan mengenai toko & produk
+
+	2. Jessica Clairine : Mengerjakan bagian Frontend
+	Login & Sign Up Page, Sign Out, Add Product Page, Penambahan efek hover pada sidebar,
+	serta seluruh pemberitahuan (misalnya login gagal dan notifikasi lainnya), nama pengguna
+	pada sidebar yang mengikuti username saat login dan menampilkan role admin di bawah nama
+	pengguna.
+
+	3. Caroline Sandra : Mengerjakan bagian Frontend & Hosting Website
+	Side Bar, Dashboard page & fitur Print, Products page, Edit page & fitur Delete, Report
+	Module (Screenshot & Explanation)
+
+	4. Vilbert Nusantara : Mengerjakan bagian Backend
+	Membuat Database untuk item dan user, CRUD Master Module
+
+
+E. Any additional information
+Kami membuat web untuk owner dari toko yang menjadi mitra kami yaitu Toko Gembira.
+Setelah login, owner bisa langsung melihat keseluruhan inti dari tokonya berdasarkan tampilan
+dashboard yaitu total item, total stok, dan total harga. Selain itu, owner juga bisa melihat produk
+yang dijual beserta dengan detail-detailnya, bahkan menambah, menghapus atau mengubah
+hal-hal terkait produk yang akan dijual di tokonya.
+
+F. Explanation
+	1. Sign Up page : Halaman ini digunakan untuk mendaftarkan akun baru. User perlu mengisi 
+	username dan password, lalu klik tombol Register untuk menyimpan data akun ke sistem. 
+	Setelah itu, bisa langsung login ke aplikasi. Setiap kali ada akun baru, id akun akan dibuat acak 
+	oleh sistem sepanjang 4 karakter yang berisikan kombinasi huruf dan angka. 
+
+	2. Login Page : Halaman untuk masuk ke akun yang sudah terdaftar. Pengguna memasukkan 
+	username dan password yang benar, lalu diarahkan ke Dashboard setelah berhasil login.
+
+	3. Sidebar : Berisi username dan role user, serta menampilan menu list/opsi fitur yang bisa dipilih 
+	dan digunakan. Ketika ada pada suatu page, aka nada hover yang menunjukkannya. Pada side 
+	bar ini juga terdapat fitur untuk sign out. Berfungsi untuk keluar dari akun yang sedang 
+	digunakan. Setelah klik “Sign Out”, pengguna akan kembali ke halaman Login agar sesi aman 
+	dan tidak disalahgunakan. 
+
+	4. Dashboard page : Menampilkan total item, total stok, dan total harga dari semua item. 
+	Juga terdapat daftar produk terbaru sebagai tampilan cepat.
+
+	5. Print: Pada dashboard page, ada tombol print dimana dashboard dan seluruh daftar produk 
+	beserta rinciannya (nama, keterangan, harga dan stok) akan ditampilkan dalam tabel dan dapat 
+	di print (akan diarahkan untuk save terlebih dahulu)
+
+	6. Products page : Berisi daftar lengkap produk beserta gambar, harga, dan stok.  Terdapat fitur 
+	search bar untuk mencari produk dan setiap produk punya tombol Edit dan Delete. 
+
+	7. Edit Product page : Digunakan untuk mengubah data produk yang sudah ada. Admin bisa 
+	memperbarui nama, deskripsi, harga, atau stok produk. Setelah klik Update, akan muncul 
+	pesan notifikasi “Produk berhasil diupdate!”.  
+
+	8. Add Products page : Digunakan untuk menambahkan produk baru ke dalam database. 
+	Form terdiri atas nama barang, keterangan, harga satuan, stok, dan unggahan gambar produk. 
+	Setiap produk akan memiliki id walaupun tidak dimasukkan oleh admin, id bersifat auto
+	increment (id tidak bisa diedit/diotak-atik). Jika berhasil akan ada notifikasi “Produk berhasil
+
+	9. Delete Product : Digunakan untuk menghapus produk dari daftar. Saat klik Delete, muncul
+	konfirmasi “Yakin mau hapus produk ini?”. Jika pilih OK, produk terhapus dan muncul
+	pesan “Produk berhasil dihapus!”.
