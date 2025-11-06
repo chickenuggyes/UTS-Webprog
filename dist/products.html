@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title id="dynamicTitle">Products</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* --- Background and overlay style (same as Add/Dashboard/Edit Pages) --- */
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background-image: url('../uploads/products.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      font-family: 'Poppins', Arial, sans-serif;
+    }
+
+    .bg-overlay {
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    /* --- Header glass boxes --- */
+    .header-box {
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      padding: 10px 25px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      display: inline-block;
+    }
+
+    .header-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: #ec4899;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
+    }
+
+    .header-store-box {
+      background: rgba(255, 255, 255, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .header-store {
+      font-size: 20px;
+      font-weight: 600;
+      color: #858383;
+      text-shadow: 0 1px 3px rgba(56, 52, 52, 0.4);
+    }
+
+    /* --- Product card enhancements --- */
+    .product-card {
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(236, 72, 153, 0.15);
+      border-radius: 16px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .product-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+
+<body class="font-sans">
+  <div class="flex h-screen relative">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-pink-100/90 shadow-lg flex flex-col relative z-10">
+      <div class="p-6 flex items-center justify-between">
+        <div class="flex flex-col">
+          <div id="sidebarUsername" class="text-2xl font-bold text-pink-600">Loading...</div>
+          <div class="text-xs text-gray-500 mt-1">Admin</div>
+        </div>
+        <button class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center" title="Profile">👤</button>
+      </div>
+
+      <nav class="flex-1 px-4 space-y-2">
+        <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+          <img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5"/>
+          Dashboard
+        </a>
+        <a href="products.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+          <img src="https://img.icons8.com/color/24/box--v1.png" class="mr-3 w-5 h-5"/>
+          Products
+        </a>
+        <a href="add.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+          <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5"/>
+          Add Product
+        </a>
+      </nav>
+
+      <div class="p-4 border-t">
+        <a href="#" id="logoutBtn" class="flex items-center p-2 rounded-lg hover:bg-red-100 text-red-600 hover:text-red-700 font-medium transition-colors">
+          <img src="https://img.icons8.com/color/24/exit.png" class="mr-3 w-5 h-5"/>
+          Sign Out
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 overflow-y-auto bg-overlay rounded-2xl shadow-md border border-pink-200 m-6 relative z-10">
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-6">
+        <div class="header-box">
+          <h1 class="header-title">Products</h1>
+        </div>
+        <div class="header-box header-store-box">
+          <span class="header-store">Toko Gembira</span>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="mb-6">
+        <div class="relative w-full">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔎</span>
+          <input id="searchInput" type="text" placeholder="Search products..."
+            class="w-full pl-9 pr-3 py-2 rounded-xl border border-pink-300 bg-white/80 shadow focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400"/>
+        </div>
+      </div>
+
+      <!-- Products Grid -->
+      <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Product cards will be injected here by JS -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Page Script -->
+  <script src="products.js"></script>
+
+  <script>
+    // Update page title with username
+    const userTitle = JSON.parse(localStorage.getItem('user') || '{}');
+    if (userTitle.username) {
+      document.title = userTitle.username + ' Products';
+    }
+
+    // Display username in sidebar
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const sidebarUsername = document.getElementById('sidebarUsername');
+    if (sidebarUsername && user.username) {
+      sidebarUsername.textContent = user.username;
+    }
+
+    // Logout logic
+    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+      e.preventDefault();
+      localStorage.removeItem('user');
+      window.location.href = '../src/login.html';
+    });
+
+    // Active link highlight
+    const currentPage = location.pathname.split("/").pop(); 
+    const sidebarLinks = document.querySelectorAll("aside nav a");
+    sidebarLinks.forEach(link => {
+      const href = link.getAttribute("href");
+      if (href === currentPage) {
+        link.classList.add("bg-pink-400", "text-white", "shadow");
+      } else {
+        link.classList.remove("bg-pink-400", "text-white", "shadow");
+      }
+    });
+  </script>
+</body>
+</html>
