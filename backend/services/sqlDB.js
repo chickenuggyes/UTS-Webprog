@@ -1,7 +1,6 @@
 import mysql from "mysql2/promise";
 import dotenv from "dotenv";
-
-dotenv.config();
+dotenv.config({ path: "../aiven.env" }); // karena file di dalam /services
 
 // --- Koneksi Pool (efisien & async)
 export const db = mysql.createPool({
@@ -13,9 +12,6 @@ export const db = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  ssl: {
-    rejectUnauthorized: true, // Aiven pakai SSL wajib
-  },
 });
 
 // --- Tes koneksi otomatis saat start
@@ -51,12 +47,12 @@ export const dbService = {
 
   // ========== ITEMS ==========
   async readItems() {
-    const [rows] = await db.query("SELECT * FROM items");
+    const [rows] = await db.query("SELECT * FROM products");
     return rows;
   },
 
   async writeItems(data) {
-    await db.query("DELETE FROM items");
+    await db.query("DELETE FROM products");
     for (const item of data) {
       await db.query(
         `INSERT INTO items (id, namaItem, keterangan, hargaSatuan, stok)
