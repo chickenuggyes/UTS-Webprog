@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title id="dynamicTitle">Transactions</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @media print { .no-print{display:none!important} }
+    body{
+      min-height:100vh;margin:0;
+      background-image:url('../uploads/dashboard.jpg');
+      background-size:cover;background-position:center;background-attachment:fixed;
+      font-family:'Poppins',Arial,sans-serif;
+    }
+    .bg-overlay{background:rgba(255,255,255,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+    .header-box{background:rgba(255,255,255,.3);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      border-radius:16px;border:1px solid rgba(255,255,255,.4);padding:10px 25px;box-shadow:0 4px 10px rgba(0,0,0,.1);display:inline-block}
+    .header-title{font-size:26px;font-weight:700;color:#ec4899;text-shadow:0 1px 2px rgba(255,255,255,.7)}
+    .header-store-box{background:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.5)}
+    .header-store{font-size:20px;font-weight:600;color:#858383;text-shadow:0 1px 3px rgba(56,52,52,.4)}
+  </style>
+</head>
+<body class="font-sans">
+<div class="flex h-screen">
+  <!-- Sidebar -->
+  <aside class="w-64 bg-pink-100/90 shadow-lg flex flex-col no-print relative z-10">
+    <div class="p-6 flex items-center justify-between">
+      <div class="flex flex-col">
+        <div id="sidebarUsername" class="text-2xl font-bold text-pink-600">Loading...</div>
+        <div class="text-xs text-gray-500 mt-1">Admin</div>
+      </div>
+      <button class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center" title="Profile">👤</button>
+    </div>
+    <nav class="flex-1 px-4 space-y-2">
+      <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+        <img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5"/> Dashboard
+      </a>
+      <a href="products.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+        <img src="https://img.icons8.com/color/24/box--v1.png" class="mr-3 w-5 h-5"/> Products
+      </a>
+      <a href="add.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+        <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5" />
+        Add Product
+      </a>
+      <a href="transaction.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+        <img src="https://img.icons8.com/color/24/transaction-list.png" class="mr-3 w-5 h-5"/> Transactions
+      </a>
+    </nav>
+    <div class="p-4 border-t">
+      <a href="#" id="logoutBtn" class="flex items-center p-2 rounded-lg hover:bg-red-100 text-red-600 hover:text-red-700 font-medium transition-colors">
+        <img src="https://img.icons8.com/color/24/exit.png" class="mr-3 w-5 h-5"/> Sign Out
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 p-6 overflow-y-auto bg-overlay rounded-2xl shadow-md border border-pink-200 m-6 relative z-10">
+    <div class="flex justify-between items-center mb-6 no-print">
+      <div class="header-box"><h1 class="header-title">Transactions</h1></div>
+      <div class="header-box header-store-box"><span class="header-store">Toko Gembira</span></div>
+    </div>
+
+    <div id="txError" class="text-red-600 mb-4 no-print"></div>
+
+    <!-- Stats (pakai API dashboard yang sama) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
+      <div class="bg-white/80 p-4 rounded-lg shadow border border-pink-100">
+        <p class="text-gray-500">Total Item</p><h2 id="totalItem" class="text-3xl font-bold">...</h2>
+      </div>
+      <div class="bg-white/80 p-4 rounded-lg shadow border border-pink-100">
+        <p class="text-gray-500">Total Stok</p><h2 id="totalStok" class="text-3xl font-bold">...</h2>
+      </div>
+      <div class="bg-white/80 p-4 rounded-lg shadow border border-pink-100">
+        <p class="text-gray-500">Total Harga</p><h2 id="totalHarga" class="text-3xl font-bold">...</h2>
+      </div>
+    </div>
+
+    <!-- Menu: In / Out / History -->
+    <div class="mt-10 mb-6 flex items-center justify-between no-print">
+      <div class="inline-flex rounded-lg bg-white/60 p-1 shadow border border-pink-100">
+        <button id="btnIn"
+          class="px-4 py-2 rounded-md font-semibold text-pink-600 hover:bg-pink-50">In</button>
+        <button id="btnOut"
+          class="px-4 py-2 rounded-md font-semibold text-pink-600 hover:bg-pink-50">Out</button>
+        <button id="btnHistory"
+          class="px-4 py-2 rounded-md font-semibold bg-pink-500 text-white">History</button>
+      </div>
+      <div></div>
+    </div>
+
+    <!-- History List -->
+    <div id="historyContainer" class="bg-white/80 rounded-lg shadow border border-pink-100">
+      <div class="px-4 py-3 border-b text-sm text-gray-600">Riwayat transaksi terbaru</div>
+      <div class="p-4 overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead>
+            <tr class="text-left text-gray-500">
+              <th class="py-2 pr-4">Tanggal</th>
+              <th class="py-2 pr-4">Tipe</th>
+              <th class="py-2 pr-4">Barang</th>
+              <th class="py-2 pr-4">Qty</th>
+              <th class="py-2 pr-4">Supplier</th>
+              <th class="py-2 pr-4">Catatan</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="6" class="py-4 text-gray-500">Memuat…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  const API="http://localhost:3000";
+  const rupiah=(n)=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n||0));
+
+  // Title, auth, active link
+  (function(){
+    const u=JSON.parse(localStorage.getItem('user')||'{}');
+    if(u.username){ document.title=u.username+' Transactions'; const sb=document.getElementById('sidebarUsername'); if(sb) sb.textContent=u.username; }
+    document.getElementById('logoutBtn')?.addEventListener('click',(e)=>{e.preventDefault();localStorage.removeItem('user');location.href='../src/login.html';});
+    const current=location.pathname.split("/").pop();
+    document.querySelectorAll("aside nav a").forEach(a=>{ const href=a.getAttribute("href"); if(href===current)a.classList.add("bg-pink-400","text-white","shadow"); else a.classList.remove("bg-pink-400","text-white","shadow"); });
+  })();
+
+  // Buttons
+  document.getElementById('btnIn').addEventListener('click',()=>location.href='in.html');
+  document.getElementById('btnOut').addEventListener('click',()=>location.href='out.html');
+  document.getElementById('btnHistory').addEventListener('click',()=>{}); // stay here
+
+  // Load stats + history
+  async function getJSON(url){ const r=await fetch(url); if(!r.ok) throw new Error(r.status+' '+r.statusText); return r.json(); }
+  (async ()=>{
+    try{
+      const dash=await getJSON(`${API}/dashboard`);
+      document.getElementById('totalItem').textContent=dash.totalItem??0;
+      document.getElementById('totalStok').textContent=dash.totalStok??0;
+      document.getElementById('totalHarga').textContent=rupiah(dash.totalHarga??0);
+    }catch(e){ document.getElementById('txError').textContent=e.message||'Gagal memuat statistik'; }
+
+    const tbody=document.getElementById('historyBody');
+    try{
+      // sesuaikan endpoint jika beda: /transactions atau /history
+      const resp=await getJSON(`${API}/transactions`);
+      const rows=(resp?.transactions||resp?.data||resp)||[];
+      if(rows.length===0){ tbody.innerHTML=`<tr><td colspan="6" class="py-4 text-gray-500">Belum ada riwayat transaksi.</td></tr>`; return; }
+      tbody.innerHTML=rows.map(t=>`
+        <tr class="border-t">
+          <td class="py-2 pr-4">${t.tanggal || t.date || '-'}</td>
+          <td class="py-2 pr-4 ${t.tipe==='OUT'?'text-red-600':'text-green-600'}">${(t.tipe||t.type||'-').toUpperCase()}</td>
+          <td class="py-2 pr-4">${t.namaItem || t.itemName || t.item || '-'}</td>
+          <td class="py-2 pr-4">${t.qty ?? t.jumlah ?? '-'}</td>
+          <td class="py-2 pr-4">${t.supplier || t.namaSupplier || '-'}</td>
+          <td class="py-2 pr-4">${t.catatan || t.note || '-'}</td>
+        </tr>
+      `).join('');
+    }catch(e){
+      tbody.innerHTML=`<tr><td colspan="6" class="py-4 text-gray-500">Belum ada data history atau endpoint belum tersedia.</td></tr>`;
+    }
+  })();
+</script>
+</body>
+</html>

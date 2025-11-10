@@ -7,14 +7,16 @@ document.getElementById("addProductForm").addEventListener("submit", async (e) =
   const keterangan  = document.getElementById("keterangan").value.trim();
   const hargaSatuan = document.getElementById("hargaSatuan").value.trim();
   const stok        = document.getElementById("stok").value.trim();
-  const file        = document.getElementById("fotoInput").files[0];
+  const kategori    = document.getElementById("kategori") ? document.getElementById("kategori").value : "";
+  const foto        = document.getElementById("fotoInput").files[0];
 
   const fd = new FormData();
   fd.append("namaItem", namaItem);
   fd.append("keterangan", keterangan);
   fd.append("hargaSatuan", hargaSatuan);
   fd.append("stok", stok);
-  if (file) fd.append("foto", file); 
+  if (kategori) fd.append("kategori", kategori);
+  if (foto) fd.append("foto", file); 
 
   const btn = e.target.querySelector('button[type="submit"]');
   btn.disabled = true;

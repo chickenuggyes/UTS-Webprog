@@ -17,13 +17,13 @@ document.getElementById('showLogin').addEventListener('click', function(e) {
 
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    const username = document.getElementById('username').value.trim();
+    const identifier = document.getElementById('identifier').value.trim();
     const password = document.getElementById('password').value.trim();
     const errorDiv = document.getElementById('error');
     errorDiv.style.display = 'none';
-
-    if (!username || !password) {
-        errorDiv.textContent = 'Username dan password wajib diisi.';
+    // Require identifier (username/email) and password for login
+    if (!identifier || !password) {
+        errorDiv.textContent = 'Username/email dan password wajib diisi.';
         errorDiv.style.display = 'block';
         return;
     }
@@ -34,7 +34,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ identifier, password })
         });
         if (response.ok) {
             const data = await response.json();
@@ -55,6 +55,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 document.getElementById('registerForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const username = document.getElementById('regUsername').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
     const password = document.getElementById('regPassword').value.trim();
     const errorDiv = document.getElementById('error');
     errorDiv.style.display = 'none';
@@ -71,15 +72,16 @@ document.getElementById('registerForm').addEventListener('submit', async functio
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ username, email, password })
         });
         if (response.ok) {
+            // auto-login using the newly created username as identifier
             const loginResponse = await fetch('http://localhost:3000/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ identifier: username, password })
             });
             if (loginResponse.ok) {
                 const loginData = await loginResponse.json();

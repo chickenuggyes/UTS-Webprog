@@ -2,6 +2,8 @@ const API = "http://localhost:3000"; // ganti saat deploy
 
 const grid   = document.getElementById("grid");
 const search = document.getElementById("searchInput");
+const chipsContainer = document.getElementById('categoryChips');
+const SELECTED_CATEGORIES = new Set();
 
 let PRODUCTS = [];
 const fmt = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
@@ -47,6 +49,7 @@ function render(list) {
 
 function applySearch() {
   const q = (search.value || "").toLowerCase().trim();
+  const catSet = SELECTED_CATEGORIES;
   const filtered = q
     ? PRODUCTS.filter(p =>
         [p.namaItem, p.keterangan]
@@ -54,7 +57,10 @@ function applySearch() {
           .some(s => String(s).toLowerCase().includes(q))
       )
     : PRODUCTS;
-  render(filtered);
+  const filteredByCat = (catSet && catSet.size > 0)
+    ? filtered.filter(p => catSet.has(String(p.kategori || "")))
+    : filtered;
+  render(filteredByCat);
 }
 
 function editProduct(id) {
@@ -89,6 +95,26 @@ async function deleteProduct(id) {
 }
 
 search.addEventListener("input", applySearch);
+
+// chips click handling (toggle category)
+if (chipsContainer) {
+  chipsContainer.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip');
+    if (!btn) return;
+    const val = btn.getAttribute('data-value') || '';
+    if (SELECTED_CATEGORIES.has(val)) {
+      SELECTED_CATEGORIES.delete(val);
+      btn.classList.remove('selected');
+    } else {
+      SELECTED_CATEGORIES.add(val);
+      btn.classList.add('selected');
+    }
+
+    // update chips label states handled by class
+    // apply search/filter
+    applySearch();
+  });
+}
 
 reloadProducts().catch(() => {
   grid.innerHTML =

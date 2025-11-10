@@ -1,5 +1,7 @@
-import { db } from "../services/sqlDB.js"; // ganti dari jsonDB.js ke sqlDB.js
+import { db } from "../services/sqlDB.js";
+import bcrypt from "bcrypt";
 
+/* ===================== Helper Functions ===================== */
 function generateUserId() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let id = "";
@@ -23,27 +25,36 @@ function generateUniqueUserId(existingIds, maxTry = 100) {
 // POST /login
 export async function login(req, res) {
   try {
-    const { username, password } = req.body || {};
-    if (!username?.trim() || !password?.trim()) {
-      return res.status(400).json({ message: "Username dan password wajib diisi" });
+    const { identifier, password } = req.body || {}; // identifier = username atau email
+
+    if (!identifier?.trim() || !password?.trim()) {
+      return res.status(400).json({ message: "Username/email dan password wajib diisi" });
     }
 
+    // cari user berdasarkan username atau email
     const [rows] = await db.query(
-      "SELECT id, username, password FROM users WHERE username = ? AND password = ?",
-      [username, password]
+      "SELECT id, username, email, password FROM users WHERE username = ? OR email = ? LIMIT 1",
+      [identifier, identifier]
     );
 
     if (rows.length === 0) {
-      return res.status(401).json({ message: "Login gagal" });
+      return res.status(401).json({ message: "User tidak ditemukan" });
     }
 
     const user = rows[0];
+
+    // cocokkan password (karena sudah di-hash)
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Password salah" });
+    }
+
     return res.json({
       message: "Login sukses",
-      user: { id: user.id, username: user.username }
+      user: { id: user.id, username: user.username, email: user.email }
     });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error login:", err);
     res.status(500).json({ message: "Terjadi kesalahan server" });
   }
 }
@@ -51,43 +62,45 @@ export async function login(req, res) {
 // POST /register
 export async function register(req, res) {
   try {
-    const { username, password } = req.body || {};
-    if (!username?.trim() || !password?.trim()) {
-      return res.status(400).json({ message: "Username dan password wajib diisi" });
+    const { username, email, password } = req.body || {};
+
+    if (!username?.trim() || !email?.trim() || !password?.trim()) {
+      return res.status(400).json({ message: "Username, email, dan password wajib diisi" });
     }
 
     if (password.length < 4) {
       return res.status(400).json({ message: "Password minimal 4 karakter" });
     }
 
+    // cek apakah username/email sudah dipakai
     const [existingUser] = await db.query(
-      "SELECT username FROM users WHERE username = ?",
-      [username]
+      "SELECT username, email FROM users WHERE username = ? OR email = ?",
+      [username, email]
     );
 
     if (existingUser.length > 0) {
-      return res.status(409).json({ message: "Username sudah terdaftar" });
+      return res.status(409).json({ message: "Username atau email sudah terdaftar" });
     }
 
-    // ambil semua ID dari database
+    // ambil semua ID buat bikin ID unik
     const [allUsers] = await db.query("SELECT id FROM users");
     const existingIds = allUsers.map(u => u.id);
-
-    // generate ID unik
     const id = generateUniqueUserId(existingIds);
 
-    // insert user baru
+    // hash password sebelum simpan
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     await db.query(
-      "INSERT INTO users (id, username, password) VALUES (?, ?, ?)",
-      [id, username, password]
+      "INSERT INTO users (id, username, email, password) VALUES (?, ?, ?, ?)",
+      [id, username, email, hashedPassword]
     );
 
     return res.status(201).json({
       message: "Registrasi berhasil",
-      user: { id, username }
+      user: { id, username, email }
     });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error register:", err);
     res.status(500).json({ message: "Terjadi kesalahan server" });
   }
 }

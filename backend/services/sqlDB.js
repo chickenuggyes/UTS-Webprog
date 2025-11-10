@@ -34,36 +34,66 @@ export const db = mysql.createPool({
 export const dbService = {
   // ========== USERS ==========
   async readUsers() {
-    const [rows] = await db.query("SELECT * FROM users");
+    const [rows] = await db.query("SELECT id, username, email FROM users");
     return rows;
   },
 
-  async writeUsers(data) {
-    await db.query("DELETE FROM users");
-    for (const user of data) {
-      await db.query(
-        "INSERT INTO users (id, username, password) VALUES (?, ?, ?)",
-        [user.id, user.username, user.password]
-      );
-    }
+  async createUser({ username, email, password }) {
+    // Asumsikan password sudah di-hash sebelum dikirim ke sini
+    const [result] = await db.query(
+      "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+      [username, email, password]
+    );
+    return result.insertId;
+  },
+
+async findUserByIdentifier(identifier) {
+    // Bisa cari berdasarkan username atau email
+    const [rows] = await db.query(
+      "SELECT * FROM users WHERE username = ? OR email = ? LIMIT 1",
+      [identifier, identifier]
+    );
+    return rows[0] || null;
+  },
+
+  async findUserByUsername(username) {
+    const [rows] = await db.query("SELECT * FROM users WHERE username = ?", [
+      username,
+    ]);
+    return rows[0] || null;
   },
 
   // ========== ITEMS ==========
-  async readItems() {
+  async readProduct() {
     const [rows] = await db.query("SELECT * FROM products");
     return rows;
   },
 
-  async writeItems(data) {
-    await db.query("DELETE FROM products");
-    for (const item of data) {
-      await db.query(
-        `INSERT INTO items (id, namaItem, keterangan, hargaSatuan, stok)
-         VALUES (?, ?, ?, ?, ?)`,
-        [item.id, item.namaItem, item.keterangan, item.hargaSatuan, item.stok]
-      );
-    }
-  },
+async upsertProduct(product) {
+  await db.query(
+    `INSERT INTO products 
+      (id, namaItem, catid, supid, keterangan, hargaSatuan, stok, foto)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE 
+       namaItem = VALUES(namaItem),
+       catid = VALUES(catid),
+       supid = VALUES(supid),
+       keterangan = VALUES(keterangan),
+       hargaSatuan = VALUES(hargaSatuan),
+       stok = VALUES(stok),
+       foto = VALUES(foto)`,
+    [
+      product.id,
+      product.namaItem,
+      product.catid,
+      product.supid,
+      product.keterangan,
+      product.hargaSatuan,
+      product.stok,
+      product.foto
+    ]
+  );
+},
 
   // ========== NEXT ID AUTO ==========
   async nextId(table, idColumn = "id") {

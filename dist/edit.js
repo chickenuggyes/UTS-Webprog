@@ -8,7 +8,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const namaBarang  = document.getElementById("namaBarang");
   const keterangan  = document.getElementById("keterangan");
   const hargaSatuan = document.getElementById("hargaSatuan");
-  const stok        = document.getElementById("stok");
+  const kategori    = document.getElementById("kategori");
   const fotoInput   = document.getElementById("fotoInput");
   const photoBox    = document.getElementById("photoBox");
 
@@ -54,10 +54,10 @@ window.addEventListener("DOMContentLoaded", async () => {
       if (!id) throw new Error("Parameter id tidak ditemukan");
       const data = await fetchItem(id);
 
-      namaBarang.value  = data.namaItem     ?? "";
-      keterangan.value  = data.keterangan   ?? "";
-      hargaSatuan.value = data.hargaSatuan  ?? "";
-      stok.value        = data.stok         ?? "";
+  namaBarang.value  = data.namaItem     ?? "";
+  keterangan.value  = data.keterangan   ?? "";
+  hargaSatuan.value = data.hargaSatuan  ?? "";
+  if (kategori) kategori.value = data.kategori ?? "";
 
       const img = resolveImg(data.foto);
       photoBox.innerHTML =
@@ -72,8 +72,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     try {
-      const fd = new FormData(form);
-      fd.append("namaItem", fd.get("namaBarang"));
+  const fd = new FormData(form);
+  fd.append("namaItem", fd.get("namaBarang"));
 
       const res = await fetch(`${API}/items/${id}`, { method: "PUT", body: fd });
       if (!res.ok) {
