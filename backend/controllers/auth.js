@@ -104,3 +104,36 @@ export async function register(req, res) {
     res.status(500).json({ message: "Terjadi kesalahan server" });
   }
 }
+export function updateProfile(req, res) {
+  const { id, username, email, password } = req.body || {};
+  if (!id) return res.status(400).json({ message: "User id is required" });
+
+  const users = db.readUsers();
+  const userIndex = users.findIndex(u => u.id === id);
+  if (userIndex === -1) return res.status(404).json({ message: "User not found" });
+
+  // validate inputs if provided
+  if (username && !username.toString().trim()) {
+    return res.status(400).json({ message: "Username tidak valid" });
+  }
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.toString())) {
+    return res.status(400).json({ message: "Email tidak valid" });
+  }
+  if (password && password.length < 4) {
+    return res.status(400).json({ message: "Password must be at least 4 characters" });
+  }
+
+  // ensure username/email uniqueness among other users
+  const conflict = users.find(u => u.id !== id && ( (username && u.username === username) || (email && u.email === email) ));
+  if (conflict) return res.status(409).json({ message: "Username atau email sudah digunakan" });
+
+  const user = users[userIndex];
+  if (username) user.username = username;
+  if (email) user.email = email;
+  if (password) user.password = password;
+
+  users[userIndex] = user;
+  db.writeUsers(users);
+
+  return res.json({ message: "Profile updated", user: { id: user.id, username: user.username, email: user.email } });
+}

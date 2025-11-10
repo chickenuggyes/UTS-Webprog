@@ -14,7 +14,7 @@ export async function report(req, res) {
     const minHarga = Number(req.query.minHarga || 0);
     const maxHarga = Number(req.query.maxHarga || Number.MAX_SAFE_INTEGER);
 
-    let sql = `SELECT * FROM items WHERE hargaSatuan BETWEEN ? AND ?`;
+    let sql = `SELECT * FROM products WHERE hargaSatuan BETWEEN ? AND ?`;
     const params = [minHarga, maxHarga];
 
     if (q) {
@@ -37,7 +37,7 @@ export async function dashboard(req, res) {
         COUNT(*) AS totalItem,
         SUM(stok) AS totalStok,
         SUM(hargaSatuan * stok) AS totalHarga
-      FROM items
+      FROM products
     `);
 
     res.json({
@@ -54,7 +54,7 @@ export async function dashboard(req, res) {
 export async function reportPdf(req, res) {
   try {
     const q = (req.query.q || "").toLowerCase();
-    let sql = "SELECT * FROM items";
+    let sql = "SELECT * FROM products";
     const params = [];
 
     if (q) {
