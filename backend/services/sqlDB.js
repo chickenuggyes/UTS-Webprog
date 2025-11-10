@@ -1,6 +1,11 @@
 import mysql from "mysql2/promise";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import dotenv from "dotenv";
-dotenv.config({ path: "../aiven.env" }); // karena file di dalam /services
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: join(__dirname, "../aiven.env") }); 
 
 // --- Koneksi Pool (efisien & async)
 export const db = mysql.createPool({
@@ -12,9 +17,9 @@ export const db = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  ssl: {
-    rejectUnauthorized: true, // Aiven pakai SSL wajib
-  },
+  //ssl: {
+     //ca: fs.readFileSync(new URL("./ca.pem", import.meta.url)), // Aiven pakai SSL wajib
+  //},
 });
 
 // --- Tes koneksi otomatis saat start
