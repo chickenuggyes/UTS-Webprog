@@ -11,6 +11,7 @@ import fs from "fs";
 import authRoutes from "./routes/authRoutes.js";
 import itemsRoutes from "./routes/mainMenuRoutes.js";
 import reportRoutes from "./routes/report.js";
+import supplierRoutes from "./routes/supplierRoutes.js"; // ✅ Tambahan route supplier
 import { dashboard } from "./controllers/report.js";
 
 dotenv.config();
@@ -45,6 +46,7 @@ app.use("/dist", express.static(path.join(__dirname, "../dist")));
 app.use("/login", authRoutes);
 app.use("/items", itemsRoutes);
 app.use("/report", reportRoutes);
+app.use("/suppliers", supplierRoutes);
 
 // Ringkasan dashboard
 app.get("/dashboard", dashboard);
@@ -56,7 +58,6 @@ app.get("/", (req, res) => {
 /* ---------- Error handler (paling akhir) ---------- */
 app.use((err, req, res, next) => {
   console.error("Server error:", err);
-  // jika error dari multer (limit size, file type, dll) akan masuk ke sini juga
   res.status(500).json({ message: err.message || "Internal Server Error" });
 });
 
