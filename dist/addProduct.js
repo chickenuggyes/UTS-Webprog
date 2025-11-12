@@ -10,13 +10,16 @@ document.getElementById("addProductForm").addEventListener("submit", async (e) =
   const kategori    = document.getElementById("kategori") ? document.getElementById("kategori").value : "";
   const foto        = document.getElementById("fotoInput").files[0];
 
-  const fd = new FormData();
-  fd.append("namaItem", namaItem);
-  fd.append("keterangan", keterangan);
-  fd.append("hargaSatuan", hargaSatuan);
-  fd.append("stok", stok);
-  if (kategori) fd.append("catid", kategori);
-  if (foto) fd.append("foto", foto); 
+const fd = new FormData();
+fd.append("namaItem", namaItem);
+fd.append("keterangan", keterangan);
+fd.append("hargaSatuan", hargaSatuan);
+fd.append("stok", stok);
+if (kategori) fd.append("catid", kategori);
+const supplier = document.getElementById("supplier") ? document.getElementById("supplier").value : "";
+if (supplier) fd.append("supid", supplier);
+if (foto) fd.append("foto", foto);
+
 
   const btn = e.target.querySelector('button[type="submit"]');
   btn.disabled = true;
