@@ -158,9 +158,19 @@
         </div>
       </div>
 
-      <!-- Products header + Print button -->
+            <!-- Tabs + Print -->
       <div class="mt-10 mb-3 flex items-center justify-between no-print">
-        <h2 class="text-lg font-semibold">Products</h2>
+        <!-- Tabs -->
+        <div class="inline-flex rounded-lg bg-white/60 p-1 shadow border border-pink-100">
+          <button id="tabProducts"
+                  class="px-4 py-2 rounded-md font-semibold bg-pink-500 text-white transition">
+            Products
+          </button>
+          <button id="tabSuppliers"
+                  class="px-4 py-2 rounded-md font-semibold text-pink-600 hover:bg-pink-50 transition">
+            Suppliers
+          </button>
+        </div>
         <button onclick="handlePrint()"
                 class="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 shadow">
           Print
@@ -169,7 +179,8 @@
 
       <!-- List (screen only) -->
       <ul id="listProducts" class="space-y-3 no-print"></ul>
-
+      <ul id="listSuppliers" class="space-y-3 no-print hidden"></ul>
+      
       <!-- PRINT-ONLY AREA -->
       <section id="printArea" class="hidden">
         <h1 class="text-xl font-bold mb-2">Daftar Produk — Toko Gembira</h1>
