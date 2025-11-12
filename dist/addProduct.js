@@ -15,8 +15,8 @@ document.getElementById("addProductForm").addEventListener("submit", async (e) =
   fd.append("keterangan", keterangan);
   fd.append("hargaSatuan", hargaSatuan);
   fd.append("stok", stok);
-  if (kategori) fd.append("kategori", kategori);
-  if (foto) fd.append("foto", file); 
+  if (kategori) fd.append("catid", kategori);
+  if (foto) fd.append("foto", foto); 
 
   const btn = e.target.querySelector('button[type="submit"]');
   btn.disabled = true;
