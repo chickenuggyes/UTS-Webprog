@@ -39,12 +39,20 @@ window.addEventListener("DOMContentLoaded", async () => {
     `;
   }
 
+  // --- SUPPLIER ROW BARU: nama + kontak + alamat ---
   function supplierRow(s) {
-    const name = s?.namaSupplier || s?.nama || s?.name || "-";
+    const name   = s?.namaSupplier || s?.nama || s?.name || "-";
+    const kontak = s?.kontak || s?.telepon || s?.phone || "-";
+    const alamat = s?.alamat || s?.address || "-";
+
     return `
       <li class="bg-white rounded-lg shadow border p-3 flex items-center gap-3">
         <span class="text-2xl">🏷️</span>
-        <span class="font-medium">${name}</span>
+        <div class="flex-1">
+          <div class="font-medium">${name}</div>
+          <div class="text-sm text-gray-600">Telp: ${kontak}</div>
+          <div class="text-xs text-gray-500">${alamat}</div>
+        </div>
       </li>
     `;
   }
@@ -88,39 +96,39 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (elItem)  elItem.textContent  = "—";
     if (elStok)  elStok.textContent  = "—";
     if (elHarga) elHarga.textContent = "—";
-    if (listProductsEl) listProductsEl.innerHTML = `<li class="text-red-600">${err.message}</li>`;
+    if (listProductsEl) listProductsEl.innerHTML =
+      `<li class="text-red-600">${err.message}</li>`;
   }
 
   // ------- Tabs behavior -------
-function setActiveTab(tab) {
-  const activeAdd       = ["bg-pink-500","text-white"];
-  const activeRemove    = ["text-pink-600","hover:bg-pink-50"];
-  const inactiveAdd     = ["text-pink-600","hover:bg-pink-50"];
-  const inactiveRemove  = ["bg-pink-500","text-white"];
+  function setActiveTab(tab) {
+    const activeAdd       = ["bg-pink-500","text-white"];
+    const activeRemove    = ["text-pink-600","hover:bg-pink-50"];
+    const inactiveAdd     = ["text-pink-600","hover:bg-pink-50"];
+    const inactiveRemove  = ["bg-pink-500","text-white"];
 
-  if (tab === "products") {
-    // products -> aktif
-    tabProducts.classList.add(...activeAdd);
-    tabProducts.classList.remove(...activeRemove);
-    // suppliers -> non-aktif
-    tabSuppliers.classList.add(...inactiveAdd);
-    tabSuppliers.classList.remove(...inactiveRemove);
+    if (tab === "products") {
+      // products -> aktif
+      tabProducts.classList.add(...activeAdd);
+      tabProducts.classList.remove(...activeRemove);
+      // suppliers -> non-aktif
+      tabSuppliers.classList.add(...inactiveAdd);
+      tabSuppliers.classList.remove(...inactiveRemove);
 
-    listProductsEl?.classList.remove("hidden");
-    listSuppliersEl?.classList.add("hidden");
-  } else {
-    // suppliers -> aktif
-    tabSuppliers.classList.add(...activeAdd);
-    tabSuppliers.classList.remove(...activeRemove);
-    // products -> non-aktif
-    tabProducts.classList.add(...inactiveAdd);
-    tabProducts.classList.remove(...inactiveRemove);
+      listProductsEl?.classList.remove("hidden");
+      listSuppliersEl?.classList.add("hidden");
+    } else {
+      // suppliers -> aktif
+      tabSuppliers.classList.add(...activeAdd);
+      tabSuppliers.classList.remove(...activeRemove);
+      // products -> non-aktif
+      tabProducts.classList.add(...inactiveAdd);
+      tabProducts.classList.remove(...inactiveRemove);
 
-    listSuppliersEl?.classList.remove("hidden");
-    listProductsEl?.classList.add("hidden");
+      listSuppliersEl?.classList.remove("hidden");
+      listProductsEl?.classList.add("hidden");
+    }
   }
-}
-
 
   async function ensureSuppliersLoaded() {
     if (!listSuppliersEl) return;
@@ -132,13 +140,17 @@ function setActiveTab(tab) {
       const suppliers = resp?.suppliers || resp || [];
       cachedSuppliers = suppliers;
       if (suppliers.length === 0) {
-        listSuppliersEl.innerHTML = `<li class="text-gray-500">Belum ada data supplier.</li>`;
+        listSuppliersEl.innerHTML =
+          `<li class="text-gray-500">Belum ada data supplier.</li>`;
       } else {
         listSuppliersEl.innerHTML = suppliers.map(supplierRow).join("");
       }
     } catch (e) {
       cachedSuppliers = []; // tandai sudah coba
-      listSuppliersEl.innerHTML = `<li class="text-gray-500">Belum ada data supplier atau endpoint belum tersedia.</li>`;
+      listSuppliersEl.innerHTML =
+        `<li class="text-gray-500">
+          Belum ada data supplier atau endpoint belum tersedia.
+        </li>`;
     }
   }
 

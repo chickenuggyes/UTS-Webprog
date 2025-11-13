@@ -1,4 +1,6 @@
-// transaction.js
+// transaction.js (versi pakai mapping produk -> supplier)
+
+// Jalankan setelah DOM siap
 document.addEventListener("DOMContentLoaded", () => {
   const API = "http://localhost:3000";
 
@@ -70,11 +72,95 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   })();
 
-  // ---------- Load history ----------
+  // ---------- Mapping produk & supplier ----------
+  let itemsById     = {};
+  let itemsByName   = {};
+  let suppliersById = {};
+
+  async function ensureMetaLoaded() {
+    // kalau sudah pernah load, skip
+    if (Object.keys(itemsById).length > 0 || Object.keys(suppliersById).length > 0) {
+      return;
+    }
+
+    try {
+      const [itemsRes, supRes] = await Promise.all([
+        getJSON(`${API}/items`),
+        getJSON(`${API}/suppliers`),
+      ]);
+
+      const items = itemsRes.items || itemsRes || [];
+      const sups  = supRes.suppliers || supRes || [];
+
+      itemsById = {};
+      itemsByName = {};
+      items.forEach((it) => {
+        const id   = it.id || it.itemId || it._id;
+        const name = (it.namaItem || it.name || it.nama || "").toLowerCase();
+        if (!id) return;
+        itemsById[id] = it;
+        if (name) itemsByName[name] = it;
+      });
+
+      suppliersById = {};
+      sups.forEach((s) => {
+        const id   = s.supid || s.id || s.kode || s.code;
+        const name = s.namaSupplier || s.nama || s.name || id;
+        if (!id) return;
+        suppliersById[id] = name;
+      });
+    } catch (e) {
+      console.error("Gagal load items/suppliers:", e);
+      itemsById = {};
+      itemsByName = {};
+      suppliersById = {};
+    }
+  }
+
+  function getSupplierNameForTx(t) {
+    // 1) coba ambil dari field supplier di transaksi (kalau backend sudah kirim supid)
+    let supId =
+      t.supplier_id ||
+      t.supplierId ||
+      t.supid ||
+      t.supId ||
+      null;
+
+    // 2) kalau belum ada, coba dari product_id
+    if (!supId) {
+      const prodId =
+        t.product_id ||
+        t.productId ||
+        t.idBarang ||
+        null;
+      if (prodId && itemsById[prodId]) {
+        supId = itemsById[prodId].supid || itemsById[prodId].supplier_id || null;
+      }
+    }
+
+    // 3) kalau belum juga, match berdasarkan nama barang
+    if (!supId) {
+      const nameKey = (t.namaItem || t.itemName || t.item || "").toLowerCase();
+      const prod    = itemsByName[nameKey];
+      if (prod) {
+        supId = prod.supid || prod.supplier_id || null;
+      }
+    }
+
+    // 4) konversi supId ke nama supplier
+    if (supId && suppliersById[supId]) return suppliersById[supId];
+    if (supId) return supId; // fallback: tampilkan id kalau nama nggak ketemu
+    return "-";
+  }
+
+  // ---------- Load history + supplier name ----------
   (async function loadHistory() {
     if (!tbodyHist) return;
+
+    // pastikan map produk & supplier sudah ada
+    await ensureMetaLoaded();
+
     try {
-      // sesuaikan kalau endpoint kamu beda, mis. /history
       const resp = await getJSON(`${API}/transactions`);
       const rows = resp?.transactions || resp?.data || resp || [];
 
@@ -85,22 +171,30 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       tbodyHist.innerHTML = rows
-        .map(
-          (t) => `
-        <tr class="border-t">
-          <td class="py-2 pr-4">${t.tanggal || t.date || "-"}</td>
-          <td class="py-2 pr-4 ${
-            (t.tipe || t.type) === "OUT" ? "text-red-600" : "text-green-600"
-          }">${(t.tipe || t.type || "-").toUpperCase()}</td>
-          <td class="py-2 pr-4">${t.namaItem || t.itemName || t.item || "-"}</td>
-          <td class="py-2 pr-4">${t.qty ?? t.jumlah ?? "-"}</td>
-          <td class="py-2 pr-4">${t.supplier || t.namaSupplier || "-"}</td>
-          <td class="py-2 pr-4">${t.catatan || t.note || "-"}</td>
-        </tr>
-      `
-        )
+        .map((t) => {
+          const tanggal = t.tanggal || t.date || "-";
+          const tipeRaw = (t.tipe || t.type || "-").toUpperCase();
+          const tipeCls =
+            (t.tipe || t.type) === "OUT" ? "text-red-600" : "text-green-600";
+          const namaItem = t.namaItem || t.itemName || t.item || "-";
+          const qty = t.qty ?? t.jumlah ?? "-";
+          const supplierName = getSupplierNameForTx(t);
+          const note = t.catatan || t.note || "-";
+
+          return `
+            <tr class="border-t">
+              <td class="py-2 pr-4">${tanggal}</td>
+              <td class="py-2 pr-4 ${tipeCls}">${tipeRaw}</td>
+              <td class="py-2 pr-4">${namaItem}</td>
+              <td class="py-2 pr-4">${qty}</td>
+              <td class="py-2 pr-4">${supplierName}</td>
+              <td class="py-2 pr-4">${note}</td>
+            </tr>
+          `;
+        })
         .join("");
     } catch (e) {
+      console.error("Gagal load history:", e);
       tbodyHist.innerHTML =
         '<tr><td colspan="6" class="py-4 text-gray-500">Belum ada data history atau endpoint belum tersedia.</td></tr>';
     }

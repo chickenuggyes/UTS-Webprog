@@ -6,100 +6,276 @@
   <title>Stock Out</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      min-height: 100vh;
-      margin: 0;
-      background-image: url('../uploads/dashboard.jpg');
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-      font-family: 'Poppins', Arial, sans-serif;
+    body{
+      min-height:100vh;margin:0;
+      background-image:url('../uploads/dashboard.jpg');
+      background-size:cover;background-position:center;
+      background-attachment:fixed;
+      font-family:'Poppins',Arial,sans-serif
     }
-    .bg-overlay {
-      background: rgba(255, 255, 255, 0.65);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+    .bg-overlay{
+      background:rgba(255,255,255,.65);
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px)
     }
-    .header-box {
-      background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      padding: 10px 25px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      display: inline-block;
+    .header-box{
+      background:rgba(255,255,255,.3);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.4);
+      padding:10px 25px;
+      box-shadow:0 4px 10px rgba(0,0,0,.1);
+      display:inline-block
     }
-    .header-title {
-      font-size: 26px;
-      font-weight: 700;
-      color: #ec4899;
-    }
-    .input {
-      width: 100%;
-      border: 1px solid #f9a8d4;
-      background: rgba(255, 255, 255, 0.85);
-      padding: 0.65rem 0.9rem;
-      border-radius: 0.75rem;
-      outline: none;
+    .header-title{font-size:26px;font-weight:700;color:#ec4899}
+    .input{
+      width:100%;border:1px solid #f9a8d4;
+      background:rgba(255,255,255,.85);
+      padding:.65rem .9rem;border-radius:.75rem;outline:none
     }
   </style>
 </head>
-
 <body>
-  <div class="flex h-screen">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-pink-100/90 shadow-lg flex flex-col relative z-10">
-      <div class="p-6 flex items-center justify-between">
-        <div class="flex flex-col">
-          <div id="sidebarUsername" class="text-2xl font-bold text-pink-600">Loading...</div>
-          <div class="text-xs text-gray-500 mt-1">Admin</div>
+<div class="flex h-screen">
+  <!-- Sidebar -->
+  <aside class="w-64 bg-pink-100/90 shadow-lg flex flex-col relative z-10">
+    <div class="p-6 flex items-center justify-between">
+      <div class="flex flex-col">
+        <div id="sidebarUsername" class="text-2xl font-bold text-pink-600">Loading...</div>
+        <div class="text-xs text-gray-500 mt-1">Admin</div>
+      </div>
+      <button class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center">👤</button>
+    </div>
+    <nav class="flex-1 px-4 space-y-2">
+      <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+        <img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5"/>Dashboard
+      </a>
+      <a href="products.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+        <img src="https://img.icons8.com/color/24/box--v1.png" class="mr-3 w-5 h-5"/>Products
+      </a>
+      <a href="add.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+          <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5"/>
+          Add Product
+      </a>
+      <a href="transaction.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+        <img src="https://img.icons8.com/color/24/transaction-list.png" class="mr-3 w-5 h-5"/>Transactions
+      </a>
+    </nav>
+    <div class="p-4 border-t">
+      <a href="#" id="logoutBtn" class="flex items-center p-2 rounded-lg hover:bg-red-100 text-red-600 font-medium">
+        <img src="https://img.icons8.com/color/24/exit.png" class="mr-3 w-5 h-5"/>Sign Out
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 p-6 overflow-y-auto bg-overlay rounded-2xl shadow-md border border-pink-200 m-6">
+    <div class="flex justify-between items-center mb-6">
+      <div class="header-box"><h1 class="header-title">Stock Out</h1></div>
+    </div>
+
+    <div id="outError" class="text-red-600 mb-4"></div>
+
+    <div id="rows" class="space-y-4"></div>
+
+    <div class="mt-4 flex items-center gap-3">
+      <button id="btnAddRow" class="px-4 py-2 bg-white border border-pink-200 rounded-lg hover:bg-pink-50">Add Row</button>
+      <button id="btnSubmit" class="ml-auto px-6 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600">Submit OUT</button>
+    </div>
+  </main>
+</div>
+
+<script>
+/* ---------- Auth + sidebar username + active menu ---------- */
+const user = JSON.parse(localStorage.getItem('user') || '{}');
+const sidebarUsername = document.getElementById('sidebarUsername');
+
+if (user.username && sidebarUsername) {
+  sidebarUsername.textContent = user.username;
+  document.title = user.username + ' — Stock Out';
+}
+
+document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  localStorage.removeItem('user');
+  window.location.href = '../src/login.html';
+});
+
+const currentPage = location.pathname.split('/').pop();
+document.querySelectorAll('aside nav a').forEach(link => {
+  const href = link.getAttribute('href');
+  if (href === currentPage) {
+    link.classList.add('bg-pink-400','text-white','shadow');
+  } else {
+    link.classList.remove('bg-pink-400','text-white','shadow');
+  }
+});
+
+/* ---------- Logic Stock OUT + Supplier otomatis ---------- */
+const API = "http://localhost:3000";
+
+const rows = document.getElementById('rows');
+const err  = document.getElementById('outError');
+
+function rowTemplate(){
+  return `
+    <div class="tx-row bg-white/80 rounded-xl shadow border border-pink-100 p-4 grid grid-cols-1 md:grid-cols-5 gap-3">
+      <div class="md:col-span-2">
+        <label class="text-sm text-gray-500">Barang</label>
+        <select class="input item-select" required>
+          <option value="">Pilih barang…</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-sm text-gray-500">Qty</label>
+        <input type="number" min="1" class="input qty-input" placeholder="0" required>
+      </div>
+      <div>
+        <label class="text-sm text-gray-500">Supplier</label>
+        <div class="input bg-gray-100 cursor-not-allowed flex items-center text-sm">
+          <span class="supplier-name text-gray-700">-</span>
         </div>
-        <button class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center">👤</button>
+        <input type="hidden" class="supplier-id-input" value="">
       </div>
-      <nav class="flex-1 px-4 space-y-2">
-        <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-          <img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5"/>Dashboard
-        </a>
-        <a href="products.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-          <img src="https://img.icons8.com/color/24/box--v1.png" class="mr-3 w-5 h-5"/>Products
-        </a>
-        <a href="add.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-          <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5" />Add Product
-        </a>
-        <a href="transaction.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-          <img src="https://img.icons8.com/color/24/transaction-list.png" class="mr-3 w-5 h-5"/>Transactions
-        </a>
-      </nav>
-      <div class="p-4 border-t">
-        <a href="#" id="logoutBtn" class="flex items-center p-2 rounded-lg hover:bg-red-100 text-red-600 font-medium">
-          <img src="https://img.icons8.com/color/24/exit.png" class="mr-3 w-5 h-5"/>Sign Out
-        </a>
+      <div>
+        <label class="text-sm text-gray-500">Catatan</label>
+        <input type="text" class="input note-input" placeholder="opsional">
       </div>
-    </aside>
+    </div>`;
+}
 
-    <!-- Main -->
-    <main class="flex-1 p-6 overflow-y-auto bg-overlay rounded-2xl shadow-md border border-pink-200 m-6">
-      <div class="flex justify-between items-center mb-6">
-        <div class="header-box"><h1 class="header-title">Stock Out</h1></div>
-      </div>
+async function getJSON(u){
+  const r = await fetch(u);
+  if(!r.ok) throw new Error(r.status+' '+r.statusText);
+  return r.json();
+}
 
-      <div id="outError" class="text-red-600 mb-4"></div>
+let cachedItems   = [];
+let itemsById     = {};
+let suppliersById = {};
 
-      <div id="rows" class="space-y-4"></div>
+// update supplier untuk 1 row berdasarkan itemId
+function updateSupplierForRow(rowEl, itemId) {
+  const nameEl = rowEl.querySelector('.supplier-name');
+  const idInput = rowEl.querySelector('.supplier-id-input');
 
-      <div class="mt-4 flex items-center gap-3">
-        <button id="btnAddRow" class="px-4 py-2 bg-white border border-pink-200 rounded-lg hover:bg-pink-50">
-          Add Row
-        </button>
-        <button id="btnSubmit" class="ml-auto px-6 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600">
-          Submit OUT
-        </button>
-      </div>
-    </main>
-  </div>
+  let supplierName = '-';
+  let supplierId   = '';
 
-  <!-- cuma panggil satu script aja -->
-  <script src="./out.js"></script>
+  if (itemId && itemsById[itemId]) {
+    const prod  = itemsById[itemId];
+    const supid = prod.supid || prod.supplier_id || prod.supplierId;
+
+    if (supid) {
+      supplierId = supid;
+      if (suppliersById[supid]) {
+        supplierName = suppliersById[supid];
+      } else {
+        supplierName = supid; // fallback: tampilkan ID kalau nama belum ada
+      }
+    }
+  }
+
+  if (nameEl)  nameEl.textContent = supplierName;
+  if (idInput) idInput.value      = supplierId;
+}
+
+async function hydrate(rowEl){
+  const itemSel = rowEl.querySelector('.item-select');
+  if (!itemSel) return;
+
+  itemSel.innerHTML =
+    '<option value="">Pilih barang…</option>' +
+    cachedItems.map(it => {
+      const id   = it.id || it.itemId || it._id;
+      const name = it.namaItem || it.name || it.nama || "-";
+      return `<option value="${id}">${name}</option>`;
+    }).join('');
+
+  // ketika barang diganti → update supplier
+  itemSel.addEventListener('change', (e) => {
+    const row = e.target.closest('.tx-row');
+    const itemId = e.target.value;
+    if (row) updateSupplierForRow(row, itemId);
+  });
+}
+
+async function addRow(){
+  rows.insertAdjacentHTML('beforeend', rowTemplate());
+  await hydrate(rows.lastElementChild);
+}
+
+// initial load items + suppliers
+(async ()=>{
+  try{
+    const itemsRes = await getJSON(`${API}/items`);
+    const items    = itemsRes.items || itemsRes || [];
+    cachedItems    = items;
+
+    itemsById = {};
+    items.forEach(it => {
+      const id = it.id || it.itemId || it._id;
+      if (id) itemsById[id] = it;
+    });
+  }catch(e){
+    console.error(e);
+    cachedItems = [];
+  }
+
+  try{
+    const supRes    = await getJSON(`${API}/suppliers`);
+    const suppliers = supRes.suppliers || supRes || [];
+    suppliersById = {};
+    suppliers.forEach(s => {
+      const id = s.supid || s.id || s.kode || s.code;
+      if (!id) return;
+      const name = s.namaSupplier || s.nama || s.name || id;
+      suppliersById[id] = name;
+    });
+  }catch(e){
+    console.error(e);
+    suppliersById = {};
+  }
+
+  addRow();
+})();
+
+document.getElementById('btnAddRow').addEventListener('click', addRow);
+
+document.getElementById('btnSubmit').addEventListener('click', async ()=>{
+  err.textContent='';
+  const payload=[];
+
+  rows.querySelectorAll('.tx-row').forEach(row=>{
+    const itemId     = row.querySelector('.item-select')?.value;
+    const qty        = Number(row.querySelector('.qty-input')?.value||0);
+    const supplierId = row.querySelector('.supplier-id-input')?.value || null;
+    const note       = row.querySelector('.note-input')?.value||'';
+
+    if(itemId && qty>0){
+      payload.push({ itemId, qty, supplierId, note });
+    }
+  });
+
+  if(payload.length===0){
+    err.textContent='Minimal 1 baris valid.';
+    return;
+  }
+
+  try{
+    const res = await fetch(`${API}/transactions/out`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ rows:payload })
+    });
+    if(!res.ok) throw new Error(res.status+' '+res.statusText);
+    alert('Transaksi OUT berhasil.');
+    location.href='transaction.html';
+  }catch(e){
+    err.textContent='Gagal submit: '+(e.message||'error');
+  }
+});
+</script>
 </body>
 </html>

@@ -21,10 +21,6 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   timezone: "+07:00"
-  // Kalau Aiven pakai SSL, aktifkan ini
-  // ssl: {
-  //   ca: fs.readFileSync(new URL("./ca.pem", import.meta.url)),
-  // },
 });
 
 pool.on("connection", (conn) => {

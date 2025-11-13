@@ -6,18 +6,46 @@
   <title>Stock In</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body{min-height:100vh;margin:0;background-image:url('../uploads/dashboard.jpg');background-size:cover;background-position:center;background-attachment:fixed;font-family:'Poppins',Arial,sans-serif}
-    .bg-overlay{background:rgba(255,255,255,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-    .header-box{background:rgba(255,255,255,.3);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:16px;border:1px solid rgba(255,255,255,.4);padding:10px 25px;box-shadow:0 4px 10px rgba(0,0,0,.1);display:inline-block}
+    body {
+      min-height:100vh;
+      margin:0;
+      background-image:url('../uploads/dashboard.jpg');
+      background-size:cover;
+      background-position:center;
+      background-attachment:fixed;
+      font-family:'Poppins',Arial,sans-serif;
+    }
+    .bg-overlay{
+      background:rgba(255,255,255,.65);
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
+    }
+    .header-box{
+      background:rgba(255,255,255,.3);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.4);
+      padding:10px 25px;
+      box-shadow:0 4px 10px rgba(0,0,0,.1);
+      display:inline-block;
+    }
     .header-title{font-size:26px;font-weight:700;color:#ec4899}
     .header-store-box{background:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.5)}
     .header-store{font-size:20px;font-weight:600;color:#858383}
-    .input{width:100%;border:1px solid #f9a8d4;background:rgba(255,255,255,.85);padding:.65rem .9rem;border-radius:.75rem;outline:none}
+    .input{
+      width:100%;
+      border:1px solid #f9a8d4;
+      background:rgba(255,255,255,.85);
+      padding:.65rem .9rem;
+      border-radius:.75rem;
+      outline:none;
+    }
   </style>
 </head>
 <body>
 <div class="flex h-screen">
-  <!-- Sidebar (sama seperti lainnya) -->
+  <!-- Sidebar -->
   <aside class="w-64 bg-pink-100/90 shadow-lg flex flex-col relative z-10">
     <div class="p-6 flex items-center justify-between">
       <div class="flex flex-col">
@@ -27,13 +55,23 @@
       <button class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center">👤</button>
     </div>
     <nav class="flex-1 px-4 space-y-2">
-      <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium"><img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5"/>Dashboard</a>
-      <a href="products.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium"><img src="https://img.icons8.com/color/24/box--v1.png" class="mr-3 w-5 h-5"/>Products</a>
-      <a href="add.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium"><img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5" />Add Product</a>
-      <a href="transaction.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium"><img src="https://img.icons8.com/color/24/transaction-list.png" class="mr-3 w-5 h-5"/>Transactions</a>
+      <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+        <img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5"/>Dashboard
+      </a>
+      <a href="products.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+        <img src="https://img.icons8.com/color/24/box--v1.png" class="mr-3 w-5 h-5"/>Products
+      </a>
+      <a href="add.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+        <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5"/>Add Product
+      </a>
+      <a href="transaction.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+        <img src="https://img.icons8.com/color/24/transaction-list.png" class="mr-3 w-5 h-5"/>Transactions
+      </a>
     </nav>
     <div class="p-4 border-t">
-      <a href="#" id="logoutBtn" class="flex items-center p-2 rounded-lg hover:bg-red-100 text-red-600 font-medium"><img src="https://img.icons8.com/color/24/exit.png" class="mr-3 w-5 h-5"/>Sign Out</a>
+      <a href="#" id="logoutBtn" class="flex items-center p-2 rounded-lg hover:bg-red-100 text-red-600 font-medium">
+        <img src="https://img.icons8.com/color/24/exit.png" class="mr-3 w-5 h-5"/>Sign Out
+      </a>
     </div>
   </aside>
 
@@ -57,15 +95,15 @@
 </div>
 
 <script>
-const API="http://localhost:3000";
-const FALLBACK_IMG="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4e6.svg";
+const API = "http://localhost:3000";
 
 const rows = document.getElementById('rows');
 const err  = document.getElementById('inError');
 
-function rowTemplate(i){
+function rowTemplate(){
   return `
-    <div class="bg-white/80 rounded-xl shadow border border-pink-100 p-4 grid grid-cols-1 md:grid-cols-6 gap-3">
+    <div class="tx-row bg-white/80 rounded-xl shadow border border-pink-100 p-4
+                grid grid-cols-1 md:grid-cols-5 gap-3">
       <div class="md:col-span-2">
         <label class="text-sm text-gray-500">Barang</label>
         <select class="input item-select" required>
@@ -76,11 +114,12 @@ function rowTemplate(i){
         <label class="text-sm text-gray-500">Qty</label>
         <input type="number" min="1" class="input qty-input" placeholder="0" required>
       </div>
-      <div class="md:col-span-2">
+      <div>
         <label class="text-sm text-gray-500">Supplier</label>
-        <select class="input supplier-select">
-          <option value="">Pilih supplier…</option>
-        </select>
+        <div class="input bg-gray-100 cursor-not-allowed flex items-center text-sm">
+          <span class="supplier-name text-gray-700">-</span>
+        </div>
+        <input type="hidden" class="supplier-id-input" value="">
       </div>
       <div>
         <label class="text-sm text-gray-500">Catatan</label>
@@ -89,14 +128,62 @@ function rowTemplate(i){
     </div>`;
 }
 
-async function getJSON(u){ const r=await fetch(u); if(!r.ok) throw new Error(r.status+' '+r.statusText); return r.json(); }
+async function getJSON(u){
+  const r = await fetch(u);
+  if(!r.ok) throw new Error(r.status+' '+r.statusText);
+  return r.json();
+}
 
-let cachedItems=[], cachedSuppliers=[];
+let cachedItems   = [];
+let itemsById     = {};
+let suppliersById = {};
+
+// helper buat update supplier satu baris
+function updateSupplierForRow(rowEl, itemId) {
+  const nameEl = rowEl.querySelector('.supplier-name');
+  const idInput = rowEl.querySelector('.supplier-id-input');
+
+  let supplierName = '-';
+  let supplierId   = '';
+
+  if (itemId && itemsById[itemId]) {
+    const prod  = itemsById[itemId];
+    const supid = prod.supid || prod.supplier_id || prod.supplierId;
+
+    if (supid) {
+      supplierId = supid;
+      if (suppliersById[supid]) {
+        supplierName = suppliersById[supid];
+      } else {
+        supplierName = supid; // fallback: tampilkan ID kalau nama belum ada
+      }
+    }
+  }
+
+  if (nameEl)  nameEl.textContent = supplierName;
+  if (idInput) idInput.value      = supplierId;
+}
+
 async function hydrateSelects(container){
   const itemSel = container.querySelector('.item-select');
-  const supSel  = container.querySelector('.supplier-select');
-  itemSel.innerHTML = '<option value="">Pilih barang…</option>'+cachedItems.map(it=>`<option value="${it.id||it.itemId||it._id}">${it.namaItem||it.name||it.nama}</option>`).join('');
-  supSel.innerHTML  = '<option value="">Pilih supplier…</option>'+cachedSuppliers.map(s=>`<option value="${s.id||s.supplierId||s._id}">${s.namaSupplier||s.nama||s.name}</option>`).join('');
+  if (!itemSel) return;
+
+  itemSel.innerHTML =
+    '<option value="">Pilih barang…</option>' +
+    cachedItems
+      .map(it => {
+        const id   = it.id || it.itemId || it._id;
+        const name = it.namaItem || it.name || it.nama || "-";
+        return `<option value="${id}">${name}</option>`;
+      })
+      .join('');
+
+  // ketika user pilih barang, langsung update supplier
+  itemSel.addEventListener('change', (e) => {
+    const rowEl = e.target.closest('.tx-row');
+    const itemId = e.target.value;
+    if (rowEl) updateSupplierForRow(rowEl, itemId);
+  });
 }
 
 async function addRow(){
@@ -105,17 +192,37 @@ async function addRow(){
   await hydrateSelects(last);
 }
 
+// init: load items + suppliers, lalu tambah 1 baris
 (async ()=>{
-  // load items & suppliers (jika belum ada endpoint suppliers, dibiarkan kosong)
   try{
-    const items=await getJSON(`${API}/items`);
-    cachedItems=items.items||items||[];
-  }catch(e){ cachedItems=[]; }
+    const itemsRes = await getJSON(`${API}/items`);
+    const items    = itemsRes.items || itemsRes || [];
+    cachedItems    = items;
+
+    itemsById = {};
+    items.forEach(it => {
+      const id = it.id || it.itemId || it._id;
+      if (id) itemsById[id] = it;
+    });
+  }catch(e){
+    console.error(e);
+    cachedItems = [];
+  }
 
   try{
-    const s=await getJSON(`${API}/suppliers`);
-    cachedSuppliers=s.suppliers||s||[];
-  }catch(e){ cachedSuppliers=[]; }
+    const supRes    = await getJSON(`${API}/suppliers`);
+    const suppliers = supRes.suppliers || supRes || [];
+    suppliersById = {};
+    suppliers.forEach(s => {
+      const id = s.supid || s.id || s.kode || s.code;
+      if (!id) return;
+      const name = s.namaSupplier || s.nama || s.name || id;
+      suppliersById[id] = name;
+    });
+  }catch(e){
+    console.error(e);
+    suppliersById = {};
+  }
 
   addRow();
 })();
@@ -123,29 +230,61 @@ async function addRow(){
 document.getElementById('btnAddRow').addEventListener('click', addRow);
 
 document.getElementById('btnSubmit').addEventListener('click', async ()=>{
-  err.textContent='';
-  const payload=[];
-  rows.querySelectorAll('.bg-white\\/80').forEach(row=>{
-    const itemId=row.querySelector('.item-select').value;
-    const qty=Number(row.querySelector('.qty-input').value||0);
-    const supplierId=row.querySelector('.supplier-select').value||null;
-    const note=row.querySelector('.note-input').value||'';
-    if(itemId && qty>0){
+  err.textContent = '';
+  const payload = [];
+
+  rows.querySelectorAll('.tx-row').forEach(row=>{
+    const itemId     = row.querySelector('.item-select')?.value;
+    const qty        = Number(row.querySelector('.qty-input')?.value || 0);
+    const supplierId = row.querySelector('.supplier-id-input')?.value || null;
+    const note       = row.querySelector('.note-input')?.value || '';
+
+    if(itemId && qty > 0){
       payload.push({ itemId, qty, supplierId, note });
     }
   });
-  if(payload.length===0){ err.textContent='Minimal 1 baris valid.'; return; }
+
+  if(payload.length === 0){
+    err.textContent = 'Minimal 1 baris valid.';
+    return;
+  }
 
   try{
-    // sesuaikan endpoint & field jika berbeda
-    const res=await fetch(`${API}/transactions/in`,{
-      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ rows:payload })
+    const res = await fetch(`${API}/transactions/in`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ rows:payload })
     });
     if(!res.ok) throw new Error(res.status+' '+res.statusText);
     alert('Transaksi IN berhasil.');
-    location.href='transaction.html';
-  }catch(e){ err.textContent='Gagal submit: '+(e.message||'error'); }
+    location.href = 'transaction.html';
+  }catch(e){
+    err.textContent = 'Gagal submit: ' + (e.message || 'error');
+  }
+});
+
+// ----- sidebar username + logout + highlight -----
+const user = JSON.parse(localStorage.getItem('user') || '{}');
+if (user.username) {
+  const nameEl = document.getElementById('sidebarUsername');
+  if (nameEl) nameEl.textContent = user.username;
+  document.title = user.username + ' — Stock In';
+}
+
+document.getElementById('logoutBtn')?.addEventListener('click', (e)=>{
+  e.preventDefault();
+  localStorage.removeItem('user');
+  window.location.href = '../src/login.html';
+});
+
+const currentPage = location.pathname.split('/').pop();
+document.querySelectorAll('aside nav a').forEach(link=>{
+  const href = link.getAttribute('href');
+  if (href === currentPage) {
+    link.classList.add('bg-pink-400','text-white','shadow');
+  }
 });
 </script>
+
 </body>
 </html>
