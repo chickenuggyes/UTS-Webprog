@@ -144,10 +144,38 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
+      // Ambil username dari user yang login
+      const userStr = localStorage.getItem("user");
+      console.log("🔍 Raw user dari localStorage:", userStr);
+      
+      const user = JSON.parse(userStr || "{}");
+      console.log("👤 Parsed user object:", user);
+      
+      // Gunakan username untuk identifikasi user
+      const username = user.username || null;
+      
+      if (!username) {
+        console.error("❌❌❌ ERROR: Username tidak ditemukan di localStorage!");
+        console.error("   User object:", user);
+        if (errorEl) errorEl.textContent = "Username tidak ditemukan. Silakan login ulang.";
+        alert("⚠️ Username tidak ditemukan. Silakan login ulang.");
+        return;
+      }
+      
+      console.log("✅ Username ditemukan:", username);
+      console.log("📦 Payload yang akan dikirim:", { rows: payload.length, username: username });
+      
+      const requestBody = { 
+        rows: payload,
+        username: username
+      };
+      
+      console.log("📤 Request body JSON yang akan dikirim:", JSON.stringify(requestBody, null, 2));
+      
       const res = await fetch(`${API}/transactions/in`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rows: payload }),
+        body: JSON.stringify(requestBody),
       });
       if (!res.ok) throw new Error(res.status + " " + res.statusText);
       alert("Transaksi IN berhasil.");

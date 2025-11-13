@@ -126,20 +126,20 @@
       required>
   </div>
 
-  <!-- KATEGORI (muncul tapi tidak bisa diubah) -->
+  <!-- KATEGORI (hanya tampil dari database, tidak bisa diubah) -->
   <div>
     <label class="block text-sm font-semibold mb-1 text-pink-800">Kategori</label>
-    <input id="kategori" name="kategori" type="text" readonly
-      class="w-full h-11 rounded-xl border border-pink-300 px-3 bg-gray-100 cursor-not-allowed"
-    >
+    <input id="kategori" type="text" readonly
+      class="w-full h-11 rounded-xl border border-pink-300 px-3 bg-gray-100 cursor-not-allowed">
   </div>
 
-  <!-- SUPPLIER (boleh diubah) -->
+  <!-- SUPPLIER (drop-down dari database) -->
   <div>
     <label class="block text-sm font-semibold mb-1 text-pink-800">Supplier</label>
-    <input id="supplier" name="supplier" type="text"
-      class="w-full h-11 rounded-xl border border-pink-300 px-3 bg-white/70 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-      placeholder="Nama supplier">
+    <select id="supplier" name="supid"
+      class="w-full h-11 rounded-xl border border-pink-300 px-3 bg-white/70 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500">
+      <option value="">Memuat daftar supplier...</option>
+    </select>
   </div>
 
   <div>
@@ -149,12 +149,13 @@
       required>
   </div>
 
+  <!-- STOK (ditampilkan saja, tidak bisa diubah) -->
   <div>
     <label class="block text-sm font-semibold mb-1 text-pink-800">Stok</label>
-    <input id="stok" name="stok" type="number"
-      class="w-full h-11 rounded-xl border border-pink-300 px-3 bg-white/70 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-      required>
+    <input id="stok" type="number" readonly placeholder="-"
+      class="w-full h-11 rounded-xl border border-pink-300 px-3 bg-gray-100 cursor-not-allowed">
   </div>
+
 </div>
 
 

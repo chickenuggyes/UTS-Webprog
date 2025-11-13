@@ -27,6 +27,7 @@ const upload = multer({
 });
 
 router.get("/", itemsController.list);
+router.get("/:id", itemsController.getOne);
 router.post("/", upload.single("foto"), itemsController.create);
 router.put("/:id", upload.single("foto"), itemsController.update);
 router.delete("/:id", itemsController.remove);

@@ -5,18 +5,50 @@ export const itemsController = {
   async list(req, res) {
     try {
       const q = (req.query.q || "").toLowerCase();
-      let sql = "SELECT * FROM products";
-      let params = [];
+      let sql = `
+        SELECT p.*, c.namaKategori
+        FROM products p
+        LEFT JOIN categories c ON c.catid = p.catid
+      `;
+      const params = [];
 
       if (q) {
-        sql += " WHERE LOWER(namaItem) LIKE ? OR LOWER(keterangan) LIKE ?";
-        params = [`%${q}%`, `%${q}%`];
+        sql += `
+          WHERE LOWER(p.namaItem) LIKE ? 
+             OR LOWER(p.keterangan) LIKE ? 
+             OR LOWER(IFNULL(c.namaKategori, '')) LIKE ?
+        `;
+        params.push(`%${q}%`, `%${q}%`, `%${q}%`);
       }
+
+      sql += " ORDER BY p.id";
 
       const [rows] = await db.query(sql, params);
       res.json({ count: rows.length, items: rows });
     } catch (err) {
       console.error("List products error:", err);
+      res.status(500).json({ message: "Gagal mengambil data produk" });
+    }
+  },
+
+  // GET /items/:id
+  async getOne(req, res) {
+    try {
+      const id = req.params.id;
+      const [rows] = await db.query(`
+        SELECT p.*, c.namaKategori
+        FROM products p
+        LEFT JOIN categories c ON c.catid = p.catid
+        WHERE p.id = ?
+      `, [id]);
+      
+      if (rows.length === 0) {
+        return res.status(404).json({ message: "Produk tidak ditemukan" });
+      }
+      
+      res.json(rows[0]);
+    } catch (err) {
+      console.error("Get product error:", err);
       res.status(500).json({ message: "Gagal mengambil data produk" });
     }
   },
@@ -79,7 +111,12 @@ export const itemsController = {
     try {
       const id = req.params.id; // VARCHAR(10)
 
-      const [rows] = await db.query("SELECT * FROM products WHERE id = ?", [id]);
+      const [rows] = await db.query(`
+        SELECT p.*, c.namaKategori
+        FROM products p
+        LEFT JOIN categories c ON c.catid = p.catid
+        WHERE p.id = ?
+      `, [id]);
       if (rows.length === 0) {
         return res.status(404).json({ message: "Produk tidak ditemukan" });
       }
@@ -114,7 +151,12 @@ export const itemsController = {
         [namaItem, catid, supid, keterangan, hargaNum, stokNum, foto, id]
       );
 
-      const [updated] = await db.query("SELECT * FROM products WHERE id = ?", [id]);
+      const [updated] = await db.query(`
+        SELECT p.*, c.namaKategori
+        FROM products p
+        LEFT JOIN categories c ON c.catid = p.catid
+        WHERE p.id = ?
+      `, [id]);
       return res.json(updated[0]);
     } catch (e) {
       console.error("Update product error:", e);
@@ -127,7 +169,12 @@ export const itemsController = {
     try {
       const id = req.params.id;
 
-      const [rows] = await db.query("SELECT * FROM products WHERE id = ?", [id]);
+      const [rows] = await db.query(`
+        SELECT p.*, c.namaKategori
+        FROM products p
+        LEFT JOIN categories c ON c.catid = p.catid
+        WHERE p.id = ?
+      `, [id]);
       if (rows.length === 0) {
         return res.status(404).json({ message: "Produk tidak ditemukan" });
       }
