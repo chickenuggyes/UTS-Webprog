@@ -1,10 +1,13 @@
 // out.js
 document.addEventListener("DOMContentLoaded", () => {
-  const API = "http://localhost:3000";
+  console.log("✅ out.js loaded"); // buat debug
 
+  const API = "http://localhost:3000";
   const rowsContainer = document.getElementById("rows");
   const errorEl = document.getElementById("outError");
   const sidebarUsername = document.getElementById("sidebarUsername");
+  const btnAddRow = document.getElementById("btnAddRow");
+  const btnSubmit = document.getElementById("btnSubmit");
 
   // ---------- Auth + sidebar ----------
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -22,11 +25,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const currentPage = location.pathname.split("/").pop();
   document.querySelectorAll("aside nav a").forEach((link) => {
     const href = link.getAttribute("href");
-    if (href === currentPage)
+    if (href === currentPage) {
       link.classList.add("bg-pink-400", "text-white", "shadow");
-    else link.classList.remove("bg-pink-400", "text-white", "shadow");
+    } else {
+      link.classList.remove("bg-pink-400", "text-white", "shadow");
+    }
   });
 
+  // ---------- Helper ----------
   async function getJSON(url) {
     const res = await fetch(url);
     if (!res.ok) throw new Error(res.status + " " + res.statusText);
@@ -87,11 +93,11 @@ document.addEventListener("DOMContentLoaded", () => {
     addRow();
   })();
 
-  document.getElementById("btnAddRow")?.addEventListener("click", () => {
-    addRow();
-  });
+  // ---------- Event: Add Row ----------
+  btnAddRow?.addEventListener("click", addRow);
 
-  document.getElementById("btnSubmit")?.addEventListener("click", async () => {
+  // ---------- Event: Submit ----------
+  btnSubmit?.addEventListener("click", async () => {
     if (errorEl) errorEl.textContent = "";
 
     const payload = [];
@@ -99,9 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const itemId = row.querySelector(".item-select")?.value;
       const qty = Number(row.querySelector(".qty-input")?.value || 0);
       const note = row.querySelector(".note-input")?.value || "";
-      if (itemId && qty > 0) {
-        payload.push({ itemId, qty, note });
-      }
+      if (itemId && qty > 0) payload.push({ itemId, qty, note });
     });
 
     if (payload.length === 0) {
@@ -116,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ rows: payload }),
       });
       if (!res.ok) throw new Error(res.status + " " + res.statusText);
-      alert("Transaksi OUT berhasil.");
+      alert("Transaksi OUT berhasil!");
       window.location.href = "transaction.html";
     } catch (e) {
       if (errorEl)

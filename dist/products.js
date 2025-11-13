@@ -69,10 +69,10 @@ function applySearch() {
       )
     : PRODUCTS;
 
-  const filteredByCat =
-    catSet && catSet.size > 0
-      ? filtered.filter((p) => catSet.has(String(p.kategori || "")))
-      : filtered;
+const filteredByCat =
+  catSet && catSet.size > 0
+    ? filtered.filter((p) => catSet.has(String(p.catid || "")))
+    : filtered;
 
   render(filteredByCat);
 }
@@ -87,7 +87,11 @@ async function reloadProducts() {
     const res = await fetch(`${API}/items`, { headers: { Accept: "application/json" } });
     if (!res.ok) throw new Error("Gagal mengambil data produk");
     const data = await res.json();
+
     PRODUCTS = data.items || [];
+
+    console.log("📦 Produk dari server:", PRODUCTS);
+
     applySearch();
   } catch (err) {
     console.error(err);
@@ -95,6 +99,7 @@ async function reloadProducts() {
       '<div class="col-span-full text-center text-red-500">Gagal mengambil data produk dari server.</div>';
   }
 }
+
 
 async function deleteProduct(id) {
   if (!confirm("Yakin mau hapus produk ini?")) return;

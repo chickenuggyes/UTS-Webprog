@@ -13,6 +13,7 @@ import itemsRoutes from "./routes/mainMenuRoutes.js";
 import reportRoutes from "./routes/report.js";
 import supplierRoutes from "./routes/supplierRoutes.js"; // ✅ Tambahan route supplier
 import { dashboard } from "./controllers/report.js";
+import transactionsRoutes from "./routes/transactionsRoutes.js"; // ✅ Tambah ini
 
 dotenv.config();
 
@@ -47,6 +48,7 @@ app.use("/login", authRoutes);
 app.use("/items", itemsRoutes);
 app.use("/report", reportRoutes);
 app.use("/suppliers", supplierRoutes);
+app.use("/transactions", transactionsRoutes); // ✅ Tambah ini di bawah routes lain
 
 // Ringkasan dashboard
 app.get("/dashboard", dashboard);
