@@ -1,6 +1,5 @@
-// transaction.js (versi pakai mapping produk -> supplier)
+// transaction.js (versi pakai mapping produk -> supplier + nota)
 
-// Jalankan setelah DOM siap
 document.addEventListener("DOMContentLoaded", () => {
   const API = "http://localhost:3000";
 
@@ -19,7 +18,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const btnIn      = document.getElementById("btnIn");
   const btnOut     = document.getElementById("btnOut");
-  const btnHistory = document.getElementById("btnHistory");
+  const btnHistory = document.getElementById("btnHistory"); // Stock Log
+  const btnNota    = document.getElementById("btnNota");    // History (nota)
+
+  const stockLogContainer = document.getElementById("stockLogContainer");
+  const notaContainer     = document.getElementById("notaContainer");
+  const notaContent       = document.getElementById("notaContent");
+
   const sidebarUsername = document.getElementById("sidebarUsername");
 
   // ---------- Auth + sidebar ----------
@@ -44,10 +49,39 @@ document.addEventListener("DOMContentLoaded", () => {
     else link.classList.remove("bg-pink-400", "text-white", "shadow");
   });
 
-  // ---------- Tombol In / Out / History ----------
+  // ---------- Tombol In / Out / Stock Log / History ----------
   btnIn?.addEventListener("click", () => (window.location.href = "in.html"));
   btnOut?.addEventListener("click", () => (window.location.href = "out.html"));
-  // History tetap di halaman ini, jadi ga perlu apa-apa
+
+  function setView(view) {
+    // reset class tombol
+    const active = ["bg-pink-500","text-white"];
+    const inactive = ["text-pink-600","hover:bg-pink-50"];
+
+    if (view === "stock") {
+      btnHistory.classList.add(...active);
+      btnHistory.classList.remove(...inactive);
+      btnNota.classList.add(...inactive);
+      btnNota.classList.remove(...active);
+
+      stockLogContainer.classList.remove("hidden");
+      notaContainer.classList.add("hidden");
+    } else {
+      btnNota.classList.add(...active);
+      btnNota.classList.remove(...inactive);
+      btnHistory.classList.add(...inactive);
+      btnHistory.classList.remove(...active);
+
+      stockLogContainer.classList.add("hidden");
+      notaContainer.classList.remove("hidden");
+    }
+  }
+
+  btnHistory?.addEventListener("click", () => setView("stock"));
+  btnNota?.addEventListener("click", () => setView("nota"));
+
+  // default: Stock Log aktif
+  setView("stock");
 
   async function getJSON(url) {
     const res = await fetch(url);
@@ -63,8 +97,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const totalStok = dash.totalStok ?? 0;
       const totalHarga = dash.totalHarga ?? 0;
 
-      if (elItem) elItem.textContent = totalItem;
-      if (elStok) elStok.textContent = totalStok;
+      if (elItem)  elItem.textContent  = totalItem;
+      if (elStok)  elStok.textContent  = totalStok;
       if (elHarga) elHarga.textContent = rupiah(totalHarga);
     } catch (e) {
       if (txError)
@@ -78,7 +112,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let suppliersById = {};
 
   async function ensureMetaLoaded() {
-    // kalau sudah pernah load, skip
     if (Object.keys(itemsById).length > 0 || Object.keys(suppliersById).length > 0) {
       return;
     }
@@ -118,7 +151,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getSupplierNameForTx(t) {
-    // 1) coba ambil dari field supplier di transaksi (kalau backend sudah kirim supid)
     let supId =
       t.supplier_id ||
       t.supplierId ||
@@ -126,7 +158,6 @@ document.addEventListener("DOMContentLoaded", () => {
       t.supId ||
       null;
 
-    // 2) kalau belum ada, coba dari product_id
     if (!supId) {
       const prodId =
         t.product_id ||
@@ -138,7 +169,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // 3) kalau belum juga, match berdasarkan nama barang
     if (!supId) {
       const nameKey = (t.namaItem || t.itemName || t.item || "").toLowerCase();
       const prod    = itemsByName[nameKey];
@@ -147,58 +177,106 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // 4) konversi supId ke nama supplier
     if (supId && suppliersById[supId]) return suppliersById[supId];
-    if (supId) return supId; // fallback: tampilkan id kalau nama nggak ketemu
+    if (supId) return supId;
     return "-";
+  }
+
+  // ---------- Build nota-style history ----------
+  let allTxRows = [];
+
+  function buildNotaFromTransactions(rows) {
+    if (!notaContent) return;
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      notaContent.textContent = "Belum ada transaksi.";
+      return;
+    }
+
+    // Ambil transaksi OUT terbaru (asumsi rows sudah diurutkan terbaru duluan)
+    const firstOut = rows.find(
+      (t) => (t.tipe || t.type || "").toUpperCase() === "OUT"
+    ) || rows[0];
+
+    const tranId =
+      firstOut.transaksiId || firstOut.id || firstOut.tranid || "-";
+    const tanggal = firstOut.tanggal || firstOut.date || "-";
+    const supplierName = getSupplierNameForTx(firstOut);
+    const tipe = (firstOut.tipe || firstOut.type || "TRANSAKSI").toUpperCase();
+
+    // Kumpulkan semua baris dengan transaksi ID yang sama (multi item)
+    const sameTxRows = rows.filter((t) => {
+      const id = t.transaksiId || t.id || t.tranid;
+      return id === tranId;
+    });
+
+    let lines = [];
+    lines.push(`${tipe === "IN" ? "Transaksi Masuk" : "Transaksi Keluar"} #${tranId}`);
+    lines.push(`Tanggal : ${tanggal}`);
+    lines.push(`Supplier: ${supplierName}`);
+    lines.push("------------------------------------------------------------");
+    lines.push("| Nama Produk     | Jumlah | Harga Satuan | Total        |");
+    lines.push("|-----------------|--------|--------------|--------------|");
+
+    let grandTotal = 0;
+
+    sameTxRows.forEach((t) => {
+      const nama = (t.namaItem || t.itemName || t.item || "-").padEnd(15, " ");
+      const qty  = String(t.qty ?? t.jumlah ?? 0).padStart(4, " ");
+
+      const hargaSatuan =
+        t.hargaSatuan ?? t.harga ?? t.price ?? 0;
+      const totalRow =
+        t.total ?? t.totalHarga ?? Number(qty) * Number(hargaSatuan);
+
+      grandTotal += Number(totalRow || 0);
+
+      const hsStr = rupiah(hargaSatuan).replace("Rp", "").trim();
+      const totStr = rupiah(totalRow).replace("Rp", "").trim();
+
+      lines.push(
+        `| ${nama} | ${qty}   | ${hsStr.padStart(10," ")} | ${totStr.padStart(10," ")} |`
+      );
+    });
+
+    lines.push("------------------------------------------------------------");
+    lines.push(`Total: ${rupiah(grandTotal)}`);
+
+    notaContent.textContent = lines.join("\n");
   }
 
   // ---------- Load history + supplier name ----------
   (async function loadHistory() {
     if (!tbodyHist) return;
 
-    // pastikan map produk & supplier sudah ada
     await ensureMetaLoaded();
 
     try {
       const resp = await getJSON(`${API}/transactions`);
       const rows = resp?.transactions || resp?.data || resp || [];
 
-      console.log("📊 Data transaksi dari API:", rows.slice(0, 2)); // Log 2 transaksi pertama
-      // Expand untuk melihat detail
-      if (rows.length > 0) {
-        console.log("📊 Detail transaksi pertama (expanded):", JSON.stringify(rows[0], null, 2));
-      }
+      allTxRows = Array.isArray(rows) ? rows : [];
 
       if (!Array.isArray(rows) || rows.length === 0) {
         tbodyHist.innerHTML =
           '<tr><td colspan="8" class="py-4 text-gray-500">Belum ada riwayat transaksi.</td></tr>';
+        notaContent && (notaContent.textContent = "Belum ada transaksi.");
         return;
       }
 
-      // Ambil user yang login
       const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
       const currentUserId = currentUser.id;
-      
-      console.log("👤 User yang login:", currentUser);
-      console.log("👤 User ID yang login:", currentUserId);
 
       tbodyHist.innerHTML = rows
-        .map((t) => {
-          // Tentukan akun berdasarkan user_id di transaksi (bukan user yang sedang login)
-          // Akun harus sesuai dengan user yang benar-benar membuat transaksi
+        .map((t, idx) => {
           let akun = "-";
-          
-          // Prioritas 1: Jika ada akun dari query (username dari JOIN users berdasarkan user_id di transaksi)
+
           if (t.akun && t.akun !== "System" && t.akun !== null && t.akun !== "") {
             akun = t.akun;
-          } 
-          // Prioritas 2: Jika ada username di data tapi bukan dari JOIN
-          else if (t.username && t.username !== "System" && t.username !== null && t.username !== "") {
+          } else if (t.username && t.username !== "System" && t.username !== null && t.username !== "") {
             akun = t.username;
           }
-          // Jika user_id null, berarti transaksi lama yang tidak punya data user - tampilkan "-"
-          // JANGAN gunakan currentUser.username karena itu bukan user yang membuat transaksi
+
           const transaksiId = t.transaksiId || t.id || t.tranid || "-";
           const tanggal = t.tanggal || t.date || "-";
           const tipeRaw = (t.tipe || t.type || "-").toUpperCase();
@@ -209,29 +287,14 @@ document.addEventListener("DOMContentLoaded", () => {
           const supplierName = getSupplierNameForTx(t);
           const note = t.catatan || t.note || "-";
 
-          // Debug log untuk semua transaksi (hanya 5 pertama)
-          const idx = rows.indexOf(t);
-          if (idx < 5) {
-            console.log(`🔍 Transaksi [${idx + 1}]:`, {
-              tranid: t.transaksiId,
-              akun: t.akun,
-              username: t.username,
-              userId: t.userId,
-              user_id: t.user_id,
-              user_id_type: typeof t.user_id,
-              userId_type: typeof t.userId,
-              catatan: t.catatan,
-              note: t.note
-            });
-          }
-
-          // Highlight jika transaksi milik user yang login
-          const isCurrentUser = currentUserId && (t.userId === currentUserId || t.user_id === currentUserId);
+          const isCurrentUser =
+            currentUserId &&
+            (t.userId === currentUserId || t.user_id === currentUserId);
           const rowClass = isCurrentUser ? "border-t bg-pink-50" : "border-t";
 
           return `
             <tr class="${rowClass}">
-              <td class="py-2 pr-4 font-semibold ${isCurrentUser ? 'text-pink-600' : ''}">${akun}</td>
+              <td class="py-2 pr-4 font-semibold ${isCurrentUser ? "text-pink-600" : ""}">${akun}</td>
               <td class="py-2 pr-4 font-mono text-xs">${transaksiId}</td>
               <td class="py-2 pr-4">${tanggal}</td>
               <td class="py-2 pr-4 ${tipeCls}">${tipeRaw}</td>
@@ -243,10 +306,14 @@ document.addEventListener("DOMContentLoaded", () => {
           `;
         })
         .join("");
+
+      // build nota pertama kali dari data yang sama
+      buildNotaFromTransactions(allTxRows);
     } catch (e) {
       console.error("Gagal load history:", e);
       tbodyHist.innerHTML =
         '<tr><td colspan="8" class="py-4 text-gray-500">Belum ada data history atau endpoint belum tersedia.</td></tr>';
+      notaContent && (notaContent.textContent = "Gagal memuat history.");
     }
   })();
 });
