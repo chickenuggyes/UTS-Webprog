@@ -1,5 +1,6 @@
-// transaction.js (versi pakai mapping produk -> supplier + nota)
+// transaction.js (Stock Log + Nota History)
 
+// Jalankan setelah DOM siap
 document.addEventListener("DOMContentLoaded", () => {
   const API = "http://localhost:3000";
 
@@ -14,17 +15,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const elItem    = document.getElementById("totalItem");
   const elStok    = document.getElementById("totalStok");
   const elHarga   = document.getElementById("totalHarga");
+
   const tbodyHist = document.getElementById("historyBody");
-
-  const btnIn      = document.getElementById("btnIn");
-  const btnOut     = document.getElementById("btnOut");
-  const btnHistory = document.getElementById("btnHistory"); // Stock Log
-  const btnNota    = document.getElementById("btnNota");    // History (nota)
-
+  const notaList  = document.getElementById("notaList");
   const stockLogContainer = document.getElementById("stockLogContainer");
   const notaContainer     = document.getElementById("notaContainer");
-  const notaContent       = document.getElementById("notaContent");
 
+  const btnIn        = document.getElementById("btnIn");
+  const btnOut       = document.getElementById("btnOut");
+  const btnStockLog  = document.getElementById("btnStockLog");
+  const btnHistory   = document.getElementById("btnHistory");
   const sidebarUsername = document.getElementById("sidebarUsername");
 
   // ---------- Auth + sidebar ----------
@@ -49,39 +49,9 @@ document.addEventListener("DOMContentLoaded", () => {
     else link.classList.remove("bg-pink-400", "text-white", "shadow");
   });
 
-  // ---------- Tombol In / Out / Stock Log / History ----------
+  // ---------- Tombol In / Out ----------
   btnIn?.addEventListener("click", () => (window.location.href = "in.html"));
   btnOut?.addEventListener("click", () => (window.location.href = "out.html"));
-
-  function setView(view) {
-    // reset class tombol
-    const active = ["bg-pink-500","text-white"];
-    const inactive = ["text-pink-600","hover:bg-pink-50"];
-
-    if (view === "stock") {
-      btnHistory.classList.add(...active);
-      btnHistory.classList.remove(...inactive);
-      btnNota.classList.add(...inactive);
-      btnNota.classList.remove(...active);
-
-      stockLogContainer.classList.remove("hidden");
-      notaContainer.classList.add("hidden");
-    } else {
-      btnNota.classList.add(...active);
-      btnNota.classList.remove(...inactive);
-      btnHistory.classList.add(...inactive);
-      btnHistory.classList.remove(...active);
-
-      stockLogContainer.classList.add("hidden");
-      notaContainer.classList.remove("hidden");
-    }
-  }
-
-  btnHistory?.addEventListener("click", () => setView("stock"));
-  btnNota?.addEventListener("click", () => setView("nota"));
-
-  // default: Stock Log aktif
-  setView("stock");
 
   async function getJSON(url) {
     const res = await fetch(url);
@@ -97,8 +67,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const totalStok = dash.totalStok ?? 0;
       const totalHarga = dash.totalHarga ?? 0;
 
-      if (elItem)  elItem.textContent  = totalItem;
-      if (elStok)  elStok.textContent  = totalStok;
+      if (elItem) elItem.textContent = totalItem;
+      if (elStok) elStok.textContent = totalStok;
       if (elHarga) elHarga.textContent = rupiah(totalHarga);
     } catch (e) {
       if (txError)
@@ -112,6 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let suppliersById = {};
 
   async function ensureMetaLoaded() {
+    // kalau sudah pernah load, skip
     if (Object.keys(itemsById).length > 0 || Object.keys(suppliersById).length > 0) {
       return;
     }
@@ -151,6 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getSupplierNameForTx(t) {
+    // 1) coba ambil dari field supplier di transaksi (kalau backend sudah kirim supid)
     let supId =
       t.supplier_id ||
       t.supplierId ||
@@ -158,6 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
       t.supId ||
       null;
 
+    // 2) kalau belum ada, coba dari product_id
     if (!supId) {
       const prodId =
         t.product_id ||
@@ -169,6 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // 3) kalau belum juga, match berdasarkan nama barang
     if (!supId) {
       const nameKey = (t.namaItem || t.itemName || t.item || "").toLowerCase();
       const prod    = itemsByName[nameKey];
@@ -177,96 +151,109 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // 4) konversi supId ke nama supplier
     if (supId && suppliersById[supId]) return suppliersById[supId];
-    if (supId) return supId;
+    if (supId) return supId; // fallback: tampilkan id kalau nama nggak ketemu
     return "-";
   }
 
-  // ---------- Build nota-style history ----------
-  let allTxRows = [];
+  // ---------- Helper: switch view Stock Log / History ----------
+  function setView(view) {
+    const activeClasses   = ["bg-pink-500", "text-white"];
+    const inactiveClasses = ["text-pink-600", "hover:bg-pink-50"];
 
-  function buildNotaFromTransactions(rows) {
-    if (!notaContent) return;
+    if (view === "stock") {
+      stockLogContainer?.classList.remove("hidden");
+      notaContainer?.classList.add("hidden");
 
-    if (!Array.isArray(rows) || rows.length === 0) {
-      notaContent.textContent = "Belum ada transaksi.";
+      btnStockLog?.classList.add(...activeClasses);
+      btnStockLog?.classList.remove(...inactiveClasses);
+
+      btnHistory?.classList.remove(...activeClasses);
+      btnHistory?.classList.add(...inactiveClasses);
+    } else {
+      stockLogContainer?.classList.add("hidden");
+      notaContainer?.classList.remove("hidden");
+
+      btnHistory?.classList.add(...activeClasses);
+      btnHistory?.classList.remove(...inactiveClasses);
+
+      btnStockLog?.classList.remove(...activeClasses);
+      btnStockLog?.classList.add(...inactiveClasses);
+    }
+  }
+
+  btnStockLog?.addEventListener("click", () => setView("stock"));
+  btnHistory?.addEventListener("click", () => setView("history"));
+
+  // default: Stock Log dulu
+  setView("stock");
+
+  // ---------- Render nota ala CLI ----------
+  function renderNotaBlock(tx) {
+    // tx: { id, tanggal, supplier, type, items[], total }
+    const judul = tx.type === "IN" ? "Transaksi Masuk" : "Transaksi Keluar";
+    const garis = "------------------------------------------------------------";
+
+    const rows = tx.items.map(it => {
+      const nama   = String(it.nama || "-");
+      const jumlah = String(it.qty ?? "-");
+      const harga  = it.harga ? String(it.harga) : "-";
+      const total  = it.total ? String(it.total) : "-";
+
+      return `| ${nama.padEnd(15)} | ${jumlah.padEnd(6)} | ${harga.padEnd(12)} | ${total.padEnd(8)} |`;
+    }).join("\n");
+
+    const totalStr = tx.total ? rupiah(tx.total) : "-";
+
+    return `
+<pre class="bg-gray-900 text-green-300 border border-gray-800 rounded-lg p-4 overflow-x-auto">
+${judul} #${tx.id}
+Tanggal: ${tx.tanggal}
+Supplier: ${tx.supplier}
+${garis}
+| Nama Produk     | Jumlah | Harga Satuan | Total    |
+${garis}
+${rows || "| (tidak ada item)                                          |"}
+${garis}
+Total: ${totalStr}
+</pre>`;
+  }
+
+  function fillNotaHistory(groupedArr) {
+    if (!notaList) return;
+    if (!groupedArr.length) {
+      notaList.innerHTML =
+        '<p class="text-gray-400">Belum ada transaksi keluar yang bisa ditampilkan sebagai nota.</p>';
       return;
     }
 
-    // Ambil transaksi OUT terbaru (asumsi rows sudah diurutkan terbaru duluan)
-    const firstOut = rows.find(
-      (t) => (t.tipe || t.type || "").toUpperCase() === "OUT"
-    ) || rows[0];
-
-    const tranId =
-      firstOut.transaksiId || firstOut.id || firstOut.tranid || "-";
-    const tanggal = firstOut.tanggal || firstOut.date || "-";
-    const supplierName = getSupplierNameForTx(firstOut);
-    const tipe = (firstOut.tipe || firstOut.type || "TRANSAKSI").toUpperCase();
-
-    // Kumpulkan semua baris dengan transaksi ID yang sama (multi item)
-    const sameTxRows = rows.filter((t) => {
-      const id = t.transaksiId || t.id || t.tranid;
-      return id === tranId;
-    });
-
-    let lines = [];
-    lines.push(`${tipe === "IN" ? "Transaksi Masuk" : "Transaksi Keluar"} #${tranId}`);
-    lines.push(`Tanggal : ${tanggal}`);
-    lines.push(`Supplier: ${supplierName}`);
-    lines.push("------------------------------------------------------------");
-    lines.push("| Nama Produk     | Jumlah | Harga Satuan | Total        |");
-    lines.push("|-----------------|--------|--------------|--------------|");
-
-    let grandTotal = 0;
-
-    sameTxRows.forEach((t) => {
-      const nama = (t.namaItem || t.itemName || t.item || "-").padEnd(15, " ");
-      const qty  = String(t.qty ?? t.jumlah ?? 0).padStart(4, " ");
-
-      const hargaSatuan =
-        t.hargaSatuan ?? t.harga ?? t.price ?? 0;
-      const totalRow =
-        t.total ?? t.totalHarga ?? Number(qty) * Number(hargaSatuan);
-
-      grandTotal += Number(totalRow || 0);
-
-      const hsStr = rupiah(hargaSatuan).replace("Rp", "").trim();
-      const totStr = rupiah(totalRow).replace("Rp", "").trim();
-
-      lines.push(
-        `| ${nama} | ${qty}   | ${hsStr.padStart(10," ")} | ${totStr.padStart(10," ")} |`
-      );
-    });
-
-    lines.push("------------------------------------------------------------");
-    lines.push(`Total: ${rupiah(grandTotal)}`);
-
-    notaContent.textContent = lines.join("\n");
+    notaList.innerHTML = groupedArr.map(renderNotaBlock).join("");
   }
 
-  // ---------- Load history + supplier name ----------
+  // ---------- Load history + supplier name + nota ----------
   (async function loadHistory() {
     if (!tbodyHist) return;
 
+    // pastikan map produk & supplier sudah ada
     await ensureMetaLoaded();
 
     try {
       const resp = await getJSON(`${API}/transactions`);
       const rows = resp?.transactions || resp?.data || resp || [];
 
-      allTxRows = Array.isArray(rows) ? rows : [];
-
       if (!Array.isArray(rows) || rows.length === 0) {
         tbodyHist.innerHTML =
           '<tr><td colspan="8" class="py-4 text-gray-500">Belum ada riwayat transaksi.</td></tr>';
-        notaContent && (notaContent.textContent = "Belum ada transaksi.");
+        fillNotaHistory([]); // kosongkan nota juga
         return;
       }
 
+      // Ambil user yang login (untuk highlight row-nya saja)
       const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
       const currentUserId = currentUser.id;
 
+      // --- 1) STOCK LOG (tabel) ---
       tbodyHist.innerHTML = rows
         .map((t, idx) => {
           let akun = "-";
@@ -288,8 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const note = t.catatan || t.note || "-";
 
           const isCurrentUser =
-            currentUserId &&
-            (t.userId === currentUserId || t.user_id === currentUserId);
+            currentUserId && (t.userId === currentUserId || t.user_id === currentUserId);
           const rowClass = isCurrentUser ? "border-t bg-pink-50" : "border-t";
 
           return `
@@ -307,13 +293,51 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .join("");
 
-      // build nota pertama kali dari data yang sama
-      buildNotaFromTransactions(allTxRows);
+      // --- 2) HISTORY NOTA (kelompok per transaksi, khusus OUT) ---
+      const grouped = {};
+
+      rows.forEach((t) => {
+        const type = (t.tipe || t.type || "").toUpperCase();
+
+        // kalau mau nota hanya barang keluar:
+        if (type !== "OUT") return;
+
+        const idTx = t.transaksiId || t.tranid || t.id;
+        if (!idTx) return;
+
+        if (!grouped[idTx]) {
+          grouped[idTx] = {
+            id: idTx,
+            tanggal: t.tanggal || t.date || "-",
+            supplier: getSupplierNameForTx(t),
+            type,
+            items: [],
+            total: 0,
+          };
+        }
+
+        const namaItem = t.namaItem || t.itemName || t.item || "-";
+        const qty = Number(t.qty ?? t.jumlah ?? 0);
+        const harga = Number(t.hargaSatuan ?? t.harga ?? t.price ?? 0);
+        const lineTotal = harga * qty || 0;
+
+        grouped[idTx].items.push({
+          nama: namaItem,
+          qty,
+          harga,
+          total: lineTotal,
+        });
+
+        grouped[idTx].total += lineTotal;
+      });
+
+      const groupedArr = Object.values(grouped);
+      fillNotaHistory(groupedArr);
     } catch (e) {
       console.error("Gagal load history:", e);
       tbodyHist.innerHTML =
         '<tr><td colspan="8" class="py-4 text-gray-500">Belum ada data history atau endpoint belum tersedia.</td></tr>';
-      notaContent && (notaContent.textContent = "Gagal memuat history.");
+      fillNotaHistory([]);
     }
   })();
 });
