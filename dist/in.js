@@ -144,30 +144,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      // Ambil username dari user yang login
+      // Ambil user info dari localStorage (username dan user_id)
       const userStr = localStorage.getItem("user");
-      console.log("🔍 Raw user dari localStorage:", userStr);
-      
       const user = JSON.parse(userStr || "{}");
-      console.log("👤 Parsed user object:", user);
       
-      // Gunakan username untuk identifikasi user
       const username = user.username || null;
+      const user_id = user.id || null;
       
       if (!username) {
-        console.error("❌❌❌ ERROR: Username tidak ditemukan di localStorage!");
-        console.error("   User object:", user);
+        console.error("❌ Username tidak ditemukan di localStorage!");
         if (errorEl) errorEl.textContent = "Username tidak ditemukan. Silakan login ulang.";
         alert("⚠️ Username tidak ditemukan. Silakan login ulang.");
         return;
       }
       
-      console.log("✅ Username ditemukan:", username);
-      console.log("📦 Payload yang akan dikirim:", { rows: payload.length, username: username });
+      console.log("👤 User info:", { username, user_id });
       
       const requestBody = { 
         rows: payload,
-        username: username
+        username: username,
+        user_id: user_id
       };
       
       console.log("📤 Request body JSON yang akan dikirim:", JSON.stringify(requestBody, null, 2));

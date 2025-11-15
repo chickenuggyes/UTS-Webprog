@@ -114,9 +114,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      // Ambil username dari user yang login
+      // Ambil user info dari localStorage (username dan user_id)
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       const username = user.username || null;
+      const user_id = user.id || null;
       
       if (!username) {
         console.error("⚠️ Username tidak ditemukan di localStorage. User object:", user);
@@ -124,15 +125,15 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       
-      console.log("👤 Username dari localStorage:", username);
-      console.log("📦 Payload yang akan dikirim:", { rows: payload.length, username: username });
+      console.log("👤 User info:", { username, user_id });
       
       const res = await fetch(`${API}/transactions/out`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           rows: payload,
-          username: username
+          username: username,
+          user_id: user_id
         }),
       });
       if (!res.ok) throw new Error(res.status + " " + res.statusText);

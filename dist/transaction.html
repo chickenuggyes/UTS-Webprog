@@ -30,7 +30,7 @@
         <div id="sidebarUsername" class="text-2xl font-bold text-pink-600">Loading...</div>
         <div class="text-xs text-gray-500 mt-1">Admin</div>
       </div>
-      <button class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center" title="Profile">👤</button>
+      <button id="profileBtn" class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center" title="Profile">👤</button>
     </div>
     <nav class="flex-1 px-4 space-y-2">
       <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
@@ -132,6 +132,133 @@
 
 
 <script src="transaction.js"></script>
+
+  <!-- Profile modal -->
+  <div id="profileModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 w-80 shadow-lg relative">
+      <button id="profileClose" class="absolute top-3 right-3 text-gray-600 hover:text-gray-900">✕</button>
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-pink-600 mb-3">Profile</h3>
+      </div>
+      <div id="profileError" class="text-sm text-red-600 mb-2 hidden"></div>
+      <form id="profileForm" class="text-sm text-gray-700">
+        <div class="flex flex-col items-center mb-3">
+          <div id="profileAvatarPlaceholder" class="w-20 h-20 rounded-full bg-pink-500 text-white grid place-items-center text-2xl">👤</div>
+          <img id="profileAvatar" src="" alt="avatar" class="w-20 h-20 rounded-full object-cover hidden mb-3" />
+          <div class="text-xs text-gray-500">ID</div>
+          <div class="font-mono text-sm text-gray-800 mb-3" id="profileId">-</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="text-xs text-gray-500">Username</label>
+          <input id="profileUsernameInput" class="w-full border rounded px-2 py-2 mt-1" type="text" />
+        </div>
+
+        <div class="mb-3">
+          <label class="text-xs text-gray-500">Email</label>
+          <input id="profileEmailInput" class="w-full border rounded px-2 py-2 mt-1" type="email" />
+        </div>
+
+        <div class="mb-4">
+          <label class="text-xs text-gray-500">Password (kosongkan jika tidak ingin mengubah)</label>
+          <input id="profilePasswordInput" class="w-full border rounded px-2 py-2 mt-1" type="password" />
+        </div>
+
+        <div class="mt-2 flex justify-between">
+          <button id="profileLogout" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">Sign out</button>
+          <div class="flex gap-2">
+            <button id="profileCancel" class="px-3 py-1 bg-gray-200 rounded">Cancel</button>
+            <button id="profileSave" class="px-3 py-1 bg-pink-500 text-white rounded">Save</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Profile modal logic
+    const profileBtn = document.getElementById('profileBtn');
+    const profileModal = document.getElementById('profileModal');
+    const profileClose = document.getElementById('profileClose');
+    const profileLogout = document.getElementById('profileLogout');
+    const profileSave = document.getElementById('profileSave');
+    const profileCancel = document.getElementById('profileCancel');
+    const profileError = document.getElementById('profileError');
+    const sidebarUsername = document.getElementById('sidebarUsername');
+
+    function openProfile() {
+      profileError.classList.add('hidden');
+      profileError.textContent = '';
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      document.getElementById('profileId').textContent = u.id || '-';
+      document.getElementById('profileUsernameInput').value = u.username || '';
+      document.getElementById('profileEmailInput').value = u.email || '';
+      document.getElementById('profilePasswordInput').value = '';
+
+      const avatarUrl = u.avatar || null;
+      const pImg = document.getElementById('profileAvatar');
+      const pPlaceholder = document.getElementById('profileAvatarPlaceholder');
+      if (avatarUrl) {
+        pImg.src = avatarUrl;
+        pImg.classList.remove('hidden');
+        pPlaceholder.classList.add('hidden');
+        if (profileBtn) profileBtn.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full"/>`;
+      } else {
+        pImg.classList.add('hidden');
+        pPlaceholder.classList.remove('hidden');
+        if (profileBtn) profileBtn.innerHTML = '👤';
+      }
+      profileModal.classList.remove('hidden');
+      profileModal.classList.add('flex');
+    }
+
+    function closeProfile() {
+      profileModal.classList.add('hidden');
+      profileModal.classList.remove('flex');
+    }
+
+    profileBtn?.addEventListener('click', (e) => { e.preventDefault(); openProfile(); });
+    profileClose?.addEventListener('click', (e) => { e.preventDefault(); closeProfile(); });
+    profileCancel?.addEventListener('click', (e) => { e.preventDefault(); closeProfile(); });
+    profileModal?.addEventListener('click', (e) => { if (e.target === profileModal) closeProfile(); });
+
+    profileLogout?.addEventListener('click', (e) => { e.preventDefault(); localStorage.removeItem('user'); window.location.href = '../src/login.html'; });
+
+    profileSave?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      profileError.classList.add('hidden');
+      const id = document.getElementById('profileId').textContent;
+      const usernameVal = document.getElementById('profileUsernameInput').value.trim();
+      const emailVal = document.getElementById('profileEmailInput').value.trim();
+      const passwordVal = document.getElementById('profilePasswordInput').value;
+
+      if (!usernameVal || !emailVal) {
+        profileError.textContent = 'Username dan email wajib diisi.';
+        profileError.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const res = await fetch('http://localhost:3000/login/profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, username: usernameVal, email: emailVal, password: passwordVal || undefined })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          profileError.textContent = data.message || 'Gagal memperbarui profile.';
+          profileError.classList.remove('hidden');
+          return;
+        }
+        localStorage.setItem('user', JSON.stringify(data.user));
+        if (sidebarUsername) sidebarUsername.textContent = data.user.username;
+        closeProfile();
+      } catch (err) {
+        profileError.textContent = 'Terjadi kesalahan koneksi.';
+        profileError.classList.remove('hidden');
+      }
+    });
+  </script>
 
 </body>
 </html>

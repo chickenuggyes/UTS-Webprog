@@ -36,7 +36,10 @@ function card(p) {
 
         <h3 class="text-lg font-semibold mt-2">${p.namaItem ?? "-"}</h3>
         <p class="text-sm text-gray-500">${p.keterangan ?? "-"}</p>
-        <p class="text-2xl font-bold text-blue-700 mt-2">${fmt.format(p.hargaSatuan || 0)}</p>
+        <div class="mt-2">
+          <p class="text-xs text-pink-600 font-medium mb-1">${p.namaKategori || "Kategori"}</p>
+          <p class="text-2xl font-bold text-blue-700">${fmt.format(p.hargaSatuan || 0)}</p>
+        </div>
 
         <div class="pt-4 flex gap-3 mt-2">
           <button onclick="editProduct('${p.id}')"

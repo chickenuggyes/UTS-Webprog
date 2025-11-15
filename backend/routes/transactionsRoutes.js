@@ -53,12 +53,26 @@ router.post("/in", async (req, res) => {
   let validUserId = null;
   if (username) {
     const [u] = await pool.query("SELECT id FROM users WHERE username = ?", [username]);
-    if (u.length > 0) validUserId = u[0].id;
-    else if (user_id) validUserId = user_id;
-  } else if (user_id) validUserId = user_id;
+    if (u.length > 0) {
+      validUserId = u[0].id;
+      console.log("✅ User ditemukan via username:", username, "-> user_id:", validUserId);
+    } else if (user_id) {
+      validUserId = user_id;
+      console.log("⚠️ User tidak ditemukan via username, menggunakan user_id:", validUserId);
+    }
+  } else if (user_id) {
+    validUserId = user_id;
+    console.log("✅ Menggunakan user_id langsung:", validUserId);
+  }
+
+  if (!validUserId) {
+    console.error("❌ ERROR: validUserId is NULL! username:", username, "user_id:", user_id);
+  }
 
   const finalSupplierId = supplier_id || rows[0]?.supplierId || null;
   const finalNote = note || rows[0]?.note || "";
+  
+  console.log("📝 Inserting transaction with user_id:", validUserId);
 
   try {
     await conn.beginTransaction();
@@ -113,11 +127,25 @@ router.post("/out", async (req, res) => {
   let validUserId = null;
   if (username) {
     const [u] = await pool.query("SELECT id FROM users WHERE username = ?", [username]);
-    if (u.length > 0) validUserId = u[0].id;
-    else if (user_id) validUserId = user_id;
-  } else if (user_id) validUserId = user_id;
+    if (u.length > 0) {
+      validUserId = u[0].id;
+      console.log("✅ User ditemukan via username:", username, "-> user_id:", validUserId);
+    } else if (user_id) {
+      validUserId = user_id;
+      console.log("⚠️ User tidak ditemukan via username, menggunakan user_id:", validUserId);
+    }
+  } else if (user_id) {
+    validUserId = user_id;
+    console.log("✅ Menggunakan user_id langsung:", validUserId);
+  }
+
+  if (!validUserId) {
+    console.error("❌ ERROR: validUserId is NULL! username:", username, "user_id:", user_id);
+  }
 
   const finalNote = note || rows[0]?.note || "";
+  
+  console.log("📝 Inserting transaction with user_id:", validUserId);
 
   try {
     await conn.beginTransaction();
@@ -161,7 +189,8 @@ router.post("/out", async (req, res) => {
 ======================================================== */
 router.get("/", async (req, res) => {
   try {
-    const [rows] = await pool.query(`
+    // Step 1: Ambil semua transaksi dengan JOIN
+    let [rows] = await pool.query(`
       SELECT 
         t.tranid AS transaksiId,
         t.transaction_type AS tipe,
@@ -169,17 +198,65 @@ router.get("/", async (req, res) => {
         t.note AS catatan,
         p.namaItem,
         td.quantity AS qty,
-        s.namaSupplier AS supplier,
-        u.username AS akun,
+        COALESCE(s.namaSupplier, '-') AS supplier,
+        u.username AS username_from_join,
         u.id AS userId,
         t.user_id
       FROM transactions t
       JOIN transaction_details td ON td.transaction_id = t.tranid
       JOIN products p ON td.product_id = p.id
       LEFT JOIN suppliers s ON t.supplier_id = s.supid
-      LEFT JOIN users u ON CAST(t.user_id AS CHAR) = CAST(u.id AS CHAR)
+      LEFT JOIN users u ON t.user_id = u.id
       ORDER BY t.transaction_date DESC
     `);
+
+    // Step 2: Jika ada rows dengan user_id tapi tidak ada username, ambil username secara manual
+    const userIdsNeedingUsername = [...new Set(rows.filter(r => r.user_id && !r.username_from_join).map(r => r.user_id))];
+    
+    let usernameMap = {};
+    if (userIdsNeedingUsername.length > 0) {
+      console.log("🔍 Fetching usernames for user_ids:", userIdsNeedingUsername);
+      const placeholders = userIdsNeedingUsername.map(() => '?').join(',');
+      const [userRows] = await pool.query(
+        `SELECT id, username FROM users WHERE id IN (${placeholders})`,
+        userIdsNeedingUsername
+      );
+      userRows.forEach(u => {
+        usernameMap[u.id] = u.username;
+      });
+      console.log("✅ Username map:", usernameMap);
+    }
+
+    // Step 3: Tambahkan username ke setiap row
+    rows = rows.map(row => {
+      let username = row.username_from_join;
+      
+      // Jika tidak ada username dari JOIN tapi ada user_id, cari di map
+      if (!username && row.user_id && usernameMap[row.user_id]) {
+        username = usernameMap[row.user_id];
+      }
+      
+      // Jika masih tidak ada username, gunakan 'System' atau '-'
+      if (!username || username === null) {
+        username = row.user_id ? 'Unknown' : 'System';
+      }
+
+      return {
+        ...row,
+        akun: username,
+        username: username
+      };
+    });
+
+    console.log("📊 Total transactions fetched:", rows.length);
+    if (rows.length > 0) {
+      console.log("📊 Sample transaction data:", {
+        tranid: rows[0].transaksiId,
+        user_id: rows[0].user_id,
+        username: rows[0].username,
+        akun: rows[0].akun
+      });
+    }
 
     res.json({ transactions: rows });
   } catch (err) {

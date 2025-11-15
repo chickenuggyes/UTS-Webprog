@@ -12,6 +12,7 @@ import authRoutes from "./routes/authRoutes.js";
 import itemsRoutes from "./routes/mainMenuRoutes.js";
 import reportRoutes from "./routes/report.js";
 import supplierRoutes from "./routes/supplierRoutes.js"; // ✅ Tambahan route supplier
+import categoryRoutes from "./routes/categoryRoutes.js"; // ✅ Tambahan route categories
 import { dashboard } from "./controllers/report.js";
 import transactionsRoutes from "./routes/transactionsRoutes.js"; // ✅ Tambah ini
 
@@ -48,6 +49,7 @@ app.use("/login", authRoutes);
 app.use("/items", itemsRoutes);
 app.use("/report", reportRoutes);
 app.use("/suppliers", supplierRoutes);
+app.use("/categories", categoryRoutes); 
 app.use("/transactions", transactionsRoutes); // ✅ Tambah ini di bawah routes lain
 
 // Ringkasan dashboard

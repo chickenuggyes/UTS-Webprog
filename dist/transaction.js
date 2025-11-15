@@ -248,6 +248,19 @@ Total: ${grandTotal}
       const resp = await getJSON(`${API}/transactions`);
       const rows = resp?.transactions || resp?.data || resp || [];
 
+      console.log("📥 Raw response from API:", resp);
+      console.log("📊 Total rows received:", rows.length);
+      
+      if (rows.length > 0) {
+        console.log("🔍 First row data:", {
+          transaksiId: rows[0].transaksiId,
+          user_id: rows[0].user_id,
+          username: rows[0].username,
+          akun: rows[0].akun,
+          userId: rows[0].userId
+        });
+      }
+
       if (!Array.isArray(rows) || rows.length === 0) {
         tbodyHist.innerHTML =
           '<tr><td colspan="8" class="py-4 text-gray-500">Belum ada riwayat transaksi.</td></tr>';
@@ -262,12 +275,28 @@ Total: ${grandTotal}
       // --- 1) STOCK LOG (tabel) ---
       tbodyHist.innerHTML = rows
         .map((t, idx) => {
+          // Tentukan username yang akan ditampilkan
           let akun = "-";
-
-          if (t.akun && t.akun !== "System" && t.akun !== null && t.akun !== "") {
+          
+          // Prioritas: akun > username > fallback
+          if (t.akun && t.akun !== "System" && t.akun !== "Unknown" && t.akun !== null && t.akun !== "" && t.akun !== undefined) {
             akun = t.akun;
-          } else if (t.username && t.username !== "System" && t.username !== null && t.username !== "") {
+          } else if (t.username && t.username !== "System" && t.username !== "Unknown" && t.username !== null && t.username !== "" && t.username !== undefined) {
             akun = t.username;
+          } else if (t.user_id) {
+            // Jika ada user_id tapi tidak ada username, coba tampilkan user_id
+            akun = `User-${t.user_id}`;
+          }
+
+          // Debug log untuk troubleshooting (hanya 3 pertama)
+          if (idx < 3) {
+            console.log(`🔍 Transaction ${idx + 1}:`, {
+              transaksiId: t.transaksiId,
+              user_id: t.user_id,
+              akun_field: t.akun,
+              username_field: t.username,
+              finalAkun: akun
+            });
           }
 
           const transaksiId = t.transaksiId || t.id || t.tranid || "-";
