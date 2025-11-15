@@ -76,22 +76,26 @@
       </div>
     </div>
 
-    <!-- Menu: In / Out / History -->
+    <!-- Menu: In / Out / Stock Log + History -->
     <div class="mt-10 mb-6 flex items-center justify-between no-print">
       <div class="inline-flex rounded-lg bg-white/60 p-1 shadow border border-pink-100">
         <button id="btnIn"
           class="px-4 py-2 rounded-md font-semibold text-pink-600 hover:bg-pink-50">In</button>
         <button id="btnOut"
           class="px-4 py-2 rounded-md font-semibold text-pink-600 hover:bg-pink-50">Out</button>
-        <button id="btnHistory"
+
+        <!-- tombol baru: Stock Log & History -->
+        <button id="btnStockLog"
           class="px-4 py-2 rounded-md font-semibold bg-pink-500 text-white">Stock Log</button>
+        <button id="btnHistory"
+          class="px-4 py-2 rounded-md font-semibold text-pink-600 hover:bg-pink-50">History</button>
       </div>
       <div></div>
     </div>
 
-    <!-- History List -->
-    <div id="historyContainer" class="bg-white/80 rounded-lg shadow border border-pink-100">
-      <div class="px-4 py-3 border-b text-sm text-gray-600">Riwayat transaksi terbaru</div>
+    <!-- STOCK LOG (tabel seperti sekarang) -->
+    <div id="stockLogContainer" class="bg-white/80 rounded-lg shadow border border-pink-100">
+      <div class="px-4 py-3 border-b text-sm text-gray-600">Riwayat perubahan stok</div>
       <div class="p-4 overflow-x-auto">
         <table class="min-w-full text-sm">
           <thead>
@@ -112,8 +116,20 @@
         </table>
       </div>
     </div>
-  </main>
+
+<!-- HISTORY NOTA (nota per transaksi) -->
+<div id="notaContainer"
+     class="bg-white/80 rounded-lg shadow border border-pink-100 mt-6 hidden">
+  <div class="px-4 py-3 border-b text-sm text-gray-600">
+    History Nota Transaksi
+  </div>
+
+  <div id="notaList" class="p-4 space-y-6">
+    <!-- isi nota via JS -->
+  </div>
 </div>
+
+
 
 <script src="transaction.js"></script>
 
