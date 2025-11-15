@@ -1,4 +1,4 @@
-// transaction.js (Stock Log + Nota History)
+// transaction.js (versi pakai mapping produk -> supplier)
 
 // Jalankan setelah DOM siap
 document.addEventListener("DOMContentLoaded", () => {
@@ -15,16 +15,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const elItem    = document.getElementById("totalItem");
   const elStok    = document.getElementById("totalStok");
   const elHarga   = document.getElementById("totalHarga");
-
   const tbodyHist = document.getElementById("historyBody");
-  const notaList  = document.getElementById("notaList");
-  const stockLogContainer = document.getElementById("stockLogContainer");
-  const notaContainer     = document.getElementById("notaContainer");
 
-  const btnIn        = document.getElementById("btnIn");
-  const btnOut       = document.getElementById("btnOut");
-  const btnStockLog  = document.getElementById("btnStockLog");
-  const btnHistory   = document.getElementById("btnHistory");
+  const btnIn      = document.getElementById("btnIn");
+  const btnOut     = document.getElementById("btnOut");
+  const btnHistory = document.getElementById("btnHistory");
   const sidebarUsername = document.getElementById("sidebarUsername");
 
   // ---------- Auth + sidebar ----------
@@ -49,9 +44,10 @@ document.addEventListener("DOMContentLoaded", () => {
     else link.classList.remove("bg-pink-400", "text-white", "shadow");
   });
 
-  // ---------- Tombol In / Out ----------
+  // ---------- Tombol In / Out / History ----------
   btnIn?.addEventListener("click", () => (window.location.href = "in.html"));
   btnOut?.addEventListener("click", () => (window.location.href = "out.html"));
+  // History tetap di halaman ini, jadi ga perlu apa-apa
 
   async function getJSON(url) {
     const res = await fetch(url);
@@ -157,81 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return "-";
   }
 
-  // ---------- Helper: switch view Stock Log / History ----------
-  function setView(view) {
-    const activeClasses   = ["bg-pink-500", "text-white"];
-    const inactiveClasses = ["text-pink-600", "hover:bg-pink-50"];
-
-    if (view === "stock") {
-      stockLogContainer?.classList.remove("hidden");
-      notaContainer?.classList.add("hidden");
-
-      btnStockLog?.classList.add(...activeClasses);
-      btnStockLog?.classList.remove(...inactiveClasses);
-
-      btnHistory?.classList.remove(...activeClasses);
-      btnHistory?.classList.add(...inactiveClasses);
-    } else {
-      stockLogContainer?.classList.add("hidden");
-      notaContainer?.classList.remove("hidden");
-
-      btnHistory?.classList.add(...activeClasses);
-      btnHistory?.classList.remove(...inactiveClasses);
-
-      btnStockLog?.classList.remove(...activeClasses);
-      btnStockLog?.classList.add(...inactiveClasses);
-    }
-  }
-
-  btnStockLog?.addEventListener("click", () => setView("stock"));
-  btnHistory?.addEventListener("click", () => setView("history"));
-
-  // default: Stock Log dulu
-  setView("stock");
-
-  // ---------- Render nota ala CLI ----------
-  function renderNotaBlock(tx) {
-    // tx: { id, tanggal, supplier, type, items[], total }
-    const judul = tx.type === "IN" ? "Transaksi Masuk" : "Transaksi Keluar";
-    const garis = "------------------------------------------------------------";
-
-    const rows = tx.items.map(it => {
-      const nama   = String(it.nama || "-");
-      const jumlah = String(it.qty ?? "-");
-      const harga  = it.harga ? String(it.harga) : "-";
-      const total  = it.total ? String(it.total) : "-";
-
-      return `| ${nama.padEnd(15)} | ${jumlah.padEnd(6)} | ${harga.padEnd(12)} | ${total.padEnd(8)} |`;
-    }).join("\n");
-
-    const totalStr = tx.total ? rupiah(tx.total) : "-";
-
-    return `
-<pre class="bg-gray-900 text-green-300 border border-gray-800 rounded-lg p-4 overflow-x-auto">
-${judul} #${tx.id}
-Tanggal: ${tx.tanggal}
-Supplier: ${tx.supplier}
-${garis}
-| Nama Produk     | Jumlah | Harga Satuan | Total    |
-${garis}
-${rows || "| (tidak ada item)                                          |"}
-${garis}
-Total: ${totalStr}
-</pre>`;
-  }
-
-  function fillNotaHistory(groupedArr) {
-    if (!notaList) return;
-    if (!groupedArr.length) {
-      notaList.innerHTML =
-        '<p class="text-gray-400">Belum ada transaksi keluar yang bisa ditampilkan sebagai nota.</p>';
-      return;
-    }
-
-    notaList.innerHTML = groupedArr.map(renderNotaBlock).join("");
-  }
-
-  // ---------- Load history + supplier name + nota ----------
+  // ---------- Load history + supplier name ----------
   (async function loadHistory() {
     if (!tbodyHist) return;
 
@@ -242,28 +164,41 @@ Total: ${totalStr}
       const resp = await getJSON(`${API}/transactions`);
       const rows = resp?.transactions || resp?.data || resp || [];
 
+      console.log("📊 Data transaksi dari API:", rows.slice(0, 2)); // Log 2 transaksi pertama
+      // Expand untuk melihat detail
+      if (rows.length > 0) {
+        console.log("📊 Detail transaksi pertama (expanded):", JSON.stringify(rows[0], null, 2));
+      }
+
       if (!Array.isArray(rows) || rows.length === 0) {
         tbodyHist.innerHTML =
           '<tr><td colspan="8" class="py-4 text-gray-500">Belum ada riwayat transaksi.</td></tr>';
-        fillNotaHistory([]); // kosongkan nota juga
         return;
       }
 
-      // Ambil user yang login (untuk highlight row-nya saja)
+      // Ambil user yang login
       const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
       const currentUserId = currentUser.id;
+      
+      console.log("👤 User yang login:", currentUser);
+      console.log("👤 User ID yang login:", currentUserId);
 
-      // --- 1) STOCK LOG (tabel) ---
       tbodyHist.innerHTML = rows
-        .map((t, idx) => {
+        .map((t) => {
+          // Tentukan akun berdasarkan user_id di transaksi (bukan user yang sedang login)
+          // Akun harus sesuai dengan user yang benar-benar membuat transaksi
           let akun = "-";
-
+          
+          // Prioritas 1: Jika ada akun dari query (username dari JOIN users berdasarkan user_id di transaksi)
           if (t.akun && t.akun !== "System" && t.akun !== null && t.akun !== "") {
             akun = t.akun;
-          } else if (t.username && t.username !== "System" && t.username !== null && t.username !== "") {
+          } 
+          // Prioritas 2: Jika ada username di data tapi bukan dari JOIN
+          else if (t.username && t.username !== "System" && t.username !== null && t.username !== "") {
             akun = t.username;
           }
-
+          // Jika user_id null, berarti transaksi lama yang tidak punya data user - tampilkan "-"
+          // JANGAN gunakan currentUser.username karena itu bukan user yang membuat transaksi
           const transaksiId = t.transaksiId || t.id || t.tranid || "-";
           const tanggal = t.tanggal || t.date || "-";
           const tipeRaw = (t.tipe || t.type || "-").toUpperCase();
@@ -274,13 +209,29 @@ Total: ${totalStr}
           const supplierName = getSupplierNameForTx(t);
           const note = t.catatan || t.note || "-";
 
-          const isCurrentUser =
-            currentUserId && (t.userId === currentUserId || t.user_id === currentUserId);
+          // Debug log untuk semua transaksi (hanya 5 pertama)
+          const idx = rows.indexOf(t);
+          if (idx < 5) {
+            console.log(`🔍 Transaksi [${idx + 1}]:`, {
+              tranid: t.transaksiId,
+              akun: t.akun,
+              username: t.username,
+              userId: t.userId,
+              user_id: t.user_id,
+              user_id_type: typeof t.user_id,
+              userId_type: typeof t.userId,
+              catatan: t.catatan,
+              note: t.note
+            });
+          }
+
+          // Highlight jika transaksi milik user yang login
+          const isCurrentUser = currentUserId && (t.userId === currentUserId || t.user_id === currentUserId);
           const rowClass = isCurrentUser ? "border-t bg-pink-50" : "border-t";
 
           return `
             <tr class="${rowClass}">
-              <td class="py-2 pr-4 font-semibold ${isCurrentUser ? "text-pink-600" : ""}">${akun}</td>
+              <td class="py-2 pr-4 font-semibold ${isCurrentUser ? 'text-pink-600' : ''}">${akun}</td>
               <td class="py-2 pr-4 font-mono text-xs">${transaksiId}</td>
               <td class="py-2 pr-4">${tanggal}</td>
               <td class="py-2 pr-4 ${tipeCls}">${tipeRaw}</td>
@@ -292,52 +243,10 @@ Total: ${totalStr}
           `;
         })
         .join("");
-
-      // --- 2) HISTORY NOTA (kelompok per transaksi, khusus OUT) ---
-      const grouped = {};
-
-      rows.forEach((t) => {
-        const type = (t.tipe || t.type || "").toUpperCase();
-
-        // kalau mau nota hanya barang keluar:
-        if (type !== "OUT") return;
-
-        const idTx = t.transaksiId || t.tranid || t.id;
-        if (!idTx) return;
-
-        if (!grouped[idTx]) {
-          grouped[idTx] = {
-            id: idTx,
-            tanggal: t.tanggal || t.date || "-",
-            supplier: getSupplierNameForTx(t),
-            type,
-            items: [],
-            total: 0,
-          };
-        }
-
-        const namaItem = t.namaItem || t.itemName || t.item || "-";
-        const qty = Number(t.qty ?? t.jumlah ?? 0);
-        const harga = Number(t.hargaSatuan ?? t.harga ?? t.price ?? 0);
-        const lineTotal = harga * qty || 0;
-
-        grouped[idTx].items.push({
-          nama: namaItem,
-          qty,
-          harga,
-          total: lineTotal,
-        });
-
-        grouped[idTx].total += lineTotal;
-      });
-
-      const groupedArr = Object.values(grouped);
-      fillNotaHistory(groupedArr);
     } catch (e) {
       console.error("Gagal load history:", e);
       tbodyHist.innerHTML =
         '<tr><td colspan="8" class="py-4 text-gray-500">Belum ada data history atau endpoint belum tersedia.</td></tr>';
-      fillNotaHistory([]);
     }
   })();
 });
