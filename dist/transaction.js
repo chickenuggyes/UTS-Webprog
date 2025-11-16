@@ -328,14 +328,13 @@ Total: ${grandTotal}
         })
         .join("");
 
-      // --- 2) HISTORY NOTA (kelompok per transaksi, khusus OUT) ---
+      // --- 2) HISTORY NOTA (kelompok per transaksi, IN dan OUT) ---
       const grouped = {};
 
       rows.forEach((t) => {
         const type = (t.tipe || t.type || "").toUpperCase();
 
-        // kalau mau nota hanya barang keluar:
-        if (type !== "OUT") return;
+        // Tampilkan semua transaksi (IN dan OUT)
 
         const idTx = t.transaksiId || t.tranid || t.id;
         if (!idTx) return;
