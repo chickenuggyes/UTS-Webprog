@@ -59,6 +59,8 @@ app.get("/", (req, res) => {
   res.redirect("/src/login.html");
 });
 
+app.use("/login", authRoutes);
+
 /* ---------- Error handler (paling akhir) ---------- */
 app.use((err, req, res, next) => {
   console.error("Server error:", err);
