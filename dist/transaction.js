@@ -189,37 +189,80 @@ document.addEventListener("DOMContentLoaded", () => {
   // default: Stock Log dulu
   setView("stock");
 
-  // ---------- Render nota ala CLI ----------
+  // ---------- Render nota dengan UI yang lebih baik ----------
 function renderNotaBlock(tx) {
   const judul = tx.type === "IN" ? "Transaksi Masuk" : "Transaksi Keluar";
-  const garis = "------------------------------------------------------------";
-
-  const rows = tx.items
+  const typeColor = tx.type === "IN" ? "bg-green-100 text-green-700 border-green-300" : "bg-red-100 text-red-700 border-red-300";
+  
+  const itemsRows = tx.items
     .map(it => {
       const nama   = String(it.nama || "-");
-      const jumlah = String(it.qty ?? "-");
+      const jumlah = it.qty ?? "-";
       const harga  = it.harga != null ? rupiah(it.harga) : "-";
       const total  = it.total != null ? rupiah(it.total) : "-";
 
-      return `| ${nama.padEnd(15)} | ${jumlah.padEnd(6)} | ${harga.padEnd(12)} | ${total.padEnd(12)} |`;
+      return `
+        <tr class="border-b border-gray-200 hover:bg-gray-50">
+          <td class="py-3 px-4 text-gray-800">${nama}</td>
+          <td class="py-3 px-4 text-center text-gray-700">${jumlah}</td>
+          <td class="py-3 px-4 text-right text-gray-700">${harga}</td>
+          <td class="py-3 px-4 text-right font-semibold text-gray-800">${total}</td>
+        </tr>
+      `;
     })
-    .join("\n");
+    .join("");
 
   const grandTotal = tx.total != null ? rupiah(tx.total) : "-";
 
   return `
-<div class="p-4 border border-pink-100 rounded-lg bg-white/60 shadow-sm">
-  <pre class="whitespace-pre-wrap font-mono text-sm text-gray-700 leading-5">
-${judul} #${tx.id}
-Tanggal: ${tx.tanggal}
-Supplier: ${tx.supplier}
-${garis}
-| Nama Produk     | Jumlah | Harga Satuan | Total       |
-${garis}
-${rows || "(tidak ada item)"}
-${garis}
-Total: ${grandTotal}
-  </pre>
+<div class="bg-white rounded-lg shadow-md border border-pink-200 overflow-hidden">
+  <div class="bg-gradient-to-r from-pink-50 to-pink-100 px-6 py-4 border-b border-pink-200">
+    <div class="flex items-center justify-between">
+      <div>
+        <h3 class="text-lg font-bold text-pink-700">${judul}</h3>
+        <p class="text-sm text-gray-600 mt-1">ID: <span class="font-mono text-pink-600">#${tx.id}</span></p>
+      </div>
+      <span class="px-3 py-1 rounded-full text-xs font-semibold border ${typeColor}">
+        ${tx.type}
+      </span>
+    </div>
+  </div>
+  
+  <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+    <div class="grid grid-cols-2 gap-4 text-sm">
+      <div>
+        <span class="text-gray-500">Tanggal:</span>
+        <span class="ml-2 font-medium text-gray-800">${tx.tanggal}</span>
+      </div>
+      <div>
+        <span class="text-gray-500">Supplier:</span>
+        <span class="ml-2 font-medium text-gray-800">${tx.supplier}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nama Produk</th>
+          <th class="py-3 px-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Jumlah</th>
+          <th class="py-3 px-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Harga Satuan</th>
+          <th class="py-3 px-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Total</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white">
+        ${itemsRows || '<tr><td colspan="4" class="py-4 text-center text-gray-500">Tidak ada item</td></tr>'}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="bg-pink-50 px-6 py-4 border-t border-pink-200">
+    <div class="flex justify-end items-center">
+      <span class="text-gray-600 mr-4 font-medium">Total:</span>
+      <span class="text-2xl font-bold text-pink-600">${grandTotal}</span>
+    </div>
+  </div>
 </div>
 `;
 }
