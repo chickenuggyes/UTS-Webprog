@@ -190,9 +190,24 @@ document.addEventListener("DOMContentLoaded", () => {
   setView("stock");
 
   // ---------- Render nota dengan UI yang lebih baik ----------
-function renderNotaBlock(tx) {
+function renderNotaBlock(tx, currentUserId) {
   const judul = tx.type === "IN" ? "Transaksi Masuk" : "Transaksi Keluar";
   const typeColor = tx.type === "IN" ? "bg-green-100 text-green-700 border-green-300" : "bg-red-100 text-red-700 border-red-300";
+  
+  // Tentukan username yang akan ditampilkan (sama seperti di stock log)
+  let akun = "-";
+  if (tx.akun && tx.akun !== "System" && tx.akun !== "Unknown" && tx.akun !== null && tx.akun !== "" && tx.akun !== undefined) {
+    akun = tx.akun;
+  } else if (tx.username && tx.username !== "System" && tx.username !== "Unknown" && tx.username !== null && tx.username !== "" && tx.username !== undefined) {
+    akun = tx.username;
+  } else if (tx.user_id) {
+    akun = `User-${tx.user_id}`;
+  }
+
+  // Highlight jika current user
+  const isCurrentUser = currentUserId && (tx.user_id === currentUserId);
+  const userClass = isCurrentUser ? "text-pink-600 font-semibold" : "";
+  const borderClass = isCurrentUser ? "border-pink-300" : "border-pink-200";
   
   const itemsRows = tx.items
     .map(it => {
@@ -215,7 +230,7 @@ function renderNotaBlock(tx) {
   const grandTotal = tx.total != null ? rupiah(tx.total) : "-";
 
   return `
-<div class="bg-white rounded-lg shadow-md border border-pink-200 overflow-hidden">
+<div class="bg-white rounded-lg shadow-md border ${borderClass} overflow-hidden">
   <div class="bg-gradient-to-r from-pink-50 to-pink-100 px-6 py-4 border-b border-pink-200">
     <div class="flex items-center justify-between">
       <div>
@@ -229,7 +244,7 @@ function renderNotaBlock(tx) {
   </div>
   
   <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-    <div class="grid grid-cols-2 gap-4 text-sm">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
       <div>
         <span class="text-gray-500">Tanggal:</span>
         <span class="ml-2 font-medium text-gray-800">${tx.tanggal}</span>
@@ -237,6 +252,10 @@ function renderNotaBlock(tx) {
       <div>
         <span class="text-gray-500">Supplier:</span>
         <span class="ml-2 font-medium text-gray-800">${tx.supplier}</span>
+      </div>
+      <div>
+        <span class="text-gray-500">User:</span>
+        <span class="ml-2 font-medium ${userClass}">${akun}</span>
       </div>
     </div>
   </div>
@@ -269,7 +288,7 @@ function renderNotaBlock(tx) {
 
 
 
-  function fillNotaHistory(groupedArr) {
+  function fillNotaHistory(groupedArr, currentUserId) {
     if (!notaList) return;
     if (!groupedArr.length) {
       notaList.innerHTML =
@@ -277,7 +296,7 @@ function renderNotaBlock(tx) {
       return;
     }
 
-    notaList.innerHTML = groupedArr.map(renderNotaBlock).join("");
+    notaList.innerHTML = groupedArr.map(tx => renderNotaBlock(tx, currentUserId)).join("");
   }
 
   // ---------- Load history + supplier name + nota ----------
@@ -307,7 +326,7 @@ function renderNotaBlock(tx) {
       if (!Array.isArray(rows) || rows.length === 0) {
         tbodyHist.innerHTML =
           '<tr><td colspan="8" class="py-4 text-gray-500">Belum ada riwayat transaksi.</td></tr>';
-        fillNotaHistory([]); // kosongkan nota juga
+        fillNotaHistory([], currentUserId); // kosongkan nota juga
         return;
       }
 
@@ -383,6 +402,16 @@ function renderNotaBlock(tx) {
         if (!idTx) return;
 
         if (!grouped[idTx]) {
+          // Tentukan username yang akan ditampilkan (sama seperti di stock log)
+          let akun = "-";
+          if (t.akun && t.akun !== "System" && t.akun !== "Unknown" && t.akun !== null && t.akun !== "" && t.akun !== undefined) {
+            akun = t.akun;
+          } else if (t.username && t.username !== "System" && t.username !== "Unknown" && t.username !== null && t.username !== "" && t.username !== undefined) {
+            akun = t.username;
+          } else if (t.user_id) {
+            akun = `User-${t.user_id}`;
+          }
+
           grouped[idTx] = {
             id: idTx,
             tanggal: t.tanggal || t.date || "-",
@@ -390,6 +419,9 @@ function renderNotaBlock(tx) {
             type,
             items: [],
             total: 0,
+            akun: akun,
+            username: t.username || t.akun || null,
+            user_id: t.user_id || null,
           };
         }
 
@@ -426,12 +458,12 @@ function renderNotaBlock(tx) {
       });
 
       const groupedArr = Object.values(grouped);
-      fillNotaHistory(groupedArr);
+      fillNotaHistory(groupedArr, currentUserId);
     } catch (e) {
       console.error("Gagal load history:", e);
       tbodyHist.innerHTML =
         '<tr><td colspan="8" class="py-4 text-gray-500">Belum ada data history atau endpoint belum tersedia.</td></tr>';
-      fillNotaHistory([]);
+      fillNotaHistory([], currentUserId);
     }
   })();
 });

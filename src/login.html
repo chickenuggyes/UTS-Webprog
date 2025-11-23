@@ -111,6 +111,44 @@
     .signup-link a:hover {
         text-decoration: underline;
     }
+
+    .error {
+        background: rgba(255, 0, 0, 0.1);
+        color: #d32f2f;
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        border: 1px solid rgba(211, 47, 47, 0.3);
+    }
+
+    .password-hint {
+        display: block;
+        font-size: 0.75rem;
+        color: #666;
+        margin-top: 0.3rem;
+    }
+
+    .form-group input:invalid {
+        border: 1px solid rgba(211, 47, 47, 0.5);
+    }
+
+    /* Responsive untuk mobile */
+    @media (max-width: 480px) {
+        .container {
+            width: 90%;
+            padding: 30px 20px;
+            margin: 20px;
+        }
+
+        .container h2 {
+            font-size: 1.5rem;
+        }
+
+        .form-group input {
+            font-size: 16px; /* Mencegah zoom di iOS */
+        }
+    }
 </style>
 
 </head>
@@ -134,7 +172,7 @@
             <div class="signup-link">
                 New User? <a href="#" id="showSignup">Signup</a>
             </div>
-            <form id="registerForm" style="display:none; margin-top:1rem;">
+            <form id="registerForm" style="display:none; margin-top:1rem;" novalidate>
                 <h2 style="font-size:1.3rem; margin-bottom:0.5rem; color:#222;">Sign Up</h2>
                 <p style="margin-bottom:1rem; color:#666; font-size:0.9rem;">Create your account to get started!</p>
                 <div class="form-group">
@@ -143,11 +181,16 @@
                 </div>
                 <div class="form-group">
                     <label for="regEmail">Email</label>
-                    <input type="email" id="regEmail" name="regEmail" required>
+                    <input type="text" id="regEmail" name="regEmail" required>
                 </div>
                 <div class="form-group">
                     <label for="regPassword">Password</label>
                     <input type="password" id="regPassword" name="regPassword" required>
+                    <small class="password-hint">Password minimal 8 karakter dan harus mengandung simbol</small>
+                </div>
+                <div class="form-group">
+                    <label for="regPasswordConfirm">Retype Password</label>
+                    <input type="password" id="regPasswordConfirm" name="regPasswordConfirm" required>
                 </div>
                 <button type="submit" class="btn">Register</button>
                 <div class="signup-link" style="margin-top:0.5rem; position:relative; z-index:1;">

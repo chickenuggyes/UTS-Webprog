@@ -61,12 +61,26 @@ export async function register(req, res) {
   try {
     const { username, email, password } = req.body || {};
 
+    console.log("📥 Register request:", { username, email, passwordLength: password?.length });
+
     if (!username?.trim() || !email?.trim() || !password?.trim()) {
       return res.status(400).json({ message: "Semua field wajib diisi" });
     }
 
-    if (password.length < 4) {
-      return res.status(400).json({ message: "Password minimal 4 karakter" });
+    // Update validasi password sesuai frontend: minimal 8 karakter
+    if (password.length < 8) {
+      return res.status(400).json({ message: "Password minimal 8 karakter" });
+    }
+
+    // Validasi password harus mengandung simbol
+    const symbolRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+    if (!symbolRegex.test(password)) {
+      return res.status(400).json({ message: "Password harus mengandung minimal satu simbol (!@#$%^&* dll)" });
+    }
+
+    // Validasi email harus ada @
+    if (!email.includes('@')) {
+      return res.status(400).json({ message: "Email harus mengandung karakter @" });
     }
 
     const [exist] = await db.query(
@@ -88,6 +102,8 @@ export async function register(req, res) {
       [id, username, email, hashed]
     );
 
+    console.log("✅ Register berhasil untuk user:", username);
+
     res.json({
       message: "Registrasi berhasil",
       user: { id, username, email }
@@ -95,7 +111,16 @@ export async function register(req, res) {
 
   } catch (err) {
     console.error("❌ Error register:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("❌ Error details:", {
+      message: err.message,
+      code: err.code,
+      sqlMessage: err.sqlMessage,
+      stack: err.stack
+    });
+    res.status(500).json({ 
+      message: "Server error",
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 }
 
