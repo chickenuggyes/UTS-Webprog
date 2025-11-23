@@ -127,10 +127,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 return false;
             }
 
-            // Validasi retype password harus sama
+            // Validasi Kondirmasi password harus sama
             if (password !== passwordConfirm) {
                 if (errorDiv) {
-                    errorDiv.textContent = 'Password dan Retype Password tidak sama.';
+                    errorDiv.textContent = 'Password dan Konfirmasi Password tidak sama.';
                     errorDiv.style.display = 'block';
                 }
                 return false;
