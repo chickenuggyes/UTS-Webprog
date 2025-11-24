@@ -1,13 +1,18 @@
+// reportController.js
 import { db } from "../services/sqlDB.js";
 import PDFDocument from "pdfkit";
 
+// Format Rupiah
 const rupiah = (n) =>
-  new Intl.NumberFormat("id-ID", { 
-    style: "currency", 
-    currency: "IDR", 
-    maximumFractionDigits: 0 
+  new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
   }).format(Number(n || 0));
 
+// ========================================================
+// REPORT JSON (PRODUCTS)
+// ========================================================
 export async function report(req, res) {
   try {
     const q = (req.query.q || "").toLowerCase();
@@ -30,6 +35,9 @@ export async function report(req, res) {
   }
 }
 
+// ========================================================
+// DASHBOARD METRIC (TOTAL PRODUK, TOTAL STOK, PEMASUKAN, DLL)
+// ========================================================
 export async function dashboard(req, res) {
   try {
     const [[stats]] = await db.query(`
@@ -84,7 +92,7 @@ export async function dashboard(req, res) {
       totalPengeluaranHariIni: totalPengeluaran,
       labaHariIni: laba,
       transaksiHariIni: transaksiHariIni.total || 0,
-      barangHampirHabis
+      barangHampirHabis,
     });
   } catch (err) {
     console.error("Error dashboard:", err);
@@ -92,104 +100,150 @@ export async function dashboard(req, res) {
   }
 }
 
+// ========================================================
+// REPORT SUPPLIER JSON
+// ========================================================
+export async function reportSupplier(req, res) {
+  try {
+    const [suppliers] = await db.query(`SELECT * FROM supplier ORDER BY id ASC`);
+    res.json({ count: suppliers.length, suppliers });
+  } catch (err) {
+    console.error("Error supplier:", err);
+    res.status(500).json({ message: "Gagal mengambil data supplier" });
+  }
+}
+
+// ========================================================
+// PDF REPORT COMBINED (PRODUCTS + SUPPLIER)
+// ========================================================
 export async function reportPdf(req, res) {
   try {
-    const q = (req.query.q || "").toLowerCase();
-    let sql = "SELECT * FROM products";
-    const params = [];
+    // ==================== PRODUCTS ====================
+    const [items] = await db.query(`SELECT * FROM products ORDER BY namaItem ASC`);
 
-    if (q) {
-      sql += " WHERE LOWER(namaItem) LIKE ? OR LOWER(keterangan) LIKE ?";
-      params.push(`%${q}%`, `%${q}%`);
-    }
-
-    const [items] = await db.query(sql, params);
-
-    const totalItem  = items.length;
-    const totalStok  = items.reduce((a, it) => a + Number(it.stok || 0), 0);
+    const totalItem = items.length;
+    const totalStok = items.reduce((a, it) => a + Number(it.stok || 0), 0);
     const totalHarga = items.reduce(
       (a, it) => a + Number(it.hargaSatuan || 0) * Number(it.stok || 0),
       0
     );
 
+    // ==================== SUPPLIERS ====================
+    const [suppliers] = await db.query(`SELECT * FROM supplier ORDER BY id ASC`);
+
+    // ==================== PDF CONFIG ====================
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="laporan-barang.pdf"`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="laporan-gabungan.pdf"`
+    );
 
     const doc = new PDFDocument({ size: "A4", margin: 40 });
     doc.pipe(res);
 
-    // Judul laporan
-    doc.fontSize(16).text("Laporan Daftar Barang Toko Gembira", { align: "center" });
-    doc.moveDown(0.2);
-    doc.fontSize(10).fillColor("#555")
-      .text(`Dicetak: ${new Date().toLocaleString("id-ID")}`, { align: "center" });
+    // ==================== HEADER ====================
+    doc.fontSize(16).text("Laporan Produk & Supplier - Toko Gembira", {
+      align: "center",
+    });
+    doc.fontSize(10).fillColor("#555").text(`Dicetak: ${new Date().toLocaleString("id-ID")}`, {
+      align: "center",
+    });
     doc.moveDown(1);
     doc.fillColor("#000");
 
-    // Ringkasan
+    // ========================================================
+    // SECTION: PRODUK
+    // ========================================================
+    doc.fontSize(14).text("📦 DATA PRODUK", { underline: true });
+    doc.moveDown(0.5);
+
     doc.fontSize(11).text(`Total Item: ${totalItem}`);
     doc.text(`Total Stok: ${totalStok}`);
     doc.text(`Total Nilai Persediaan: ${rupiah(totalHarga)}`);
-    doc.moveDown(0.5);
 
-    // Garis pemisah
-    doc.moveTo(40, doc.y).lineTo(555, doc.y).strokeColor("#999").stroke();
-    doc.moveDown(0.5);
+    doc.moveDown(1);
 
-    // Header tabel
-    const cols = [
+    // HEADER TABEL PRODUK
+    const prodCols = [
       { label: "#", width: 30, align: "left" },
       { label: "Nama", width: 160, align: "left" },
-      { label: "Qty", width: 50, align: "left" },
-      { label: "Keterangan", width: 120, align: "left" },
       { label: "Harga", width: 80, align: "right" },
-      { label: "Stok", width: 45, align: "right" },
-      { label: "Subtotal", width: 90, align: "right" }
+      { label: "Stok", width: 50, align: "right" },
+      { label: "Subtotal", width: 100, align: "right" },
     ];
 
     let y = doc.y;
-    const startX = 40;
+    let x = 40;
 
-    // Header kolom
-    doc.fontSize(10).font("Helvetica-Bold").fillColor("#222");
-    let x = startX;
-    cols.forEach(c => {
+    doc.font("Helvetica-Bold");
+    prodCols.forEach((c) => {
       doc.text(c.label, x, y, { width: c.width, align: c.align });
       x += c.width;
     });
-    y += 18;
-    doc.moveTo(startX, y - 4).lineTo(startX + 575, y - 4).strokeColor("#999").stroke();
-    doc.font("Helvetica").fillColor("#000");
 
-    // Isi tabel
+    y += 20;
+    doc.font("Helvetica");
+
+    // ROW DATA
     items.forEach((it, idx) => {
-      const subtotal = Number(it.hargaSatuan || 0) * Number(it.stok || 0);
-      let x = startX;
+      const subtotal = it.hargaSatuan * it.stok;
+      let x = 40;
+
       const cells = [
-        String(idx + 1),
-        String(it.namaItem ?? "-"),
-        String(it.keterangan ?? "-"),
-        rupiah(it.hargaSatuan || 0),
-        String(it.stok ?? 0),
+        idx + 1,
+        it.namaItem,
+        rupiah(it.hargaSatuan),
+        it.stok,
         rupiah(subtotal),
       ];
 
-      cols.forEach((c, i) => {
-        doc.text(cells[i], x, y, { width: c.width, align: c.align });
+      prodCols.forEach((c, i) => {
+        doc.text(String(cells[i]), x, y, { width: c.width, align: c.align });
         x += c.width;
       });
 
       y += 20;
-      doc.moveTo(startX, y).lineTo(startX + 575, y).strokeColor("#eee").stroke();
-      y += 2;
     });
 
-    // Total akhir
+    doc.moveDown(2);
+
+    // ========================================================
+    // SECTION: SUPPLIER
+    // ========================================================
+    doc.addPage();
+    doc.fontSize(14).text("📑 DATA SUPPLIER", { underline: true });
     doc.moveDown(1);
+
+    const suppCols = [
+      { label: "ID", width: 50 },
+      { label: "Nama Supplier", width: 200 },
+      { label: "No HP", width: 130 },
+      { label: "Alamat", width: 150 },
+    ];
+
+    y = doc.y;
+    x = 40;
+
     doc.font("Helvetica-Bold");
-    doc.text("TOTAL:", startX + 400, y, { width: 70, align: "right" });
-    doc.text(rupiah(totalHarga), startX + 470, y, { width: 90, align: "right" });
+    suppCols.forEach((c) => {
+      doc.text(c.label, x, y, { width: c.width });
+      x += c.width;
+    });
+
     doc.font("Helvetica");
+    y += 20;
+
+    suppliers.forEach((s) => {
+      let x = 40;
+      const row = [s.id, s.namaSupplier, s.noHp, s.alamat];
+
+      suppCols.forEach((c, i) => {
+        doc.text(String(row[i] ?? "-"), x, y, { width: c.width });
+        x += c.width;
+      });
+
+      y += 20;
+    });
 
     doc.end();
   } catch (err) {

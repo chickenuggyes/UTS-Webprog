@@ -50,7 +50,8 @@ app.use("/items", itemsRoutes);
 app.use("/report", reportRoutes);
 app.use("/suppliers", supplierRoutes);
 app.use("/categories", categoryRoutes); 
-app.use("/transactions", transactionsRoutes); // ✅ Tambah ini di bawah routes lain
+app.use("/transactions", transactionsRoutes); 
+app.use("/reports", transactionsRoutes);
 
 // Ringkasan dashboard
 app.get("/dashboard", dashboard);
