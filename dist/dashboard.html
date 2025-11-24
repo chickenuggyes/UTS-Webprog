@@ -158,6 +158,44 @@
         </div>
       </div>
 
+
+<!-- 📊 Statistik Tambahan -->
+<section id="statContainer" class="mt-10 space-y-8 no-print">
+  
+  <!-- Summary Block -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white/80 p-4 rounded-lg shadow">
+      <p class="text-gray-500">Total Kategori</p>
+      <h2 id="statKategori" class="text-2xl font-bold">...</h2>
+    </div>
+    <div class="bg-white/80 p-4 rounded-lg shadow">
+      <p class="text-gray-500">Total Supplier</p>
+      <h2 id="statSupplier" class="text-2xl font-bold">...</h2>
+    </div>
+    <div class="bg-white/80 p-4 rounded-lg shadow">
+      <p class="text-gray-500">Transaksi Hari Ini</p>
+      <h2 id="statTxToday" class="text-2xl font-bold">...</h2>
+    </div>
+  </div>
+
+  <!-- ⚠️ Alert stok rendah -->
+  <div id="stockAlert" class="hidden bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg">
+    ⚠️ Beberapa barang stoknya < 5. Mohon lakukan restock.
+  </div>
+
+  <!-- 📈 Grafik transaksi per minggu -->
+  <div class="bg-white/80 p-4 rounded-lg shadow">
+    <p class="font-semibold mb-2">Grafik Transaksi Per Minggu</p>
+    <canvas id="chartWeekly"></canvas>
+  </div>
+
+  <!-- 📊 Grafik barang paling banyak OUT / IN -->
+  <div class="bg-white/80 p-4 rounded-lg shadow">
+    <p class="font-semibold mb-2">Barang Paling Banyak IN / OUT</p>
+    <canvas id="chartPopular"></canvas>
+  </div>
+</section>
+
             <!-- Tabs + Print -->
       <div class="mt-10 mb-3 flex items-center justify-between no-print">
         <!-- Tabs -->
@@ -372,5 +410,6 @@
       else link.classList.remove("bg-pink-400","text-white","shadow");
     });
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>

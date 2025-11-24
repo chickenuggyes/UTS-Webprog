@@ -39,7 +39,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     `;
   }
 
-  // --- SUPPLIER ROW BARU: nama + kontak + alamat ---
+  // --- SUPPLIER ROW: nama + kontak + alamat ---
   function supplierRow(s) {
     const name   = s?.namaSupplier || s?.nama || s?.name || "-";
     const kontak = s?.kontak || s?.telepon || s?.phone || "-";
@@ -67,7 +67,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   let cachedSuppliers = null; // null = belum pernah load
   let dashCache   = { totalItem: 0, totalStok: 0, totalHarga: 0 };
 
-  // ------- Initial load: dashboard + products (tetap) -------
+  // ------- Initial load: dashboard + products -------
   try {
     const [dash, itemsRes] = await Promise.all([
       getJSON(`${API}/dashboard`),
@@ -85,7 +85,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (elHarga) elHarga.textContent = rupiah(dashCache.totalHarga);
 
     if (listProductsEl && itemsRes) {
-      const items = itemsRes.items || [];
+      const items = itemsRes.items || itemsRes || [];
       cachedItems = items;
       listProductsEl.innerHTML = items.map(itemRow).join("");
     }
@@ -96,8 +96,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (elItem)  elItem.textContent  = "—";
     if (elStok)  elStok.textContent  = "—";
     if (elHarga) elHarga.textContent = "—";
-    if (listProductsEl) listProductsEl.innerHTML =
-      `<li class="text-red-600">${err.message}</li>`;
+    if (listProductsEl) {
+      listProductsEl.innerHTML =
+        `<li class="text-red-600">${err.message}</li>`;
+    }
   }
 
   // ------- Tabs behavior -------
@@ -135,7 +137,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (cachedSuppliers !== null) return; // sudah pernah load
 
     try {
-      // Sesuaikan endpoint kalau berbeda (mis: /supplier, /suppliers/list, dll)
       const resp = await getJSON(`${API}/suppliers`);
       const suppliers = resp?.suppliers || resp || [];
       cachedSuppliers = suppliers;
@@ -165,9 +166,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // ------- Print (produk saja) -------
   function fillPrintSummary(dash) {
-    const pItem   = document.getElementById('pTotalItem');
-    const pStok   = document.getElementById('pTotalStok');
-    const pHarga  = document.getElementById('pTotalHarga');
+    const pItem   = document.getElementById("pTotalItem");
+    const pStok   = document.getElementById("pTotalStok");
+    const pHarga  = document.getElementById("pTotalHarga");
     if (pItem)  pItem.textContent  = dash.totalItem;
     if (pStok)  pStok.textContent  = dash.totalStok;
     if (pHarga) pHarga.textContent = rupiah(dash.totalHarga);
@@ -187,6 +188,220 @@ window.addEventListener("DOMContentLoaded", async () => {
     `).join("");
   }
 
+  // ====== Statistik Tambahan ======
+  async function loadExtraStats() {
+    const statKategoriEl = document.getElementById("statKategori");
+    const statSupplierEl = document.getElementById("statSupplier");
+    const statTxTodayEl  = document.getElementById("statTxToday");
+    const stockAlertEl   = document.getElementById("stockAlert");
+    const chartWeeklyEl  = document.getElementById("chartWeekly");
+    const chartPopularEl = document.getElementById("chartPopular");
+
+    // kalau elemen2 ini tidak ada (misal file dipakai di halaman lain), jangan lanjut
+    if (!statKategoriEl && !chartWeeklyEl && !chartPopularEl) return;
+
+    try {
+      const [itemsRes, suppliersRes, txRes] = await Promise.all([
+        getJSON(`${API}/items`),
+        getJSON(`${API}/suppliers`),
+        getJSON(`${API}/transactions`),
+      ]);
+
+      const items = itemsRes.items || itemsRes || [];
+      const suppliers = suppliersRes.suppliers || suppliersRes || [];
+      const txRows =
+        txRes.transactions || txRes.items || txRes.data || txRes || [];
+
+      // --- Summary: kategori, supplier, transaksi hari ini ---
+      if (statKategoriEl) {
+        const kategoriSet = new Set(
+          items
+            .map((i) => i.namaKategori || i.kategori || i.category)
+            .filter(Boolean)
+        );
+        statKategoriEl.textContent = kategoriSet.size;
+      }
+
+      if (statSupplierEl) {
+        statSupplierEl.textContent = suppliers.length;
+      }
+
+      if (statTxTodayEl) {
+        const todayStr = new Date().toLocaleDateString("id-ID");
+        const txTodayCount = txRows.filter((t) => {
+          const d = new Date(t.tanggal || t.date);
+          return d.toLocaleDateString("id-ID") === todayStr;
+        }).length;
+        statTxTodayEl.textContent = txTodayCount;
+      }
+
+      // --- Alert stok < 5 ---
+      if (stockAlertEl) {
+        const lowStock = items.filter(
+          (p) => Number(p.stok ?? p.stock ?? 0) < 5
+        );
+        if (lowStock.length > 0) {
+          stockAlertEl.classList.remove("hidden");
+        } else {
+          stockAlertEl.classList.add("hidden");
+        }
+      }
+
+      // --- Grafik Weekly (Human Friendly label) ---
+      if (chartWeeklyEl && typeof Chart !== "undefined") {
+        function getWeekRange(date) {
+          const d = new Date(date);
+          const day = d.getDay() || 7; // Minggu -> 7
+          const start = new Date(d);
+          start.setDate(d.getDate() - (day - 1)); // mundur ke Senin
+          const end = new Date(start);
+          end.setDate(start.getDate() + 6); // sampai Minggu
+
+          const format = (dt) =>
+            dt.toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            });
+
+          return `${format(start)} — ${format(end)}`;
+        }
+
+        const weeklyObj = {};
+        txRows.forEach((t) => {
+          const d = new Date(t.tanggal || t.date);
+          if (isNaN(d)) return;
+          const key = getWeekRange(d);
+          weeklyObj[key] = (weeklyObj[key] || 0) + 1;
+        });
+
+        const sortedLabels = Object.keys(weeklyObj).sort(
+          (a, b) =>
+            new Date(a.split(" — ")[0]) - new Date(b.split(" — ")[0])
+        );
+
+        if (sortedLabels.length > 0) {
+          new Chart(chartWeeklyEl.getContext("2d"), {
+            type: "line",
+            data: {
+              labels: sortedLabels,
+              datasets: [
+                {
+                  label: "Jumlah Transaksi",
+                  data: sortedLabels.map((lb) => weeklyObj[lb]),
+                  borderColor: "#ec4899",
+                  backgroundColor: "#ec489980",
+                  borderWidth: 3,
+                  tension: 0.3,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: { position: "top" },
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { precision: 0 },
+                },
+              },
+            },
+          });
+        }
+      }
+
+      // --- Grafik Barang Paling Banyak IN / OUT (dipisah) ---
+      if (chartPopularEl && typeof Chart !== "undefined") {
+        const popularity = {};
+        txRows.forEach((t) => {
+          const name =
+            t.namaItem || t.itemName || t.item || "-";
+          if (!name) return;
+
+          const type = String(t.tipe || t.type || "").toUpperCase();
+          const qty = Math.abs(
+            Number(t.qty ?? t.jumlah ?? t.quantity ?? 0)
+          );
+          if (!qty) return;
+
+          if (!popularity[name]) {
+            popularity[name] = { in: 0, out: 0 };
+          }
+
+          if (type === "IN") {
+            popularity[name].in += qty;
+          } else if (type === "OUT") {
+            popularity[name].out += qty;
+          }
+        });
+
+        const entries = Object.entries(popularity)
+          .sort(
+            (a, b) =>
+              (b[1].in + b[1].out) - (a[1].in + a[1].out)
+          )
+          .slice(0, 10); // top 10 saja biar rapi
+
+        const labels = entries.map(([name]) => name);
+        const dataIn  = entries.map(([, v]) => v.in);
+        const dataOut = entries.map(([, v]) => v.out);
+
+        if (labels.length > 0) {
+          new Chart(chartPopularEl.getContext("2d"), {
+            type: "bar",
+            data: {
+              labels,
+              datasets: [
+                {
+                  label: "Total IN",
+                  data: dataIn,
+                  backgroundColor: "#22c55e", // hijau
+                },
+                {
+                  label: "Total OUT",
+                  data: dataOut,
+                  backgroundColor: "#ef4444", // merah
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: { position: "top" },
+                tooltip: {
+                  callbacks: {
+                    label: (ctx) =>
+                      `${ctx.dataset.label}: ${ctx.parsed.y}`,
+                  },
+                },
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { precision: 0 },
+                },
+                x: {
+                  ticks: {
+                    maxRotation: 45,
+                    minRotation: 25,
+                  },
+                },
+              },
+            },
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Gagal memuat statistik tambahan:", e);
+    }
+  }
+
+  // jalankan statistik tambahan
+  loadExtraStats();
+
+  // ------- Print handler -------
   window.handlePrint = function () {
     fillPrintSummary(dashCache);
     buildPrintTable(cachedItems);
