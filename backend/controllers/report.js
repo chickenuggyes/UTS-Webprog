@@ -40,10 +40,51 @@ export async function dashboard(req, res) {
       FROM products
     `);
 
+    const [[pemasukan]] = await db.query(`
+      SELECT SUM(td.quantity * p.hargaSatuan) AS total
+      FROM transaction_details td
+      JOIN transactions t ON td.transaction_id = t.tranid
+      JOIN products p ON td.product_id = p.id
+      WHERE t.transaction_type = 'IN'
+      AND DATE(t.transaction_date) = CURDATE()
+    `);
+
+    const [[pengeluaran]] = await db.query(`
+      SELECT SUM(td.quantity * p.hargaSatuan) AS total
+      FROM transaction_details td
+      JOIN transactions t ON td.transaction_id = t.tranid
+      JOIN products p ON td.product_id = p.id
+      WHERE t.transaction_type = 'OUT'
+      AND DATE(t.transaction_date) = CURDATE()
+    `);
+
+    const [[transaksiHariIni]] = await db.query(`
+      SELECT COUNT(*) AS total
+      FROM transactions
+      WHERE DATE(transaction_date) = CURDATE()
+    `);
+
+    const [barangHampirHabis] = await db.query(`
+      SELECT id, namaItem, stok
+      FROM products
+      WHERE stok < 5
+      ORDER BY stok ASC
+      LIMIT 5
+    `);
+
+    const totalPemasukan = pemasukan.total || 0;
+    const totalPengeluaran = pengeluaran.total || 0;
+    const laba = totalPemasukan - totalPengeluaran;
+
     res.json({
       totalItem: stats.totalItem || 0,
       totalStok: stats.totalStok || 0,
       totalHarga: stats.totalHarga || 0,
+      totalPemasukanHariIni: totalPemasukan,
+      totalPengeluaranHariIni: totalPengeluaran,
+      labaHariIni: laba,
+      transaksiHariIni: transaksiHariIni.total || 0,
+      barangHampirHabis
     });
   } catch (err) {
     console.error("Error dashboard:", err);
