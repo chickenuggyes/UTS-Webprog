@@ -18,8 +18,26 @@ app.get("/api/dashboard/summary", async (req, res) => {
       "SELECT COUNT(*) AS total FROM transactions WHERE DATE(transaction_date) = CURDATE()"
     );
     const [barangHampirHabis] = await db.query(
-      "SELECT id, namaItem, stok FROM products WHERE stok < 10 ORDER BY stok ASC LIMIT 5"
+      "SELECT id, namaItem, stok FROM products WHERE stok < 5 ORDER BY stok ASC LIMIT 5"
     );
+    const [[finance]] = await db.query(`
+      SELECT
+        SUM(
+          CASE WHEN t.transaction_type = 'IN' 
+               THEN d.quantity * d.hargaSatuan ELSE 0 END
+        ) AS pemasukan,
+        SUM(
+          CASE WHEN t.transaction_type = 'OUT' 
+               THEN d.quantity * d.hargaSatuan ELSE 0 END
+        ) AS pengeluaran
+      FROM transactions t
+      JOIN transaction_details d ON t.tranid = d.transaction_id
+      WHERE DATE(t.created_at) = CURDATE()
+    `);
+
+    const pemasukan = finance.pemasukan || 0;
+    const pengeluaran = finance.pengeluaran || 0;
+    const laba = pemasukan - pengeluaran;
 
     res.json({
       totalProduk: totalProduk.total || 0,
@@ -29,6 +47,9 @@ app.get("/api/dashboard/summary", async (req, res) => {
       totalHarga: totalHarga.total || 0,
       transaksiHariIni: transaksiHariIni.total || 0,
       barangHampirHabis,
+      pemasukanHariIni: pemasukan,
+      pengeluaranHariIni: pengeluaran,
+      labaHariIni: laba,
     });
   } catch (err) {
     console.error("❌ Error getDashboardSummary:", err);

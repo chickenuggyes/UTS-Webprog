@@ -104,26 +104,22 @@ router.post("/in", async (req, res) => {
         [detailId, tranid, r.itemId, r.qty, harga]
       );
 
-      await conn.query(
-        `INSERT INTO stocklog (username, transactionId, type, item, qty, supplier, note, createdAt)
-         VALUES (?, ?, 'IN', ?, ?, ?, ?, NOW())`,
-        [
-          validUsername,
-          tranid,
-          namaItem,
-          r.qty,
-          finalSupplierId ?? "-",
-          r.note || finalNote,
-        ]
-      );
+    await conn.query(
+      `
+      INSERT INTO stocklog (stokid, transaction_id, product_id, user_id, change_type, quantity)
+      VALUES (UUID(), ?, ?, ?, ?, ?)
+      `,
+      [tranid, r.itemId, validUserId, 'OUT', r.qty]
+    );
     }
 
     await conn.commit();
     res.json({ message: "Transaksi IN berhasil", tranid });
-  } catch (err) {
+    } catch (err) {
+    console.error("❌ ERROR OUT:", err); // <--- TAMBAH INI
     await conn.rollback();
     res.status(500).json({ message: "Gagal transaksi IN", error: err.message });
-  } finally {
+  }finally {
     conn.release();
   }
 });
@@ -195,16 +191,19 @@ router.post("/out", async (req, res) => {
         [detailId, tranid, r.itemId, r.qty, harga]
       );
 
-      await conn.query(
-        `INSERT INTO stocklog (username, transactionId, type, item, qty, supplier, note, createdAt)
-         VALUES (?, ?, 'OUT', ?, ?, '-', ?, NOW())`,
-        [validUsername, tranid, namaItem, r.qty, r.note || finalNote]
-      );
+    await conn.query(
+      `
+      INSERT INTO stocklog (stokid, transaction_id, product_id, user_id, change_type, quantity)
+      VALUES (UUID(), ?, ?, ?, ?, ?)
+      `,
+      [tranid, r.itemId, validUserId, 'OUT', r.qty]
+    );
     }
 
     await conn.commit();
     res.json({ message: "Transaksi OUT berhasil", tranid });
-  } catch (err) {
+    } catch (err) {
+    console.error("❌ ERROR OUT:", err); // <--- TAMBAH INI
     await conn.rollback();
     res.status(500).json({ message: "Gagal transaksi OUT", error: err.message });
   } finally {
