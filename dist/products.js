@@ -81,9 +81,12 @@ const filteredByCat =
 }
 
 function editProduct(id) {
+  // Confirm sebelum masuk halaman edit
+  if (!confirm("Yakin ingin mengedit produk ini?")) return;
   console.log("➡️ Redirect to edit:", id);
   window.location.href = `edit.html?id=${encodeURIComponent(id)}`;
 }
+
 
 async function reloadProducts() {
   try {

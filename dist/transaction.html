@@ -93,6 +93,24 @@
       <div></div>
     </div>
 
+    <!-- SEARCH + FILTER (letakkan di sebelah kanan group tombol) -->
+<div class="flex items-center gap-3">
+  <!-- Search -->
+  <div class="relative">
+    <input id="txSearch" type="search" placeholder="Cari transaksi, item, supplier, note..." 
+           class="px-3 py-2 w-72 rounded-md border focus:outline-none focus:ring-2 focus:ring-pink-300" />
+    <div class="absolute right-2 top-2 text-gray-400">🔎</div>
+  </div>
+
+  <!-- Filter chips: All / IN / OUT -->
+  <div id="txFilterGroup" class="inline-flex rounded-lg bg-white/60 p-1 shadow border border-pink-100">
+    <button data-filter="ALL" class="tx-filter-chip px-3 py-2 rounded-md font-semibold text-pink-600 hover:bg-pink-50">All</button>
+    <button data-filter="IN"  class="tx-filter-chip px-3 py-2 rounded-md font-semibold text-pink-600 hover:bg-pink-50">IN</button>
+    <button data-filter="OUT" class="tx-filter-chip px-3 py-2 rounded-md font-semibold text-pink-600 hover:bg-pink-50">OUT</button>
+  </div>
+</div>
+
+
     <!-- STOCK LOG (tabel seperti sekarang) -->
     <div id="stockLogContainer" class="bg-white/80 rounded-lg shadow border border-pink-100">
       <div class="px-4 py-3 border-b text-sm text-gray-600">Riwayat perubahan stok</div>

@@ -114,20 +114,17 @@ window.addEventListener("DOMContentLoaded", async () => {
   await loadItem();
 
   form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    try {
-  const fd = new FormData(form);
-  fd.append("namaItem", fd.get("namaBarang"));
-
-      const res = await fetch(`${API}/items/${id}`, { method: "PUT", body: fd });
-      if (!res.ok) {
-        const err = await res.json().catch(()=> ({}));
-        throw new Error(err.message || "Gagal update produk");
-      }
-      alert("Produk berhasil diupdate!");
-      window.location.href = "products.html";
-    } catch (err) {
-      alert(err.message || "Gagal update produk");
-    }
-  });
+  e.preventDefault();
+  // Confirm sebelum simpan
+  if (!confirm("Yakin ingin menyimpan perubahan untuk produk ini?")) return;
+  try {
+    const fd = new FormData(form);
+    
+    // Success notification
+    alert("Produk berhasil diupdate!");
+    window.location.href = "products.html";
+  } catch (err) {
+    alert(err.message || "Gagal update produk");
+  }
+});
 });

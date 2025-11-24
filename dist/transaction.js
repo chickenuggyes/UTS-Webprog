@@ -1,6 +1,7 @@
 // transaction.js (Stock Log + Nota History)
+// Ditambahkan: Search realtime + Filter chips (All / IN / OUT)
+// Perubahan seminimal mungkin — sisipan kecil tanpa merombak struktur utama.
 
-// Jalankan setelah DOM siap
 document.addEventListener("DOMContentLoaded", () => {
   const API = "http://localhost:3000";
 
@@ -299,6 +300,190 @@ function renderNotaBlock(tx, currentUserId) {
     notaList.innerHTML = groupedArr.map(tx => renderNotaBlock(tx, currentUserId)).join("");
   }
 
+  // ============================
+  // SEARCH + FILTER (SISIPAN)
+  // - minimal changes, hanya sisipkan fungsi dan state
+  // ============================
+  const txSearch = document.getElementById("txSearch"); // pastikan ada di HTML
+  let allRows = []; // akan diisi saat loadHistory
+  let activeFilter = "ALL"; // ALL | IN | OUT
+
+  function txMatchesSearch(tx, q) {
+    if (!q) return true;
+    q = q.toLowerCase();
+
+    const fields = [
+      tx.transaksiId, tx.id, tx.tranid,
+      tx.namaItem, tx.itemName, tx.item,
+      tx.catatan, tx.note,
+      tx.akun, tx.username,
+      tx.tipe, tx.type,
+      getSupplierNameForTx(tx)
+    ];
+
+    return fields.some(f => String(f || "").toLowerCase().includes(q));
+  }
+
+  function getFilteredRows() {
+    const q = (txSearch?.value || "").trim().toLowerCase();
+    return allRows.filter((t) => {
+      const type = String((t.tipe || t.type || "")).toUpperCase();
+      if (activeFilter === "IN" && type !== "IN") return false;
+      if (activeFilter === "OUT" && type !== "OUT") return false;
+      return txMatchesSearch(t, q);
+    });
+  }
+
+  function updateFilterChipVisuals() {
+    document.querySelectorAll(".tx-filter-chip").forEach((c) => {
+      const f = c.dataset.filter || "ALL";
+      if (f === activeFilter) {
+        c.classList.add("bg-pink-500", "text-white");
+        c.classList.remove("text-pink-600");
+      } else {
+        c.classList.remove("bg-pink-500", "text-white");
+        c.classList.add("text-pink-600");
+      }
+    });
+  }
+
+  // register chips if ada
+  document.querySelectorAll(".tx-filter-chip").forEach((c) => {
+    c.addEventListener("click", () => {
+      const f = c.dataset.filter || "ALL";
+      // toggle: klik ulang kembali ke ALL
+      activeFilter = (activeFilter === f) ? "ALL" : f;
+      updateFilterChipVisuals();
+      renderFilteredView();
+    });
+  });
+
+  // register search input
+  txSearch?.addEventListener("input", () => {
+    renderFilteredView();
+  });
+
+  // render berdasarkan filter & search
+  function renderFilteredView() {
+    // gunakan logic render dari bagian loadHistory (mirip)
+    if (!tbodyHist) return;
+    const rows = getFilteredRows();
+
+    // STOCK LOG TABLE render
+    if (!Array.isArray(rows) || rows.length === 0) {
+      tbodyHist.innerHTML =
+        '<tr><td colspan="8" class="py-4 text-gray-500">Belum ada riwayat transaksi sesuai filter / pencarian.</td></tr>';
+    } else {
+      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const currentUserId = currentUser.id;
+
+      tbodyHist.innerHTML = rows
+        .map((t, idx) => {
+          let akun = "-";
+          if (t.akun && t.akun !== "System" && t.akun !== "Unknown" && t.akun !== null && t.akun !== "" && t.akun !== undefined) {
+            akun = t.akun;
+          } else if (t.username && t.username !== "System" && t.username !== "Unknown" && t.username !== null && t.username !== "" && t.username !== undefined) {
+            akun = t.username;
+          } else if (t.user_id) {
+            akun = `User-${t.user_id}`;
+          }
+
+          const transaksiId = t.transaksiId || t.id || t.tranid || "-";
+          const tanggal = t.tanggal || t.date || "-";
+          const tipeRaw = (t.tipe || t.type || "-").toUpperCase();
+          const tipeCls =
+            (t.tipe || t.type) === "OUT" ? "text-red-600" : "text-green-600";
+          const namaItem = t.namaItem || t.itemName || t.item || "-";
+          const qty = t.qty ?? t.jumlah ?? "-";
+          const supplierName = getSupplierNameForTx(t);
+          const note = t.catatan || t.note || "-";
+
+          const isCurrentUser =
+            currentUserId && (t.userId === currentUserId || t.user_id === currentUserId);
+          const rowClass = isCurrentUser ? "border-t bg-pink-50" : "border-t";
+
+          return `
+            <tr class="${rowClass}">
+              <td class="py-2 pr-4 font-semibold ${isCurrentUser ? "text-pink-600" : ""}">${akun}</td>
+              <td class="py-2 pr-4 font-mono text-xs">${transaksiId}</td>
+              <td class="py-2 pr-4">${tanggal}</td>
+              <td class="py-2 pr-4 ${tipeCls}">${tipeRaw}</td>
+              <td class="py-2 pr-4">${namaItem}</td>
+              <td class="py-2 pr-4">${qty}</td>
+              <td class="py-2 pr-4">${supplierName}</td>
+              <td class="py-2 pr-4">${note}</td>
+            </tr>
+          `;
+        })
+        .join("");
+    }
+
+    // HISTORY NOTA render (grouped)
+    const grouped = {};
+    rows.forEach((t) => {
+      const type = (t.tipe || t.type || "").toUpperCase();
+      const idTx = t.transaksiId || t.tranid || t.id;
+      if (!idTx) return;
+
+      if (!grouped[idTx]) {
+        let akun = "-";
+        if (t.akun && t.akun !== "System" && t.akun !== "Unknown" && t.akun !== null && t.akun !== "" && t.akun !== undefined) {
+          akun = t.akun;
+        } else if (t.username && t.username !== "System" && t.username !== "Unknown" && t.username !== null && t.username !== "" && t.username !== undefined) {
+          akun = t.username;
+        } else if (t.user_id) {
+          akun = `User-${t.user_id}`;
+        }
+
+        grouped[idTx] = {
+          id: idTx,
+          tanggal: t.tanggal || t.date || "-",
+          supplier: getSupplierNameForTx(t),
+          type,
+          items: [],
+          total: 0,
+          akun: akun,
+          username: t.username || t.akun || null,
+          user_id: t.user_id || null,
+        };
+      }
+
+      const namaItem = t.namaItem || t.itemName || t.item || "-";
+      const qty = Number(t.qty ?? t.jumlah ?? t.quantity ?? 0);
+
+      let harga = 0;
+      if (t.hargaSatuan != null) {
+        harga = Number(t.hargaSatuan);
+      } else if (t.harga_satuan != null) {
+        harga = Number(t.harga_satuan);
+      } else {
+        const prodId =
+          t.product_id ||
+          t.productId ||
+          t.idBarang ||
+          null;
+        if (prodId && itemsById[prodId] && itemsById[prodId].hargaSatuan != null) {
+          harga = Number(itemsById[prodId].hargaSatuan);
+        }
+      }
+
+      const lineTotal = qty * harga;
+
+      grouped[idTx].items.push({
+        nama: namaItem,
+        qty,
+        harga,
+        total: lineTotal,
+      });
+
+      grouped[idTx].total += lineTotal;
+    });
+
+    const groupedArr = Object.values(grouped);
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+    fillNotaHistory(groupedArr, currentUser.id);
+  }
+
   // ---------- Load history + supplier name + nota ----------
   (async function loadHistory() {
     if (!tbodyHist) return;
@@ -330,135 +515,16 @@ function renderNotaBlock(tx, currentUserId) {
         return;
       }
 
+      // Simpan semua rows ke state (dipakai search/filter)
+      allRows = Array.isArray(rows) ? rows : [];
+
       // Ambil user yang login (untuk highlight row-nya saja)
       const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
       const currentUserId = currentUser.id;
 
-      // --- 1) STOCK LOG (tabel) ---
-      tbodyHist.innerHTML = rows
-        .map((t, idx) => {
-          // Tentukan username yang akan ditampilkan
-          let akun = "-";
-          
-          // Prioritas: akun > username > fallback
-          if (t.akun && t.akun !== "System" && t.akun !== "Unknown" && t.akun !== null && t.akun !== "" && t.akun !== undefined) {
-            akun = t.akun;
-          } else if (t.username && t.username !== "System" && t.username !== "Unknown" && t.username !== null && t.username !== "" && t.username !== undefined) {
-            akun = t.username;
-          } else if (t.user_id) {
-            // Jika ada user_id tapi tidak ada username, coba tampilkan user_id
-            akun = `User-${t.user_id}`;
-          }
-
-          // Debug log untuk troubleshooting (hanya 3 pertama)
-          if (idx < 3) {
-            console.log(`🔍 Transaction ${idx + 1}:`, {
-              transaksiId: t.transaksiId,
-              user_id: t.user_id,
-              akun_field: t.akun,
-              username_field: t.username,
-              finalAkun: akun
-            });
-          }
-
-          const transaksiId = t.transaksiId || t.id || t.tranid || "-";
-          const tanggal = t.tanggal || t.date || "-";
-          const tipeRaw = (t.tipe || t.type || "-").toUpperCase();
-          const tipeCls =
-            (t.tipe || t.type) === "OUT" ? "text-red-600" : "text-green-600";
-          const namaItem = t.namaItem || t.itemName || t.item || "-";
-          const qty = t.qty ?? t.jumlah ?? "-";
-          const supplierName = getSupplierNameForTx(t);
-          const note = t.catatan || t.note || "-";
-
-          const isCurrentUser =
-            currentUserId && (t.userId === currentUserId || t.user_id === currentUserId);
-          const rowClass = isCurrentUser ? "border-t bg-pink-50" : "border-t";
-
-          return `
-            <tr class="${rowClass}">
-              <td class="py-2 pr-4 font-semibold ${isCurrentUser ? "text-pink-600" : ""}">${akun}</td>
-              <td class="py-2 pr-4 font-mono text-xs">${transaksiId}</td>
-              <td class="py-2 pr-4">${tanggal}</td>
-              <td class="py-2 pr-4 ${tipeCls}">${tipeRaw}</td>
-              <td class="py-2 pr-4">${namaItem}</td>
-              <td class="py-2 pr-4">${qty}</td>
-              <td class="py-2 pr-4">${supplierName}</td>
-              <td class="py-2 pr-4">${note}</td>
-            </tr>
-          `;
-        })
-        .join("");
-
-      // --- 2) HISTORY NOTA (kelompok per transaksi, IN dan OUT) ---
-      const grouped = {};
-
-      rows.forEach((t) => {
-        const type = (t.tipe || t.type || "").toUpperCase();
-
-        // Tampilkan semua transaksi (IN dan OUT)
-
-        const idTx = t.transaksiId || t.tranid || t.id;
-        if (!idTx) return;
-
-        if (!grouped[idTx]) {
-          // Tentukan username yang akan ditampilkan (sama seperti di stock log)
-          let akun = "-";
-          if (t.akun && t.akun !== "System" && t.akun !== "Unknown" && t.akun !== null && t.akun !== "" && t.akun !== undefined) {
-            akun = t.akun;
-          } else if (t.username && t.username !== "System" && t.username !== "Unknown" && t.username !== null && t.username !== "" && t.username !== undefined) {
-            akun = t.username;
-          } else if (t.user_id) {
-            akun = `User-${t.user_id}`;
-          }
-
-          grouped[idTx] = {
-            id: idTx,
-            tanggal: t.tanggal || t.date || "-",
-            supplier: getSupplierNameForTx(t),
-            type,
-            items: [],
-            total: 0,
-            akun: akun,
-            username: t.username || t.akun || null,
-            user_id: t.user_id || null,
-          };
-        }
-
-  const namaItem = t.namaItem || t.itemName || t.item || "-";
-  const qty = Number(t.qty ?? t.jumlah ?? t.quantity ?? 0);
-
-  let harga = 0;
-  if (t.hargaSatuan != null) {
-    harga = Number(t.hargaSatuan);
-  } else if (t.harga_satuan != null) {
-    harga = Number(t.harga_satuan);
-  } else {
-    const prodId =
-      t.product_id ||
-      t.productId ||
-      t.idBarang ||
-      null;
-    if (prodId && itemsById[prodId] && itemsById[prodId].hargaSatuan != null) {
-      harga = Number(itemsById[prodId].hargaSatuan);
-    }
-  }
-
-  const lineTotal = qty * harga;
-
-  grouped[idTx].items.push({
-    nama: namaItem,
-    qty,
-    harga,
-    total: lineTotal,
-  });
-
-  grouped[idTx].total += lineTotal;
-
-      });
-
-      const groupedArr = Object.values(grouped);
-      fillNotaHistory(groupedArr, currentUserId);
+      // initial render: gunakan filtered renderer
+      updateFilterChipVisuals();
+      renderFilteredView();
     } catch (e) {
       console.error("Gagal load history:", e);
       tbodyHist.innerHTML =
