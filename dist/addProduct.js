@@ -47,3 +47,38 @@ if (foto) fd.append("foto", foto);
     btn.textContent = prevText;
   }
 });
+
+// Variabel untuk elemen gambar profil baru
+const profileFotoInput = document.getElementById('profileFotoInput');
+const profileAvatar = document.getElementById('profileAvatar');
+const profileAvatarContainer = document.getElementById('profileAvatarContainer');
+const profilePlaceholder = document.getElementById('profileAvatarPlaceholder');
+
+// Event listener untuk mengklik container avatar agar membuka input file
+profileAvatarContainer?.addEventListener('click', () => {
+  profileFotoInput?.click();
+});
+
+// Event listener untuk menampilkan preview gambar profil
+profileFotoInput?.addEventListener('change', function () {
+  if (this.files && this.files[0]) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      profileAvatar.src = e.target.result;
+      profileAvatar.classList.remove('hidden');
+      profilePlaceholder.classList.add('hidden');
+    };
+    reader.readAsDataURL(this.files[0]);
+  } else {
+    // Jika file dibatalkan, kembalikan ke avatar default atau yang tersimpan
+    const u = JSON.parse(localStorage.getItem('user') || '{}');
+    if (u.avatar) {
+      profileAvatar.src = u.avatar;
+      profileAvatar.classList.remove('hidden');
+      profilePlaceholder.classList.add('hidden');
+    } else {
+      profileAvatar.classList.add('hidden');
+      profilePlaceholder.classList.remove('hidden');
+    }
+  }
+});

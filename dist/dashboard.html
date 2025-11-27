@@ -161,7 +161,6 @@
 
 <!-- 📊 Statistik Tambahan -->
 <section id="statContainer" class="mt-10 space-y-8 no-print">
-  
   <!-- Summary Block -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <div class="bg-white/80 p-4 rounded-lg shadow">
@@ -179,22 +178,27 @@
   </div>
 
   <!-- ⚠️ Alert stok rendah -->
-  <div id="stockAlert" class="hidden bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg">
-    ⚠️ Beberapa barang stoknya < 5. Mohon lakukan restock.
+  <div id="stockAlert"
+       class="hidden bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg">
+    ⚠️ Beberapa barang stoknya &lt; 5. Mohon lakukan restock.
   </div>
 
-  <!-- 📈 Grafik transaksi per minggu -->
-  <div class="bg-white/80 p-4 rounded-lg shadow">
-    <p class="font-semibold mb-2">Grafik Transaksi Per Minggu</p>
-    <canvas id="chartWeekly"></canvas>
-  </div>
+  <!-- 📈 + 📊 Grafik: 2 kolom (kiri-kanan) -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Grafik transaksi per minggu -->
+    <div class="bg-white/80 p-4 rounded-lg shadow">
+      <p class="font-semibold mb-2">Grafik Transaksi Per Minggu</p>
+      <canvas id="chartWeekly"></canvas>
+    </div>
 
-  <!-- 📊 Grafik barang paling banyak OUT / IN -->
-  <div class="bg-white/80 p-4 rounded-lg shadow">
-    <p class="font-semibold mb-2">Barang Paling Banyak IN / OUT</p>
-    <canvas id="chartPopular"></canvas>
+    <!-- Grafik barang paling banyak IN / OUT -->
+    <div class="bg-white/80 p-4 rounded-lg shadow">
+      <p class="font-semibold mb-2">Barang Paling Banyak IN / OUT</p>
+      <canvas id="chartPopular"></canvas>
+    </div>
   </div>
 </section>
+
 
             <!-- Tabs + Print -->
       <div class="mt-10 mb-3 flex items-center justify-between no-print">

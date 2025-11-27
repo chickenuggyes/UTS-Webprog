@@ -247,7 +247,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         }
       }
 
-      // --- Grafik Weekly (Human Friendly label) ---
+            // --- Grafik Weekly (Human Friendly + 3 garis: Total, IN, OUT) ---
       if (chartWeeklyEl && typeof Chart !== "undefined") {
         function getWeekRange(date) {
           const d = new Date(date);
@@ -267,12 +267,23 @@ window.addEventListener("DOMContentLoaded", async () => {
           return `${format(start)} — ${format(end)}`;
         }
 
+        // weeklyObj: { labelMinggu: { total, in, out } }
         const weeklyObj = {};
         txRows.forEach((t) => {
           const d = new Date(t.tanggal || t.date);
           if (isNaN(d)) return;
-          const key = getWeekRange(d);
-          weeklyObj[key] = (weeklyObj[key] || 0) + 1;
+
+          const key  = getWeekRange(d);
+          const type = String(t.tipe || t.type || "").toUpperCase();
+
+          if (!weeklyObj[key]) {
+            weeklyObj[key] = { total: 0, in: 0, out: 0 };
+          }
+
+          // kita hitung per transaksi (bukan qty) -> 1 transaksi = 1 hitungan
+          weeklyObj[key].total += 1;
+          if (type === "IN")  weeklyObj[key].in  += 1;
+          if (type === "OUT") weeklyObj[key].out += 1;
         });
 
         const sortedLabels = Object.keys(weeklyObj).sort(
@@ -287,11 +298,27 @@ window.addEventListener("DOMContentLoaded", async () => {
               labels: sortedLabels,
               datasets: [
                 {
-                  label: "Jumlah Transaksi",
-                  data: sortedLabels.map((lb) => weeklyObj[lb]),
+                  label: "Total Transaksi",
+                  data: sortedLabels.map((lb) => weeklyObj[lb].total),
                   borderColor: "#ec4899",
-                  backgroundColor: "#ec489980",
-                  borderWidth: 3,
+                  backgroundColor: "#ec489940",
+                  borderWidth: 2,
+                  tension: 0.3,
+                },
+                {
+                  label: "Transaksi IN",
+                  data: sortedLabels.map((lb) => weeklyObj[lb].in),
+                  borderColor: "#22c55e",
+                  backgroundColor: "#22c55e40",
+                  borderWidth: 2,
+                  tension: 0.3,
+                },
+                {
+                  label: "Transaksi OUT",
+                  data: sortedLabels.map((lb) => weeklyObj[lb].out),
+                  borderColor: "#ef4444",
+                  backgroundColor: "#ef444440",
+                  borderWidth: 2,
                   tension: 0.3,
                 },
               ],
@@ -299,7 +326,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             options: {
               responsive: true,
               plugins: {
-                legend: { position: "top" },
+                legend: { position: "top" }, // klik legend bisa hide/show garis
               },
               scales: {
                 y: {
@@ -311,6 +338,7 @@ window.addEventListener("DOMContentLoaded", async () => {
           });
         }
       }
+
 
       // --- Grafik Barang Paling Banyak IN / OUT (dipisah) ---
       if (chartPopularEl && typeof Chart !== "undefined") {
