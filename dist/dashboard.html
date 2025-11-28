@@ -273,27 +273,42 @@
         <h3 class="text-lg font-semibold text-pink-600 mb-3">Profile</h3>
       </div>
       <div id="profileError" class="text-sm text-red-600 mb-2 hidden"></div>
-      <form id="profileForm" class="text-sm text-gray-700">
+      <form id="profileForm" class="text-sm text-gray-700 space-y-3">
         <div class="flex flex-col items-center mb-3">
-          <div id="profileAvatarPlaceholder" class="w-20 h-20 rounded-full bg-pink-500 text-white grid place-items-center text-2xl">👤</div>
-          <img id="profileAvatar" src="" alt="avatar" class="w-20 h-20 rounded-full object-cover hidden mb-3" />
+          <div id="profileAvatarContainer" class="relative w-24 h-24 mb-3 group">
+            <div id="profileAvatarPlaceholder"
+              class="w-full h-full rounded-full bg-pink-500 text-white grid place-items-center text-3xl cursor-pointer"
+              title="Unggah foto profile">👤</div>
+            <img id="profileAvatar" src="" alt="avatar"
+              class="w-full h-full rounded-full object-cover hidden cursor-pointer" title="Unggah foto profile" />
+            <input type="file" id="profileFotoInput" accept="image/*" class="hidden">
+            <div
+              class="absolute inset-0 rounded-full bg-black/40 text-white grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.218A2 2 0 0110.74 4h2.52a2 2 0 011.664.89l.812 1.218A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+          </div>
           <div class="text-xs text-gray-500">ID</div>
           <div class="font-mono text-sm text-gray-800 mb-3" id="profileId">-</div>
         </div>
 
-        <div class="mb-3">
+        <div>
           <label class="text-xs text-gray-500">Username</label>
-          <input id="profileUsernameInput" class="w-full border rounded px-2 py-2 mt-1" type="text" />
+          <input id="profileUsernameInput" class="w-full border rounded px-2 py-1" type="text" />
         </div>
 
-        <div class="mb-3">
+        <div>
           <label class="text-xs text-gray-500">Email</label>
-          <input id="profileEmailInput" class="w-full border rounded px-2 py-2 mt-1" type="email" />
+          <input id="profileEmailInput" class="w-full border rounded px-2 py-1" type="email" />
         </div>
 
-        <div class="mb-4">
+        <div>
           <label class="text-xs text-gray-500">Password (kosongkan jika tidak ingin mengubah)</label>
-          <input id="profilePasswordInput" class="w-full border rounded px-2 py-2 mt-1" type="password" />
+          <input id="profilePasswordInput" class="w-full border rounded px-2 py-1" type="password" />
         </div>
 
         <div class="mt-2 flex justify-between">
@@ -334,24 +349,30 @@
     function openProfile() {
       profileError.classList.add('hidden');
       profileError.textContent = '';
+      profileFotoInput.value = ''; // Reset input file
+
       const u = JSON.parse(localStorage.getItem('user') || '{}');
       document.getElementById('profileId').textContent = u.id || '-';
       document.getElementById('profileUsernameInput').value = u.username || '';
       document.getElementById('profileEmailInput').value = u.email || '';
       document.getElementById('profilePasswordInput').value = '';
 
-      // avatar handling: show image if provided, else emoji circle
       const avatarUrl = u.avatar || null;
       const pImg = document.getElementById('profileAvatar');
       const pPlaceholder = document.getElementById('profileAvatarPlaceholder');
+
       if (avatarUrl) {
         pImg.src = avatarUrl;
         pImg.classList.remove('hidden');
         pPlaceholder.classList.add('hidden');
+        // Update sidebar button
+        const profileBtn = document.getElementById('profileBtn');
         if (profileBtn) profileBtn.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full"/>`;
       } else {
         pImg.classList.add('hidden');
         pPlaceholder.classList.remove('hidden');
+        // Update sidebar button
+        const profileBtn = document.getElementById('profileBtn');
         if (profileBtn) profileBtn.innerHTML = '👤';
       }
 
@@ -374,10 +395,22 @@
     profileSave?.addEventListener('click', async (e) => {
       e.preventDefault();
       profileError.classList.add('hidden');
-      const id = document.getElementById('profileId').textContent;
+      
+      // Mengambil data user dari localStorage (sumber paling tepercaya untuk ID)
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const id = currentUser.id; // Ambil ID langsung dari objek user
+
       const usernameVal = document.getElementById('profileUsernameInput').value.trim();
       const emailVal = document.getElementById('profileEmailInput').value.trim();
       const passwordVal = document.getElementById('profilePasswordInput').value;
+      const newFoto = document.getElementById('profileFotoInput').files[0];
+
+      // Validasi ID (Penting!)
+      if (!id) {
+        profileError.textContent = 'Error: User ID tidak ditemukan di penyimpanan lokal. Silakan coba login ulang.';
+        profileError.classList.remove('hidden');
+        return;
+      }
 
       if (!usernameVal || !emailVal) {
         profileError.textContent = 'Username dan email wajib diisi.';
@@ -385,11 +418,24 @@
         return;
       }
 
+      // Gunakan FormData untuk mengirim data teks dan file
+      const fd = new FormData();
+      fd.append("id", id); // Sekarang menggunakan ID dari localStorage
+      fd.append("username", usernameVal);
+      fd.append("email", emailVal);
+      if (passwordVal) fd.append("password", passwordVal);
+      if (newFoto) fd.append("foto", newFoto);
+
+      const profileSaveBtn = e.target;
+      const prevText = profileSaveBtn.textContent;
+      profileSaveBtn.disabled = true;
+      profileSaveBtn.textContent = 'Saving...';
+
       try {
         const res = await fetch('http://localhost:3000/login/profile', {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, username: usernameVal, email: emailVal, password: passwordVal || undefined })
+          // Tidak perlu headers['Content-Type']='application/json' saat pakai FormData
+          body: fd
         });
         const data = await res.json();
         if (!res.ok) {
@@ -399,11 +445,62 @@
         }
         // update localStorage and UI
         localStorage.setItem('user', JSON.stringify(data.user));
-        if (sidebarUsername) sidebarUsername.textContent = data.user.username;
+        const sb = document.getElementById('sidebarUsername');
+        if (sb) sb.textContent = data.user.username;
+        
+        // Perbarui tampilan avatar di sidebar setelah save berhasil
+        const profileBtn = document.getElementById('profileBtn');
+        if (profileBtn) {
+            if (data.user.avatar) {
+                profileBtn.innerHTML = `<img src="${data.user.avatar}" class="w-full h-full object-cover rounded-full"/>`;
+            } else {
+                profileBtn.innerHTML = '👤';
+            }
+        }
+        
+        alert('Profil berhasil diperbarui!');
         closeProfile();
       } catch (err) {
         profileError.textContent = 'Terjadi kesalahan koneksi.';
         profileError.classList.remove('hidden');
+      } finally {
+        profileSaveBtn.disabled = false;
+        profileSaveBtn.textContent = prevText;
+      }
+    });
+
+    // Variabel untuk elemen gambar profil baru
+    const profileFotoInput = document.getElementById('profileFotoInput');
+    const profileAvatar = document.getElementById('profileAvatar');
+    const profileAvatarContainer = document.getElementById('profileAvatarContainer');
+    const profilePlaceholder = document.getElementById('profileAvatarPlaceholder');
+
+    // Event listener untuk mengklik container avatar agar membuka input file
+    profileAvatarContainer?.addEventListener('click', () => {
+      profileFotoInput?.click();
+    });
+
+    // Event listener untuk menampilkan preview gambar profil
+    profileFotoInput?.addEventListener('change', function () {
+      if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          profileAvatar.src = e.target.result;
+          profileAvatar.classList.remove('hidden');
+          profilePlaceholder.classList.add('hidden');
+        };
+        reader.readAsDataURL(this.files[0]);
+      } else {
+        // Jika file dibatalkan, kembalikan ke avatar default atau yang tersimpan
+        const u = JSON.parse(localStorage.getItem('user') || '{}');
+        if (u.avatar) {
+          profileAvatar.src = u.avatar;
+          profileAvatar.classList.remove('hidden');
+          profilePlaceholder.classList.add('hidden');
+        } else {
+          profileAvatar.classList.add('hidden');
+          profilePlaceholder.classList.remove('hidden');
+        }
       }
     });
 
