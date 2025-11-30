@@ -30,7 +30,7 @@ export async function login(req, res) {
     }
 
     const [rows] = await db.query(
-      "SELECT id, username, email, password FROM users WHERE username = ? OR email = ? LIMIT 1",
+      "SELECT id, username, email, password, foto FROM users WHERE username = ? OR email = ? LIMIT 1",
       [identifier, identifier]
     );
 
@@ -47,7 +47,7 @@ export async function login(req, res) {
 
     res.json({
       message: "Login sukses",
-      user: { id: user.id, username: user.username, email: user.email }
+      user: { id: user.id, username: user.username, email: user.email, avatar: user.foto || null }
     });
 
   } catch (err) {
@@ -178,9 +178,16 @@ export async function updateProfile(req, res) {
       [id]
     );
 
+    const userData = updated[0];
+    // Map foto to avatar for frontend consistency
     res.json({
       message: "Profile berhasil diperbarui",
-      user: updated[0],
+      user: {
+        id: userData.id,
+        username: userData.username,
+        email: userData.email,
+        avatar: userData.foto || null
+      },
       fotoBaru: foto || null
     });
     
