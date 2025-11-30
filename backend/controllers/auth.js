@@ -125,9 +125,11 @@ export async function register(req, res) {
 }
 
 /* ===================== UPDATE PROFILE (FINAL FIX) ===================== */
+/* ===================== UPDATE PROFILE (WITH FOTO) ===================== */
 export async function updateProfile(req, res) {
   try {
     const { id, username, email, password } = req.body || {};
+    const foto = req.file ? req.file.filename : null;
 
     if (!id) return res.status(400).json({ message: "User ID diperlukan" });
 
@@ -140,7 +142,7 @@ export async function updateProfile(req, res) {
       return res.status(404).json({ message: "User tidak ditemukan" });
     }
 
-    // cek username/email dipakai user lain
+    // Cek username/email dipakai user lain
     const [conflict] = await db.query(
       "SELECT id FROM users WHERE (username = ? OR email = ?) AND id != ?",
       [username, email, id]
@@ -150,6 +152,7 @@ export async function updateProfile(req, res) {
       return res.status(409).json({ message: "Username/email sudah digunakan" });
     }
 
+    // Bangun query dinamis
     let query = "UPDATE users SET username = ?, email = ?";
     const params = [username, email];
 
@@ -159,23 +162,31 @@ export async function updateProfile(req, res) {
       params.push(hashed);
     }
 
+    // 👉 TAMBAHAN: Perbarui foto jika ada upload
+    if (foto) {
+      query += ", foto = ?";
+      params.push(foto);
+    }
+
     query += " WHERE id = ?";
     params.push(id);
 
     await db.query(query, params);
 
     const [updated] = await db.query(
-      "SELECT id, username, email FROM users WHERE id = ? LIMIT 1",
+      "SELECT id, username, email, foto FROM users WHERE id = ? LIMIT 1",
       [id]
     );
 
     res.json({
       message: "Profile berhasil diperbarui",
-      user: updated[0]
+      user: updated[0],
+      fotoBaru: foto || null
     });
-
+    
   } catch (err) {
     console.error("❌ Error update profile:", err);
     res.status(500).json({ message: "Server error" });
   }
 }
+
