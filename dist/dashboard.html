@@ -184,7 +184,7 @@
   </div>
 
   <!-- 📈 + 📊 Grafik: 2 kolom (kiri-kanan) -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <!-- Grafik transaksi per minggu -->
     <div class="bg-white/80 p-4 rounded-lg shadow">
       <p class="font-semibold mb-2">Grafik Transaksi Per Minggu</p>
@@ -196,6 +196,14 @@
       <p class="font-semibold mb-2">Barang Paling Banyak IN / OUT</p>
       <canvas id="chartPopular"></canvas>
     </div>
+  </div>
+
+  <!-- 📉 Daftar barang dengan stok < 5 -->
+  <div class="bg-white/80 p-4 rounded-lg shadow">
+    <p class="font-semibold mb-2">Barang dengan Stok &lt; 5</p>
+    <ul id="lowStockList" class="space-y-2 text-sm text-gray-700">
+      <li class="text-gray-500">Memuat data...</li>
+    </ul>
   </div>
 </section>
 
@@ -228,22 +236,35 @@
         <h1 class="text-xl font-bold mb-2">Daftar Produk — Toko Gembira</h1>
 
         <!-- Summary -->
-        <table class="w-full border-collapse mb-4">
-          <tbody>
-            <tr>
-              <th class="border px-3 py-2 text-left">Total Item</th>
-              <td id="pTotalItem" class="border px-3 py-2">-</td>
-            </tr>
-            <tr>
-              <th class="border px-3 py-2 text-left">Total Stok</th>
-              <td id="pTotalStok" class="border px-3 py-2">-</td>
-            </tr>
-            <tr>
-              <th class="border px-3 py-2 text-left">Total Harga</th>
-              <td id="pTotalHarga" class="border px-3 py-2">-</td>
-            </tr>
-          </tbody>
-        </table>
+<table class="w-full border-collapse mb-4">
+  <tbody>
+    <tr>
+      <th class="border px-3 py-2 text-left">Total Item</th>
+      <td id="pTotalItem" class="border px-3 py-2">-</td>
+    </tr>
+    <tr>
+      <th class="border px-3 py-2 text-left">Total Stok</th>
+      <td id="pTotalStok" class="border px-3 py-2">-</td>
+    </tr>
+    <tr>
+      <th class="border px-3 py-2 text-left">Total Harga</th>
+      <td id="pTotalHarga" class="border px-3 py-2">-</td>
+    </tr>
+    <tr>
+      <th class="border px-3 py-2 text-left">Total Kategori</th>
+      <td id="pTotalKategori" class="border px-3 py-2">-</td>
+    </tr>
+    <tr>
+      <th class="border px-3 py-2 text-left">Total Supplier</th>
+      <td id="pTotalSupplier" class="border px-3 py-2">-</td>
+    </tr>
+    <tr>
+      <th class="border px-3 py-2 text-left">Transaksi Hari Ini</th>
+      <td id="pTxToday" class="border px-3 py-2">-</td>
+    </tr>
+  </tbody>
+</table>
+
 
         <!-- Products Table -->
         <table id="printTable" class="w-full border-collapse">

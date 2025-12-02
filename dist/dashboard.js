@@ -67,6 +67,13 @@ window.addEventListener("DOMContentLoaded", async () => {
   let cachedSuppliers = null; // null = belum pernah load
   let dashCache   = { totalItem: 0, totalStok: 0, totalHarga: 0 };
 
+  // cache statistik tambahan (untuk print)
+  let extraStatsCache = {
+    totalKategori: 0,
+    totalSupplier: 0,
+    txToday: 0,
+  };
+
   // ------- Initial load: dashboard + products -------
   try {
     const [dash, itemsRes] = await Promise.all([
@@ -165,13 +172,22 @@ window.addEventListener("DOMContentLoaded", async () => {
   setActiveTab("products");
 
   // ------- Print (produk saja) -------
-  function fillPrintSummary(dash) {
+  function fillPrintSummary(dash, extra = extraStatsCache) {
     const pItem   = document.getElementById("pTotalItem");
     const pStok   = document.getElementById("pTotalStok");
     const pHarga  = document.getElementById("pTotalHarga");
-    if (pItem)  pItem.textContent  = dash.totalItem;
-    if (pStok)  pStok.textContent  = dash.totalStok;
-    if (pHarga) pHarga.textContent = rupiah(dash.totalHarga);
+
+    const pKategori = document.getElementById("pTotalKategori");
+    const pSupplier = document.getElementById("pTotalSupplier");
+    const pTxToday  = document.getElementById("pTxToday");
+
+    if (pItem)   pItem.textContent   = dash.totalItem;
+    if (pStok)   pStok.textContent   = dash.totalStok;
+    if (pHarga)  pHarga.textContent  = rupiah(dash.totalHarga);
+
+    if (pKategori) pKategori.textContent = extra.totalKategori ?? "-";
+    if (pSupplier) pSupplier.textContent = extra.totalSupplier ?? "-";
+    if (pTxToday)  pTxToday.textContent  = extra.txToday ?? "-";
   }
 
   function buildPrintTable(items) {
@@ -189,16 +205,28 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ====== Statistik Tambahan ======
-  async function loadExtraStats() {
+   async function loadExtraStats() {
     const statKategoriEl = document.getElementById("statKategori");
     const statSupplierEl = document.getElementById("statSupplier");
     const statTxTodayEl  = document.getElementById("statTxToday");
     const stockAlertEl   = document.getElementById("stockAlert");
     const chartWeeklyEl  = document.getElementById("chartWeekly");
     const chartPopularEl = document.getElementById("chartPopular");
+    const lowStockListEl = document.getElementById("lowStockList");
 
-    // kalau elemen2 ini tidak ada (misal file dipakai di halaman lain), jangan lanjut
-    if (!statKategoriEl && !chartWeeklyEl && !chartPopularEl) return;
+    // kalau semua elemen ini tidak ada (misal file dipakai di halaman lain), jangan lanjut
+    if (
+      !statKategoriEl &&
+      !statSupplierEl &&
+      !statTxTodayEl &&
+      !stockAlertEl &&
+      !chartWeeklyEl &&
+      !chartPopularEl &&
+      !lowStockListEl
+    ) {
+      return;
+    }
+
 
     try {
       const [itemsRes, suppliersRes, txRes] = await Promise.all([
@@ -213,33 +241,40 @@ window.addEventListener("DOMContentLoaded", async () => {
         txRes.transactions || txRes.items || txRes.data || txRes || [];
 
       // --- Summary: kategori, supplier, transaksi hari ini ---
+      const kategoriSet = new Set(
+        items
+          .map((i) => i.namaKategori || i.kategori || i.category)
+          .filter(Boolean)
+      );
+      const totalKategori = kategoriSet.size;
+      extraStatsCache.totalKategori = totalKategori;
       if (statKategoriEl) {
-        const kategoriSet = new Set(
-          items
-            .map((i) => i.namaKategori || i.kategori || i.category)
-            .filter(Boolean)
-        );
-        statKategoriEl.textContent = kategoriSet.size;
+        statKategoriEl.textContent = totalKategori;
       }
 
+      const totalSupplier = suppliers.length;
+      extraStatsCache.totalSupplier = totalSupplier;
       if (statSupplierEl) {
-        statSupplierEl.textContent = suppliers.length;
+        statSupplierEl.textContent = totalSupplier;
       }
 
+      const todayStr = new Date().toLocaleDateString("id-ID");
+      const txTodayCount = txRows.filter((t) => {
+        const d = new Date(t.tanggal || t.date);
+        if (isNaN(d)) return false;
+        return d.toLocaleDateString("id-ID") === todayStr;
+      }).length;
+      extraStatsCache.txToday = txTodayCount;
       if (statTxTodayEl) {
-        const todayStr = new Date().toLocaleDateString("id-ID");
-        const txTodayCount = txRows.filter((t) => {
-          const d = new Date(t.tanggal || t.date);
-          return d.toLocaleDateString("id-ID") === todayStr;
-        }).length;
         statTxTodayEl.textContent = txTodayCount;
       }
 
-      // --- Alert stok < 5 ---
+      // --- Alert stok < 5 + daftar barang stok < 5 ---
+      const lowStock = items.filter(
+        (p) => Number(p.stok ?? p.stock ?? 0) < 5
+      );
+
       if (stockAlertEl) {
-        const lowStock = items.filter(
-          (p) => Number(p.stok ?? p.stock ?? 0) < 5
-        );
         if (lowStock.length > 0) {
           stockAlertEl.classList.remove("hidden");
         } else {
@@ -247,7 +282,35 @@ window.addEventListener("DOMContentLoaded", async () => {
         }
       }
 
-            // --- Grafik Weekly (Human Friendly + 3 garis: Total, IN, OUT) ---
+      if (lowStockListEl) {
+        if (lowStock.length === 0) {
+          lowStockListEl.innerHTML =
+            '<li class="text-gray-500">Semua stok aman (≥ 5).</li>';
+        } else {
+          const rows = lowStock
+            .slice()
+            .sort(
+              (a, b) =>
+                Number(a.stok ?? a.stock ?? 0) -
+                Number(b.stok ?? b.stock ?? 0)
+            )
+            .map((p) => {
+              const nama = p.namaItem ?? p.nama ?? p.name ?? "-";
+              const s = Number(p.stok ?? p.stock ?? 0);
+              return `
+                <li class="flex items-center justify-between bg-white rounded-md border px-3 py-2">
+                  <span class="truncate mr-2">${nama}</span>
+                  <span class="font-semibold text-red-600">${s} pcs</span>
+                </li>
+              `;
+            })
+            .join("");
+          lowStockListEl.innerHTML = rows;
+        }
+      }
+
+
+      // --- Grafik Weekly (Human Friendly + 3 garis: Total, IN, OUT) ---
       if (chartWeeklyEl && typeof Chart !== "undefined") {
         function getWeekRange(date) {
           const d = new Date(date);
@@ -338,7 +401,6 @@ window.addEventListener("DOMContentLoaded", async () => {
           });
         }
       }
-
 
       // --- Grafik Barang Paling Banyak IN / OUT (dipisah) ---
       if (chartPopularEl && typeof Chart !== "undefined") {
@@ -431,7 +493,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // ------- Print handler -------
   window.handlePrint = function () {
-    fillPrintSummary(dashCache);
+    fillPrintSummary(dashCache, extraStatsCache);
     buildPrintTable(cachedItems);
     window.print();
   };

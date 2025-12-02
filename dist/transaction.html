@@ -5,21 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title id="dynamicTitle">Transactions</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @media print { .no-print{display:none!important} }
-    body{
-      min-height:100vh;margin:0;
-      background-image:url('../uploads/dashboard.jpg');
-      background-size:cover;background-position:center;background-attachment:fixed;
-      font-family:'Poppins',Arial,sans-serif;
-    }
-    .bg-overlay{background:rgba(255,255,255,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-    .header-box{background:rgba(255,255,255,.3);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-      border-radius:16px;border:1px solid rgba(255,255,255,.4);padding:10px 25px;box-shadow:0 4px 10px rgba(0,0,0,.1);display:inline-block}
-    .header-title{font-size:26px;font-weight:700;color:#ec4899;text-shadow:0 1px 2px rgba(255,255,255,.7)}
-    .header-store-box{background:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.5)}
-    .header-store{font-size:20px;font-weight:600;color:#858383;text-shadow:0 1px 3px rgba(56,52,52,.4)}
-  </style>
+<style>
+  @media print {
+    .no-print { display: none !important; }
+
+    /* Jangan cetak Stock Log */
+    #stockLogContainer { display: none !important; }
+
+    /* Paksa History (nota) tampil saat print */
+    #notaContainer { display: block !important; }
+  }
+
+  body{
+    min-height:100vh;margin:0;
+    background-image:url('../uploads/dashboard.jpg');
+    background-size:cover;background-position:center;background-attachment:fixed;
+    font-family:'Poppins',Arial,sans-serif;
+  }
+  .bg-overlay{background:rgba(255,255,255,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .header-box{background:rgba(255,255,255,.3);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-radius:16px;border:1px solid rgba(255,255,255,.4);padding:10px 25px;box-shadow:0 4px 10px rgba(0,0,0,.1);display:inline-block}
+  .header-title{font-size:26px;font-weight:700;color:#ec4899;text-shadow:0 1px 2px rgba(255,255,255,.7)}
+  .header-store-box{background:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.5)}
+  .header-store{font-size:20px;font-weight:600;color:#858383;text-shadow:0 1px 3px rgba(56,52,52,.4)}
+</style>
+
 </head>
 <body class="font-sans">
 <div class="flex h-screen">
@@ -138,8 +148,14 @@
 <!-- HISTORY NOTA (nota per transaksi) -->
 <div id="notaContainer"
      class="bg-white/80 rounded-lg shadow border border-pink-100 mt-6 hidden">
-  <div class="px-4 py-3 border-b text-sm text-gray-600">
-    History Nota Transaksi
+  <div class="px-4 py-3 border-b text-sm text-gray-600 flex items-center justify-between">
+    <span>History Nota Transaksi</span>
+
+    <!-- Tombol print khusus history -->
+    <button id="btnPrintHistory"
+            class="no-print px-3 py-1 text-xs font-semibold bg-pink-500 text-white rounded hover:bg-pink-600">
+      Print History
+    </button>
   </div>
 
   <div id="notaList" class="p-4 space-y-6">
@@ -149,7 +165,14 @@
 
 
 
+
 <script src="transaction.js"></script>
+<script>
+  // Print hanya bagian History (nota)
+  document.getElementById('btnPrintHistory')?.addEventListener('click', function () {
+    window.print();
+  });
+</script>
 
   <!-- Profile modal -->
   <div id="profileModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
