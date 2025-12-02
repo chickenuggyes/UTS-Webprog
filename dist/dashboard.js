@@ -77,40 +77,38 @@ window.addEventListener("DOMContentLoaded", async () => {
     profitToday: 0,
   };
 
-  // ------- Initial load: dashboard + products -------
+  // ------- Initial load: dashboard + products (dipisah supaya tidak saling merusak) -------
+try {
+  const dash = await getJSON(`${API}/dashboard`);
+
+  // Update dashboard
+  dashCache = {
+    totalItem : dash.totalItem  ?? 0,
+    totalStok : dash.totalStok  ?? 0,
+    totalHarga: dash.totalHarga ?? 0
+  };
+
+  if (elItem)  elItem.textContent  = dashCache.totalItem;
+  if (elStok)  elStok.textContent  = dashCache.totalStok;
+  if (elHarga) elHarga.textContent = rupiah(dashCache.totalHarga);
+
+  if (elError) elError.textContent = "";
+} catch (err) {
+  if (elError) elError.textContent = err.message || "Gagal memuat dashboard";
+}
+
+// Load list products (AMAN dari error dashboard)
+if (listProductsEl) {
   try {
-    const [dash, itemsRes] = await Promise.all([
-      getJSON(`${API}/dashboard`),
-      listProductsEl ? getJSON(`${API}/items`) : Promise.resolve(null),
-    ]);
-
-    dashCache = {
-      totalItem : dash.totalItem  ?? 0,
-      totalStok : dash.totalStok  ?? 0,
-      totalHarga: dash.totalHarga ?? 0
-    };
-
-    if (elItem)  elItem.textContent  = dashCache.totalItem;
-    if (elStok)  elStok.textContent  = dashCache.totalStok;
-    if (elHarga) elHarga.textContent = rupiah(dashCache.totalHarga);
-
-    if (listProductsEl && itemsRes) {
-      const items = itemsRes.items || itemsRes || [];
-      cachedItems = items;
-      listProductsEl.innerHTML = items.map(itemRow).join("");
-    }
-
-    if (elError) elError.textContent = "";
+    const itemsRes = await getJSON(`${API}/items`);
+    const items = itemsRes.items || itemsRes || [];
+    cachedItems = items;
+    listProductsEl.innerHTML = items.map(itemRow).join("");
   } catch (err) {
-    if (elError) elError.textContent = err.message || "Gagal memuat dashboard";
-    if (elItem)  elItem.textContent  = "—";
-    if (elStok)  elStok.textContent  = "—";
-    if (elHarga) elHarga.textContent = "—";
-    if (listProductsEl) {
-      listProductsEl.innerHTML =
-        `<li class="text-red-600">${err.message}</li>`;
-    }
+    listProductsEl.innerHTML =
+      `<li class="text-red-600">${err.message || "Gagal memuat produk"}</li>`;
   }
+}
 
   // ------- Tabs behavior -------
   function setActiveTab(tab) {

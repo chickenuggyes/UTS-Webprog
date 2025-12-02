@@ -10,10 +10,9 @@ import fs from "fs";
 // routes & controllers
 import authRoutes from "./routes/authRoutes.js";
 import itemsRoutes from "./routes/mainMenuRoutes.js";
-import reportRoutes from "./routes/report.js";
+import reportRoutes from "./routes/dashboard.js";
 import supplierRoutes from "./routes/supplierRoutes.js"; // ✅ Tambahan route supplier
-import categoryRoutes from "./routes/categoryRoutes.js"; // ✅ Tambahan route categories
-import { dashboard } from "./controllers/report.js";
+import { dashboard } from "./controllers/dashboard.js";
 import transactionsRoutes from "./routes/transactionsRoutes.js"; // ✅ Tambah ini
 
 dotenv.config();
@@ -54,7 +53,6 @@ app.use("/login", authRoutes);
 app.use("/items", itemsRoutes);
 app.use("/report", reportRoutes);
 app.use("/suppliers", supplierRoutes);
-app.use("/categories", categoryRoutes); 
 app.use("/transactions", transactionsRoutes); 
 app.use("/reports", transactionsRoutes);
 
