@@ -22,7 +22,7 @@ function resolveImg(p) {
 function card(p) {
   const imgSrc = resolveImg(p);
   return `
-    <article class="bg-white rounded-lg shadow border relative overflow-visible">
+    <article class="product-card bg-white rounded-lg shadow border relative overflow-visible">
       <div class="bg-gray-50 h-48 grid place-items-center relative z-0">
         <img src="${imgSrc}" alt="${p.namaItem ?? "-"}"
              class="h-40 w-40 object-contain pointer-events-none"

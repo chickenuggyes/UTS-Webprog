@@ -163,19 +163,15 @@
   </div>
 </div>
 
-
-
+  </main>
+  <!-- End of Main -->
+</div>
+<!-- End of flex h-screen container -->
 
 <script src="transaction.js"></script>
-<script>
-  // Print hanya bagian History (nota)
-  document.getElementById('btnPrintHistory')?.addEventListener('click', function () {
-    window.print();
-  });
-</script>
 
-  <!-- Profile modal -->
-  <div id="profileModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+<!-- Profile modal - moved outside all scrollable containers to prevent scroll -->
+<div id="profileModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50" style="position: fixed !important;">
     <div class="bg-white rounded-xl p-6 w-80 shadow-lg relative">
       <button id="profileClose" class="absolute top-3 right-3 text-gray-600 hover:text-gray-900">✕</button>
       <div class="flex items-center justify-between">
@@ -276,11 +272,15 @@
 
       profileModal.classList.remove('hidden');
       profileModal.classList.add('flex');
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
     }
 
     function closeProfile() {
       profileModal.classList.add('hidden');
       profileModal.classList.remove('flex');
+      // Restore body scroll when modal is closed
+      document.body.style.overflow = '';
     }
 
     profileBtn?.addEventListener('click', (e) => { e.preventDefault(); openProfile(); });

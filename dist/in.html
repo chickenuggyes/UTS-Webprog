@@ -411,11 +411,15 @@ document.querySelectorAll('aside nav a').forEach(link=>{
 
       profileModal.classList.remove('hidden');
       profileModal.classList.add('flex');
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
     }
 
     function closeProfile() {
       profileModal.classList.add('hidden');
       profileModal.classList.remove('flex');
+      // Restore body scroll when modal is closed
+      document.body.style.overflow = '';
     }
 
     profileBtn?.addEventListener('click', (e) => { e.preventDefault(); openProfile(); });

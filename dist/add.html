@@ -286,6 +286,8 @@
   </div>
 
   <script>
+    const API = "http://localhost:3000";
+    
     // Profile modal logic (shared)
     const profileBtn = document.getElementById('profileBtn');
     const profileModal = document.getElementById('profileModal');
@@ -295,43 +297,63 @@
     const profileCancel = document.getElementById('profileCancel');
     const profileError = document.getElementById('profileError');
 
+    // Variabel untuk elemen gambar profil baru
+    const profileFotoInput = document.getElementById('profileFotoInput');
+    const profileAvatar = document.getElementById('profileAvatar');
+    const profileAvatarContainer = document.getElementById('profileAvatarContainer');
+    const profilePlaceholder = document.getElementById('profileAvatarPlaceholder');
+
     function openProfile() {
       profileError.classList.add('hidden');
       profileError.textContent = '';
-      profileFotoInput.value = ''; // Reset input file
+      if (profileFotoInput) profileFotoInput.value = ''; // Reset input file
 
       const u = JSON.parse(localStorage.getItem('user') || '{}');
-      document.getElementById('profileId').textContent = u.id || '-';
-      document.getElementById('profileUsernameInput').value = u.username || '';
-      document.getElementById('profileEmailInput').value = u.email || '';
-      document.getElementById('profilePasswordInput').value = '';
+      const profileIdEl = document.getElementById('profileId');
+      const profileUsernameInputEl = document.getElementById('profileUsernameInput');
+      const profileEmailInputEl = document.getElementById('profileEmailInput');
+      const profilePasswordInputEl = document.getElementById('profilePasswordInput');
 
-      const avatarUrl = u.avatar || null;
+      if (profileIdEl) profileIdEl.textContent = u.id || '-';
+      if (profileUsernameInputEl) profileUsernameInputEl.value = u.username || '';
+      if (profileEmailInputEl) profileEmailInputEl.value = u.email || '';
+      if (profilePasswordInputEl) profilePasswordInputEl.value = '';
+
+      const avatarFilename = u.avatar || null;
       const pImg = document.getElementById('profileAvatar');
       const pPlaceholder = document.getElementById('profileAvatarPlaceholder');
 
-      if (avatarUrl) {
-        pImg.src = avatarUrl;
-        pImg.classList.remove('hidden');
-        pPlaceholder.classList.add('hidden');
+      if (avatarFilename) {
+        const avatarUrl = `${API}/uploads/${avatarFilename}`;
+        if (pImg) {
+          pImg.src = avatarUrl;
+          pImg.classList.remove('hidden');
+        }
+        if (pPlaceholder) pPlaceholder.classList.add('hidden');
         // Update sidebar button
         const profileBtn = document.getElementById('profileBtn');
         if (profileBtn) profileBtn.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full"/>`;
       } else {
-        pImg.classList.add('hidden');
-        pPlaceholder.classList.remove('hidden');
+        if (pImg) pImg.classList.add('hidden');
+        if (pPlaceholder) pPlaceholder.classList.remove('hidden');
         // Update sidebar button
         const profileBtn = document.getElementById('profileBtn');
         if (profileBtn) profileBtn.innerHTML = '👤';
       }
 
-      profileModal.classList.remove('hidden');
-      profileModal.classList.add('flex');
+      if (profileModal) {
+        profileModal.classList.remove('hidden');
+        profileModal.classList.add('flex');
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+      }
     }
 
     function closeProfile() {
       profileModal.classList.add('hidden');
       profileModal.classList.remove('flex');
+      // Restore body scroll when modal is closed
+      document.body.style.overflow = '';
     }
 
     profileBtn?.addEventListener('click', (e) => { e.preventDefault(); openProfile(); });
@@ -401,7 +423,16 @@
         const profileBtn = document.getElementById('profileBtn');
         if (profileBtn) {
             if (data.user.avatar) {
-                profileBtn.innerHTML = `<img src="${data.user.avatar}" class="w-full h-full object-cover rounded-full"/>`;
+                const avatarUrl = `${API}/uploads/${data.user.avatar}`;
+                profileBtn.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full"/>`;
+                // Update juga di modal
+                const pImg = document.getElementById('profileAvatar');
+                const pPlaceholder = document.getElementById('profileAvatarPlaceholder');
+                if (pImg && pPlaceholder) {
+                  pImg.src = avatarUrl;
+                  pImg.classList.remove('hidden');
+                  pPlaceholder.classList.add('hidden');
+                }
             } else {
                 profileBtn.innerHTML = '👤';
             }
@@ -417,6 +448,49 @@
         profileSaveBtn.textContent = prevText;
       }
     });
+
+    // Event listener untuk mengklik container avatar agar membuka input file
+    profileAvatarContainer?.addEventListener('click', () => {
+      profileFotoInput?.click();
+    });
+
+    // Event listener untuk menampilkan preview gambar profil
+    profileFotoInput?.addEventListener('change', function () {
+      if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (profileAvatar) {
+            profileAvatar.src = e.target.result;
+            profileAvatar.classList.remove('hidden');
+          }
+          if (profilePlaceholder) profilePlaceholder.classList.add('hidden');
+        };
+        reader.readAsDataURL(this.files[0]);
+      } else {
+        // Jika file dibatalkan, kembalikan ke avatar default atau yang tersimpan
+        const u = JSON.parse(localStorage.getItem('user') || '{}');
+        if (u.avatar) {
+          if (profileAvatar) {
+            profileAvatar.src = `${API}/uploads/${u.avatar}`;
+            profileAvatar.classList.remove('hidden');
+          }
+          if (profilePlaceholder) profilePlaceholder.classList.add('hidden');
+        } else {
+          if (profileAvatar) profileAvatar.classList.add('hidden');
+          if (profilePlaceholder) profilePlaceholder.classList.remove('hidden');
+        }
+      }
+    });
+
+    // Load profile avatar on page load
+    (function() {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      const profileBtn = document.getElementById('profileBtn');
+      if (profileBtn && u.avatar) {
+        const avatarUrl = `${API}/uploads/${u.avatar}`;
+        profileBtn.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full"/>`;
+      }
+    })();
   </script>
 
   <script src="addProduct.js"></script>

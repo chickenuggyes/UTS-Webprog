@@ -250,10 +250,12 @@ function renderNotaBlock(tx, currentUserId) {
         <span class="text-gray-500">Tanggal:</span>
         <span class="ml-2 font-medium text-gray-800">${tx.tanggal}</span>
       </div>
+      ${tx.type === "IN" && tx.supplier ? `
       <div>
         <span class="text-gray-500">Supplier:</span>
         <span class="ml-2 font-medium text-gray-800">${tx.supplier}</span>
       </div>
+      ` : ''}
       <div>
         <span class="text-gray-500">User:</span>
         <span class="ml-2 font-medium ${userClass}">${akun}</span>
@@ -363,16 +365,55 @@ function renderNotaBlock(tx, currentUserId) {
     renderFilteredView();
   });
 
+  // Update header tabel berdasarkan filter
+  function updateTableHeader() {
+    const thead = document.querySelector("#stockLogContainer thead tr");
+    if (!thead) return;
+    
+    const isOutFilter = activeFilter === "OUT";
+    
+    if (isOutFilter) {
+      // Hapus kolom Supplier untuk filter OUT
+      thead.innerHTML = `
+        <th class="py-2 pr-4">Username</th>
+        <th class="py-2 pr-4">Transaksi ID</th>
+        <th class="py-2 pr-4">Tanggal</th>
+        <th class="py-2 pr-4">Tipe</th>
+        <th class="py-2 pr-4">Barang</th>
+        <th class="py-2 pr-4">Qty</th>
+        <th class="py-2 pr-4">Catatan</th>
+      `;
+    } else {
+      // Tampilkan kolom Supplier untuk filter ALL atau IN
+      thead.innerHTML = `
+        <th class="py-2 pr-4">Username</th>
+        <th class="py-2 pr-4">Transaksi ID</th>
+        <th class="py-2 pr-4">Tanggal</th>
+        <th class="py-2 pr-4">Tipe</th>
+        <th class="py-2 pr-4">Barang</th>
+        <th class="py-2 pr-4">Qty</th>
+        <th class="py-2 pr-4">Supplier</th>
+        <th class="py-2 pr-4">Catatan</th>
+      `;
+    }
+  }
+
   // render berdasarkan filter & search
   function renderFilteredView() {
     // gunakan logic render dari bagian loadHistory (mirip)
     if (!tbodyHist) return;
     const rows = getFilteredRows();
+    
+    // Update header berdasarkan filter
+    updateTableHeader();
+    
+    const isOutFilter = activeFilter === "OUT";
+    const colCount = isOutFilter ? 7 : 8;
 
     // STOCK LOG TABLE render
     if (!Array.isArray(rows) || rows.length === 0) {
       tbodyHist.innerHTML =
-        '<tr><td colspan="8" class="py-4 text-gray-500">Belum ada riwayat transaksi sesuai filter / pencarian.</td></tr>';
+        `<tr><td colspan="${colCount}" class="py-4 text-gray-500">Belum ada riwayat transaksi sesuai filter / pencarian.</td></tr>`;
     } else {
       const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
       const currentUserId = currentUser.id;
@@ -395,25 +436,41 @@ function renderNotaBlock(tx, currentUserId) {
             (t.tipe || t.type) === "OUT" ? "text-red-600" : "text-green-600";
           const namaItem = t.namaItem || t.itemName || t.item || "-";
           const qty = t.qty ?? t.jumlah ?? "-";
-          const supplierName = getSupplierNameForTx(t);
           const note = t.catatan || t.note || "-";
 
           const isCurrentUser =
             currentUserId && (t.userId === currentUserId || t.user_id === currentUserId);
           const rowClass = isCurrentUser ? "border-t bg-pink-50" : "border-t";
 
-          return `
-            <tr class="${rowClass}">
-              <td class="py-2 pr-4 font-semibold ${isCurrentUser ? "text-pink-600" : ""}">${akun}</td>
-              <td class="py-2 pr-4 font-mono text-xs">${transaksiId}</td>
-              <td class="py-2 pr-4">${tanggal}</td>
-              <td class="py-2 pr-4 ${tipeCls}">${tipeRaw}</td>
-              <td class="py-2 pr-4">${namaItem}</td>
-              <td class="py-2 pr-4">${qty}</td>
-              <td class="py-2 pr-4">${supplierName}</td>
-              <td class="py-2 pr-4">${note}</td>
-            </tr>
-          `;
+          if (isOutFilter) {
+            // Untuk filter OUT, tidak tampilkan kolom Supplier
+            return `
+              <tr class="${rowClass}">
+                <td class="py-2 pr-4 font-semibold ${isCurrentUser ? "text-pink-600" : ""}">${akun}</td>
+                <td class="py-2 pr-4 font-mono text-xs">${transaksiId}</td>
+                <td class="py-2 pr-4">${tanggal}</td>
+                <td class="py-2 pr-4 ${tipeCls}">${tipeRaw}</td>
+                <td class="py-2 pr-4">${namaItem}</td>
+                <td class="py-2 pr-4">${qty}</td>
+                <td class="py-2 pr-4">${note}</td>
+              </tr>
+            `;
+          } else {
+            // Untuk filter ALL atau IN, tampilkan kolom Supplier (dengan "-" untuk OUT)
+            const supplierName = (tipeRaw === "IN") ? getSupplierNameForTx(t) : "-";
+            return `
+              <tr class="${rowClass}">
+                <td class="py-2 pr-4 font-semibold ${isCurrentUser ? "text-pink-600" : ""}">${akun}</td>
+                <td class="py-2 pr-4 font-mono text-xs">${transaksiId}</td>
+                <td class="py-2 pr-4">${tanggal}</td>
+                <td class="py-2 pr-4 ${tipeCls}">${tipeRaw}</td>
+                <td class="py-2 pr-4">${namaItem}</td>
+                <td class="py-2 pr-4">${qty}</td>
+                <td class="py-2 pr-4">${supplierName}</td>
+                <td class="py-2 pr-4">${note}</td>
+              </tr>
+            `;
+          }
         })
         .join("");
     }
@@ -435,10 +492,13 @@ function renderNotaBlock(tx, currentUserId) {
           akun = `User-${t.user_id}`;
         }
 
+        // Hanya simpan supplier untuk transaksi IN
+        const supplier = (type === "OUT") ? null : getSupplierNameForTx(t);
+        
         grouped[idTx] = {
           id: idTx,
           tanggal: t.tanggal || t.date || "-",
-          supplier: getSupplierNameForTx(t),
+          supplier: supplier,
           type,
           items: [],
           total: 0,
@@ -509,8 +569,9 @@ function renderNotaBlock(tx, currentUserId) {
       }
 
       if (!Array.isArray(rows) || rows.length === 0) {
+        const colCount = activeFilter === "OUT" ? 7 : 8;
         tbodyHist.innerHTML =
-          '<tr><td colspan="8" class="py-4 text-gray-500">Belum ada riwayat transaksi.</td></tr>';
+          `<tr><td colspan="${colCount}" class="py-4 text-gray-500">Belum ada riwayat transaksi.</td></tr>`;
         fillNotaHistory([], currentUserId); // kosongkan nota juga
         return;
       }
@@ -524,11 +585,13 @@ function renderNotaBlock(tx, currentUserId) {
 
       // initial render: gunakan filtered renderer
       updateFilterChipVisuals();
+      updateTableHeader(); // Update header berdasarkan filter aktif sebelum render
       renderFilteredView();
     } catch (e) {
       console.error("Gagal load history:", e);
+      const colCount = activeFilter === "OUT" ? 7 : 8;
       tbodyHist.innerHTML =
-        '<tr><td colspan="8" class="py-4 text-gray-500">Belum ada data history atau endpoint belum tersedia.</td></tr>';
+        `<tr><td colspan="${colCount}" class="py-4 text-gray-500">Belum ada data history atau endpoint belum tersedia.</td></tr>`;
       fillNotaHistory([], currentUserId);
     }
   })();

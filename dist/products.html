@@ -106,7 +106,7 @@
 <body class="font-sans">
   <div class="flex h-screen relative">
     <!-- Sidebar -->
-    <aside class="w-64 bg-pink-100/90 shadow-lg flex flex-col relative z-10">
+    <aside class="w-64 bg-pink-100/90 shadow-lg flex flex-col no-print relative z-10">
       <div class="p-6 flex items-center justify-between">
         <div class="flex flex-col">
           <div id="sidebarUsername" class="text-2xl font-bold text-pink-600">Loading...</div>
@@ -114,18 +114,17 @@
         </div>
   <button id="profileBtn" class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center" title="Profile">👤</button>
       </div>
-
       <nav class="flex-1 px-4 space-y-2">
         <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-          <img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5"/>
+          <img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5" />
           Dashboard
         </a>
         <a href="products.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-          <img src="https://img.icons8.com/color/24/box--v1.png" class="mr-3 w-5 h-5"/>
+          <img src="https://img.icons8.com/color/24/box--v1.png" class="mr-3 w-5 h-5" />
           Products
         </a>
         <a href="add.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-          <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5"/>
+          <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5" />
           Add Product
         </a>
         <a href="transaction.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
@@ -133,10 +132,9 @@
           Transactions
         </a>
       </nav>
-
       <div class="p-4 border-t">
         <a href="#" id="logoutBtn" class="flex items-center p-2 rounded-lg hover:bg-red-100 text-red-600 hover:text-red-700 font-medium transition-colors">
-          <img src="https://img.icons8.com/color/24/exit.png" class="mr-3 w-5 h-5"/>
+          <img src="https://img.icons8.com/color/24/exit.png" class="mr-3 w-5 h-5" />
           Sign Out
         </a>
       </div>
@@ -188,19 +186,6 @@
 
   <script>
     const API = "http://localhost:3000";
-    // Update page title with username
-    const userTitle = JSON.parse(localStorage.getItem('user') || '{}');
-    if (userTitle.username) {
-      document.title = userTitle.username + ' Products';
-    }
-
-    // Display username in sidebar
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const sidebarUsernameEl = document.getElementById('sidebarUsername');
-
-    if (sidebarUsernameEl && user.username) {
-      sidebarUsernameEl.textContent = user.username;
-    }
 
     // Logout logic
     document.getElementById('logoutBtn').addEventListener('click', function(e) {
@@ -209,17 +194,6 @@
       window.location.href = '../src/login.html';
     });
 
-    // Active link highlight
-    const currentPage = location.pathname.split("/").pop(); 
-    const sidebarLinks = document.querySelectorAll("aside nav a");
-    sidebarLinks.forEach(link => {
-      const href = link.getAttribute("href");
-      if (href === currentPage) {
-        link.classList.add("bg-pink-400", "text-white", "shadow");
-      } else {
-        link.classList.remove("bg-pink-400", "text-white", "shadow");
-      }
-    });
   </script>
   <!-- Profile modal (copied from dashboard) -->
   <div id="profileModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
@@ -326,11 +300,15 @@
 
         profileModal.classList.remove('hidden');
         profileModal.classList.add('flex');
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
       }
 
     function closeProfile() {
       profileModal.classList.add('hidden');
       profileModal.classList.remove('flex');
+      // Restore body scroll when modal is closed
+      document.body.style.overflow = '';
     }
 
     if (profileBtn) {
@@ -462,15 +440,47 @@
         }
       });
 
-    // Load profile avatar on page load
+  </script>
+  
+  <!-- Simple script to update username - like in add.html - MUST be last -->
+  <script>
     (function() {
-      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const sidebarUsername = document.getElementById('sidebarUsername');
+      if (sidebarUsername && user.username) {
+        sidebarUsername.textContent = user.username;
+      }
+      
+      // Also update profile button avatar if exists
       const profileBtn = document.getElementById('profileBtn');
-      if (profileBtn && u.avatar) {
-        const avatarUrl = `${API}/uploads/${u.avatar}`;
+      if (profileBtn && user.avatar) {
+        const avatarUrl = `http://localhost:3000/uploads/${user.avatar}`;
         profileBtn.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full"/>`;
       }
     })();
+  </script>
+  
+  <!-- Active link highlight - must be last -->
+  <script>
+    // Wait for DOM to be fully ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', highlightActiveLink);
+    } else {
+      highlightActiveLink();
+    }
+    
+    function highlightActiveLink() {
+      const currentPage = location.pathname.split("/").pop();
+      const sidebarLinks = document.querySelectorAll("aside nav a");
+      sidebarLinks.forEach(link => {
+        const href = link.getAttribute("href");
+        if (href === currentPage) {
+          link.classList.add("bg-pink-400", "text-white", "shadow");
+        } else {
+          link.classList.remove("bg-pink-400", "text-white", "shadow");
+        }
+      });
+    }
   </script>
 </body>
 </html>
