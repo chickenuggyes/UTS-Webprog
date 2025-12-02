@@ -30,6 +30,49 @@
   .header-store{font-size:20px;font-weight:600;color:#858383;text-shadow:0 1px 3px rgba(56,52,52,.4)}
 </style>
 
+<style>
+@media print {
+
+  /* Buat print mengabaikan batasan tinggi layar */
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hilangkan border, shadow, dan rounding supaya tidak kepotong */
+  main {
+    overflow: visible !important;
+    height: auto !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+  }
+
+  /* Pastikan Nota tampil full */
+  #notaList {
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  /* Hilangkan background blur */
+  .bg-overlay {
+    background: white !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Force break page agar beberapa nota tidak menumpuk */
+  .nota-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
+</style>
+
+
 </head>
 <body class="font-sans">
 <div class="flex h-screen">
@@ -73,18 +116,7 @@
 
     <div id="txError" class="text-red-600 mb-4 no-print"></div>
 
-    <!-- Stats (pakai API dashboard yang sama) -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
-      <div class="bg-white/80 p-4 rounded-lg shadow border border-pink-100">
-        <p class="text-gray-500">Total Item</p><h2 id="totalItem" class="text-3xl font-bold">...</h2>
-      </div>
-      <div class="bg-white/80 p-4 rounded-lg shadow border border-pink-100">
-        <p class="text-gray-500">Total Stok</p><h2 id="totalStok" class="text-3xl font-bold">...</h2>
-      </div>
-      <div class="bg-white/80 p-4 rounded-lg shadow border border-pink-100">
-        <p class="text-gray-500">Total Harga</p><h2 id="totalHarga" class="text-3xl font-bold">...</h2>
-      </div>
-    </div>
+
 
     <!-- Menu: In / Out / Stock Log + History -->
     <div class="mt-10 mb-6 flex items-center justify-between no-print">
@@ -169,6 +201,18 @@
 <!-- End of flex h-screen container -->
 
 <script src="transaction.js"></script>
+<script>
+  // Print hanya bagian HISTORY
+  const printBtn = document.getElementById("btnPrintHistory");
+
+  if (printBtn) {
+    printBtn.addEventListener("click", () => {
+      // Force show history only
+      document.getElementById("notaContainer").classList.remove("hidden");
+      window.print();
+    });
+  }
+</script>
 
 <!-- Profile modal - moved outside all scrollable containers to prevent scroll -->
 <div id="profileModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50" style="position: fixed !important;">

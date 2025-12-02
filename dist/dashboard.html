@@ -177,10 +177,34 @@
     </div>
   </div>
 
+    <!-- Summary Keuangan Harian -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white/80 p-4 rounded-lg shadow">
+      <p class="text-gray-500">Total Pemasukan Hari Ini</p>
+      <h2 id="statIncomeToday" class="text-2xl font-bold">—</h2>
+    </div>
+    <div class="bg-white/80 p-4 rounded-lg shadow">
+      <p class="text-gray-500">Total Pengeluaran Hari Ini</p>
+      <h2 id="statOutcomeToday" class="text-2xl font-bold">—</h2>
+    </div>
+    <div class="bg-white/80 p-4 rounded-lg shadow">
+      <p class="text-gray-500">Laba Hari Ini</p>
+      <h2 id="statProfitToday" class="text-2xl font-bold">—</h2>
+    </div>
+  </div>
+
   <!-- ⚠️ Alert stok rendah -->
   <div id="stockAlert"
        class="hidden bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg">
     ⚠️ Beberapa barang stoknya &lt; 5. Mohon lakukan restock.
+  </div>
+
+  <!-- 📉 Daftar barang dengan stok < 5 -->
+  <div class="bg-white/80 p-4 rounded-lg shadow">
+    <p class="font-semibold mb-2">Barang dengan Stok &lt; 5</p>
+    <ul id="lowStockList" class="space-y-2 text-sm text-gray-700">
+      <li class="text-gray-500">Memuat data...</li>
+    </ul>
   </div>
 
   <!-- 📈 + 📊 Grafik: 2 kolom (kiri-kanan) -->
@@ -196,14 +220,6 @@
       <p class="font-semibold mb-2">Barang Paling Banyak IN / OUT</p>
       <canvas id="chartPopular"></canvas>
     </div>
-  </div>
-
-  <!-- 📉 Daftar barang dengan stok < 5 -->
-  <div class="bg-white/80 p-4 rounded-lg shadow">
-    <p class="font-semibold mb-2">Barang dengan Stok &lt; 5</p>
-    <ul id="lowStockList" class="space-y-2 text-sm text-gray-700">
-      <li class="text-gray-500">Memuat data...</li>
-    </ul>
   </div>
 </section>
 
@@ -235,7 +251,8 @@
       <section id="printArea" class="hidden">
         <h1 class="text-xl font-bold mb-2">Daftar Produk — Toko Gembira</h1>
 
-        <!-- Summary -->
+
+<!-- Summary -->
 <table class="w-full border-collapse mb-4">
   <tbody>
     <tr>
@@ -262,21 +279,39 @@
       <th class="border px-3 py-2 text-left">Transaksi Hari Ini</th>
       <td id="pTxToday" class="border px-3 py-2">-</td>
     </tr>
+
+    <!-- Tambahan baru -->
+    <tr>
+      <th class="border px-3 py-2 text-left">Pemasukan Hari Ini</th>
+      <td id="pIncomeToday" class="border px-3 py-2">-</td>
+    </tr>
+    <tr>
+      <th class="border px-3 py-2 text-left">Pengeluaran Hari Ini</th>
+      <td id="pOutcomeToday" class="border px-3 py-2">-</td>
+    </tr>
+    <tr>
+      <th class="border px-3 py-2 text-left">Laba Hari Ini</th>
+      <td id="pProfitToday" class="border px-3 py-2">-</td>
+    </tr>
+
   </tbody>
 </table>
 
 
+
         <!-- Products Table -->
         <table id="printTable" class="w-full border-collapse">
-          <thead>
-            <tr>
-              <th class="border px-3 py-2 text-left">No</th>
-              <th class="border px-3 py-2 text-left">Nama</th>
-              <th class="border px-3 py-2 text-left">Keterangan</th>
-              <th class="border px-3 py-2 text-left">Harga</th>
-              <th class="border px-3 py-2 text-left">Stok</th>
-            </tr>
-          </thead>
+<thead>
+  <tr>
+    <th class="border px-3 py-2 text-left">No</th>
+    <th class="border px-3 py-2 text-left">Nama</th>
+    <th class="border px-3 py-2 text-left">Keterangan</th>
+    <th class="border px-3 py-2 text-left">Supplier</th>
+    <th class="border px-3 py-2 text-left">Harga</th>
+    <th class="border px-3 py-2 text-left">Stok</th>
+  </tr>
+</thead>
+
           <tbody></tbody>
         </table>
       </section>

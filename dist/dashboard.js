@@ -67,11 +67,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   let cachedSuppliers = null; // null = belum pernah load
   let dashCache   = { totalItem: 0, totalStok: 0, totalHarga: 0 };
 
-  // cache statistik tambahan (untuk print)
+  // cache statistik tambahan (untuk print + summary)
   let extraStatsCache = {
     totalKategori: 0,
     totalSupplier: 0,
     txToday: 0,
+    incomeToday: 0,
+    outcomeToday: 0,
+    profitToday: 0,
   };
 
   // ------- Initial load: dashboard + products -------
@@ -181,6 +184,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     const pSupplier = document.getElementById("pTotalSupplier");
     const pTxToday  = document.getElementById("pTxToday");
 
+    const pIncome  = document.getElementById("pIncomeToday");
+    const pOutcome = document.getElementById("pOutcomeToday");
+    const pProfit  = document.getElementById("pProfitToday");
+
     if (pItem)   pItem.textContent   = dash.totalItem;
     if (pStok)   pStok.textContent   = dash.totalStok;
     if (pHarga)  pHarga.textContent  = rupiah(dash.totalHarga);
@@ -188,37 +195,59 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (pKategori) pKategori.textContent = extra.totalKategori ?? "-";
     if (pSupplier) pSupplier.textContent = extra.totalSupplier ?? "-";
     if (pTxToday)  pTxToday.textContent  = extra.txToday ?? "-";
+
+    if (pIncome)  pIncome.textContent  = rupiah(extra.incomeToday ?? 0);
+    if (pOutcome) pOutcome.textContent = rupiah(extra.outcomeToday ?? 0);
+    if (pProfit)  pProfit.textContent  = rupiah(extra.profitToday ?? 0);
   }
 
   function buildPrintTable(items) {
     const tbody = document.querySelector("#printTable tbody");
     if (!tbody) return;
-    tbody.innerHTML = items.map((p, i) => `
-      <tr>
-        <td class="border px-3 py-2">${i + 1}</td>
-        <td class="border px-3 py-2">${p.namaItem ?? "-"}</td>
-        <td class="border px-3 py-2">${p.keterangan ?? "-"}</td>
-        <td class="border px-3 py-2">${rupiah(p.hargaSatuan)}</td>
-        <td class="border px-3 py-2">${p.stok ?? 0}</td>
-      </tr>
-    `).join("");
+
+    tbody.innerHTML = items
+      .map((p, i) => {
+        const supplier =
+          p.namaSupplier ||
+          p.supplierName ||
+          p.supplier ||
+          "-";
+
+        return `
+          <tr>
+            <td class="border px-3 py-2">${i + 1}</td>
+            <td class="border px-3 py-2">${p.namaItem ?? "-"}</td>
+            <td class="border px-3 py-2">${p.keterangan ?? "-"}</td>
+            <td class="border px-3 py-2">${supplier}</td>
+            <td class="border px-3 py-2">${rupiah(p.hargaSatuan)}</td>
+            <td class="border px-3 py-2">${p.stok ?? 0}</td>
+          </tr>
+        `;
+      })
+      .join("");
   }
 
   // ====== Statistik Tambahan ======
-   async function loadExtraStats() {
-    const statKategoriEl = document.getElementById("statKategori");
-    const statSupplierEl = document.getElementById("statSupplier");
-    const statTxTodayEl  = document.getElementById("statTxToday");
-    const stockAlertEl   = document.getElementById("stockAlert");
-    const chartWeeklyEl  = document.getElementById("chartWeekly");
-    const chartPopularEl = document.getElementById("chartPopular");
-    const lowStockListEl = document.getElementById("lowStockList");
+  async function loadExtraStats() {
+    const statKategoriEl     = document.getElementById("statKategori");
+    const statSupplierEl     = document.getElementById("statSupplier");
+    const statTxTodayEl      = document.getElementById("statTxToday");
+    const statIncomeTodayEl  = document.getElementById("statIncomeToday");
+    const statOutcomeTodayEl = document.getElementById("statOutcomeToday");
+    const statProfitTodayEl  = document.getElementById("statProfitToday");
+    const stockAlertEl       = document.getElementById("stockAlert");
+    const chartWeeklyEl      = document.getElementById("chartWeekly");
+    const chartPopularEl     = document.getElementById("chartPopular");
+    const lowStockListEl     = document.getElementById("lowStockList");
 
     // kalau semua elemen ini tidak ada (misal file dipakai di halaman lain), jangan lanjut
     if (
       !statKategoriEl &&
       !statSupplierEl &&
       !statTxTodayEl &&
+      !statIncomeTodayEl &&
+      !statOutcomeTodayEl &&
+      !statProfitTodayEl &&
       !stockAlertEl &&
       !chartWeeklyEl &&
       !chartPopularEl &&
@@ -226,7 +255,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     ) {
       return;
     }
-
 
     try {
       const [itemsRes, suppliersRes, txRes] = await Promise.all([
@@ -240,7 +268,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       const txRows =
         txRes.transactions || txRes.items || txRes.data || txRes || [];
 
-      // --- Summary: kategori, supplier, transaksi hari ini ---
+      // --- Summary: kategori, supplier ---
       const kategoriSet = new Set(
         items
           .map((i) => i.namaKategori || i.kategori || i.category)
@@ -258,15 +286,60 @@ window.addEventListener("DOMContentLoaded", async () => {
         statSupplierEl.textContent = totalSupplier;
       }
 
+      // --- Hitung transaksi & keuangan hari ini ---
       const todayStr = new Date().toLocaleDateString("id-ID");
-      const txTodayCount = txRows.filter((t) => {
+      let txTodayCount = 0;
+      let incomeToday  = 0; // pemasukan (OUT)
+      let outcomeToday = 0; // pengeluaran (IN)
+
+      txRows.forEach((t) => {
         const d = new Date(t.tanggal || t.date);
-        if (isNaN(d)) return false;
-        return d.toLocaleDateString("id-ID") === todayStr;
-      }).length;
-      extraStatsCache.txToday = txTodayCount;
+        if (isNaN(d)) return;
+
+        if (d.toLocaleDateString("id-ID") !== todayStr) return;
+        txTodayCount++;
+
+        const type = String(t.tipe || t.type || "").toUpperCase();
+        const qty  = Math.abs(
+          Number(t.qty ?? t.jumlah ?? t.quantity ?? 0)
+        );
+
+        const hargaSatuan = Number(
+          t.hargaSatuan ?? t.harga ?? t.price ?? t.unitPrice ?? 0
+        );
+
+        let total = Number(
+          t.total ?? t.totalHarga ?? t.subtotal ?? 0
+        );
+        if (!total) {
+          // fallback: hitung manual kalau field total kosong
+          total = hargaSatuan * (qty || 1);
+        }
+
+        if (type === "OUT") {
+          incomeToday += total;
+        } else if (type === "IN") {
+          outcomeToday += total;
+        }
+      });
+
+      extraStatsCache.txToday      = txTodayCount;
+      extraStatsCache.incomeToday  = incomeToday;
+      extraStatsCache.outcomeToday = outcomeToday;
+      extraStatsCache.profitToday  = incomeToday - outcomeToday;
+
       if (statTxTodayEl) {
         statTxTodayEl.textContent = txTodayCount;
+      }
+      if (statIncomeTodayEl) {
+        statIncomeTodayEl.textContent = rupiah(incomeToday);
+      }
+      if (statOutcomeTodayEl) {
+        statOutcomeTodayEl.textContent = rupiah(outcomeToday);
+      }
+      if (statProfitTodayEl) {
+        const profit = incomeToday - outcomeToday;
+        statProfitTodayEl.textContent = rupiah(profit);
       }
 
       // --- Alert stok < 5 + daftar barang stok < 5 ---
@@ -295,12 +368,25 @@ window.addEventListener("DOMContentLoaded", async () => {
                 Number(b.stok ?? b.stock ?? 0)
             )
             .map((p) => {
-              const nama = p.namaItem ?? p.nama ?? p.name ?? "-";
-              const s = Number(p.stok ?? p.stock ?? 0);
+              const nama     = p.namaItem ?? p.nama ?? p.name ?? "-";
+              const ket      = p.keterangan ?? "-";
+              const kategori = p.namaKategori || p.kategori || p.category || "-";
+              const s        = Number(p.stok ?? p.stock ?? 0);
+
               return `
                 <li class="flex items-center justify-between bg-white rounded-md border px-3 py-2">
-                  <span class="truncate mr-2">${nama}</span>
-                  <span class="font-semibold text-red-600">${s} pcs</span>
+                  <div class="mr-3">
+                    <p class="font-medium">${nama}</p>
+                    <p class="text-xs text-gray-500">
+                      Kategori: ${kategori}
+                    </p>
+                    <p class="text-xs text-gray-500">
+                      ${ket}
+                    </p>
+                  </div>
+                  <span class="font-semibold text-red-600 whitespace-nowrap">
+                    ${s} pcs
+                  </span>
                 </li>
               `;
             })
@@ -308,7 +394,6 @@ window.addEventListener("DOMContentLoaded", async () => {
           lowStockListEl.innerHTML = rows;
         }
       }
-
 
       // --- Grafik Weekly (Human Friendly + 3 garis: Total, IN, OUT) ---
       if (chartWeeklyEl && typeof Chart !== "undefined") {
