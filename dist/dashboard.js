@@ -85,16 +85,25 @@ try {
   dashCache = {
     totalItem : dash.totalItem  ?? 0,
     totalStok : dash.totalStok  ?? 0,
-    totalHarga: dash.totalHarga ?? 0
+    totalHarga: dash.totalHarga ?? 0,
+    totalKategori: dash.totalKategori ?? 0
   };
 
   if (elItem)  elItem.textContent  = dashCache.totalItem;
   if (elStok)  elStok.textContent  = dashCache.totalStok;
   if (elHarga) elHarga.textContent = rupiah(dashCache.totalHarga);
 
+  // Update kategori langsung dari backend
+  const statKategoriEl = document.getElementById("statKategori");
+  if (statKategoriEl) {
+    statKategoriEl.textContent = dashCache.totalKategori;
+    extraStatsCache.totalKategori = dashCache.totalKategori;
+  }
+
   if (elError) elError.textContent = "";
 } catch (err) {
   if (elError) elError.textContent = err.message || "Gagal memuat dashboard";
+  console.error("Dashboard error:", err);
 }
 
 // Load list products (AMAN dari error dashboard)
@@ -255,10 +264,13 @@ if (listProductsEl) {
     }
 
     try {
-      const [itemsRes, suppliersRes, txRes] = await Promise.all([
+      // Gunakan endpoint backend yang tersedia
+      const [itemsRes, suppliersRes, txTodayRes, txSummaryTodayRes, txRes] = await Promise.all([
         getJSON(`${API}/items`),
         getJSON(`${API}/suppliers`),
-        getJSON(`${API}/transactions`),
+        getJSON(`${API}/transactions/today`).catch(() => ({ total: 0 })),
+        getJSON(`${API}/transactions/summary/today`).catch(() => ({ pemasukan: 0, pengeluaran: 0, profit: 0 })),
+        getJSON(`${API}/transactions`).catch(() => ({ transactions: [] })),
       ]);
 
       const items = itemsRes.items || itemsRes || [];
@@ -267,14 +279,15 @@ if (listProductsEl) {
         txRes.transactions || txRes.items || txRes.data || txRes || [];
 
       // --- Summary: kategori, supplier ---
-      const kategoriSet = new Set(
-        items
-          .map((i) => i.namaKategori || i.kategori || i.category)
-          .filter(Boolean)
-      );
-      const totalKategori = kategoriSet.size;
-      extraStatsCache.totalKategori = totalKategori;
-      if (statKategoriEl) {
+      // Kategori sudah diambil dari /dashboard, skip jika sudah ada
+      if (statKategoriEl && (!statKategoriEl.textContent || statKategoriEl.textContent === "...")) {
+        const kategoriSet = new Set(
+          items
+            .map((i) => i.namaKategori || i.kategori || i.category)
+            .filter(Boolean)
+        );
+        const totalKategori = kategoriSet.size;
+        extraStatsCache.totalKategori = totalKategori;
         statKategoriEl.textContent = totalKategori;
       }
 
@@ -284,51 +297,23 @@ if (listProductsEl) {
         statSupplierEl.textContent = totalSupplier;
       }
 
-      // --- Hitung transaksi & keuangan hari ini ---
-      const todayStr = new Date().toLocaleDateString("id-ID");
-      let txTodayCount = 0;
-      let incomeToday  = 0; // pemasukan (OUT)
-      let outcomeToday = 0; // pengeluaran (IN)
-
-      txRows.forEach((t) => {
-        const d = new Date(t.tanggal || t.date);
-        if (isNaN(d)) return;
-
-        if (d.toLocaleDateString("id-ID") !== todayStr) return;
-        txTodayCount++;
-
-        const type = String(t.tipe || t.type || "").toUpperCase();
-        const qty  = Math.abs(
-          Number(t.qty ?? t.jumlah ?? t.quantity ?? 0)
-        );
-
-        const hargaSatuan = Number(
-          t.hargaSatuan ?? t.harga ?? t.price ?? t.unitPrice ?? 0
-        );
-
-        let total = Number(
-          t.total ?? t.totalHarga ?? t.subtotal ?? 0
-        );
-        if (!total) {
-          // fallback: hitung manual kalau field total kosong
-          total = hargaSatuan * (qty || 1);
-        }
-
-        if (type === "OUT") {
-          incomeToday += total;
-        } else if (type === "IN") {
-          outcomeToday += total;
-        }
-      });
-
-      extraStatsCache.txToday      = txTodayCount;
-      extraStatsCache.incomeToday  = incomeToday;
-      extraStatsCache.outcomeToday = outcomeToday;
-      extraStatsCache.profitToday  = incomeToday - outcomeToday;
-
+      // --- Transaksi hari ini dari endpoint backend ---
+      const txTodayCount = txTodayRes.total || 0;
+      extraStatsCache.txToday = txTodayCount;
       if (statTxTodayEl) {
         statTxTodayEl.textContent = txTodayCount;
       }
+
+      // --- Pemasukan, pengeluaran, profit dari endpoint summary today ---
+      // Backend sudah benar: pemasukan = OUT (penjualan), pengeluaran = IN (pembelian)
+      const incomeToday = txSummaryTodayRes.pemasukan || 0;  // OUT = penjualan = pemasukan
+      const outcomeToday = txSummaryTodayRes.pengeluaran || 0;  // IN = pembelian = pengeluaran
+      const profitToday = txSummaryTodayRes.profit || (incomeToday - outcomeToday);
+
+      extraStatsCache.incomeToday = incomeToday;
+      extraStatsCache.outcomeToday = outcomeToday;
+      extraStatsCache.profitToday = profitToday;
+
       if (statIncomeTodayEl) {
         statIncomeTodayEl.textContent = rupiah(incomeToday);
       }
@@ -336,8 +321,7 @@ if (listProductsEl) {
         statOutcomeTodayEl.textContent = rupiah(outcomeToday);
       }
       if (statProfitTodayEl) {
-        const profit = incomeToday - outcomeToday;
-        statProfitTodayEl.textContent = rupiah(profit);
+        statProfitTodayEl.textContent = rupiah(profitToday);
       }
 
       // --- Alert stok < 5 + daftar barang stok < 5 ---

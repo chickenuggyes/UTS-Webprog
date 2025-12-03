@@ -3,7 +3,10 @@
 // Perubahan seminimal mungkin — sisipan kecil tanpa merombak struktur utama.
 
 document.addEventListener("DOMContentLoaded", () => {
-  const API = "http://localhost:3000";
+  console.log("✅ transaction.js loaded");
+  
+  try {
+    const API = "http://localhost:3000";
 
   const rupiah = (n) =>
     new Intl.NumberFormat("id-ID", {
@@ -55,9 +58,50 @@ document.addEventListener("DOMContentLoaded", () => {
   btnOut?.addEventListener("click", () => (window.location.href = "out.html"));
 
   async function getJSON(url) {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(res.status + " " + res.statusText);
-    return res.json();
+    try {
+      console.log("🔗 Fetching:", url);
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log("📡 Response status:", res.status, res.statusText);
+      console.log("📡 Response headers:", res.headers);
+      
+      // Baca response text dulu untuk debugging
+      const responseText = await res.text();
+      console.log("📄 Raw response text:", responseText.substring(0, 500));
+      
+      if (!res.ok) {
+        let errorData;
+        try {
+          errorData = JSON.parse(responseText);
+        } catch {
+          errorData = { message: res.statusText || responseText.substring(0, 200) };
+        }
+        console.error("❌ API Error Response:", errorData);
+        const errorMsg = errorData.message || errorData.error || `HTTP ${res.status}: ${res.statusText}`;
+        throw new Error(errorMsg);
+      }
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error("❌ JSON Parse Error:", parseError);
+        console.error("❌ Response text:", responseText);
+        throw new Error("Response bukan format JSON yang valid");
+      }
+      
+      console.log("✅ Response data:", data);
+      return data;
+    } catch (err) {
+      console.error("❌ Fetch error:", err);
+      console.error("❌ Error type:", err.constructor.name);
+      throw err;
+    }
   }
 
   // ---------- Load statistik ----------
@@ -548,14 +592,47 @@ function renderNotaBlock(tx, currentUserId) {
   (async function loadHistory() {
     if (!tbodyHist) return;
 
+    // Ambil user yang login dulu (untuk highlight row-nya saja)
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const currentUserId = currentUser.id;
+
     // pastikan map produk & supplier sudah ada
     await ensureMetaLoaded();
 
     try {
+      console.log("🔄 Loading transactions from:", `${API}/transactions`);
       const resp = await getJSON(`${API}/transactions`);
-      const rows = resp?.transactions || resp?.data || resp || [];
+      console.log("📥 Full API response:", resp);
+      
+      // Handle berbagai format response
+      let rows = [];
+      if (resp) {
+        if (Array.isArray(resp)) {
+          rows = resp;
+        } else if (resp.transactions && Array.isArray(resp.transactions)) {
+          rows = resp.transactions;
+        } else if (resp.data && Array.isArray(resp.data)) {
+          rows = resp.data;
+        } else if (resp.items && Array.isArray(resp.items)) {
+          rows = resp.items;
+        } else {
+          console.warn("⚠️ Unexpected response format:", resp);
+          // Coba ambil semua property yang mungkin array
+          for (const key in resp) {
+            if (Array.isArray(resp[key])) {
+              rows = resp[key];
+              console.log(`✅ Found array in property: ${key}`);
+              break;
+            }
+          }
+        }
+      }
+      
+      if (!Array.isArray(rows)) {
+        console.error("❌ Response is not an array:", typeof rows, rows);
+        throw new Error("Format data tidak valid dari server. Response: " + JSON.stringify(resp).substring(0, 100));
+      }
 
-      console.log("📥 Raw response from API:", resp);
       console.log("📊 Total rows received:", rows.length);
       
       if (rows.length > 0) {
@@ -568,31 +645,76 @@ function renderNotaBlock(tx, currentUserId) {
         });
       }
 
-      if (!Array.isArray(rows) || rows.length === 0) {
+      if (rows.length === 0) {
         const colCount = activeFilter === "OUT" ? 7 : 8;
         tbodyHist.innerHTML =
           `<tr><td colspan="${colCount}" class="py-4 text-gray-500">Belum ada riwayat transaksi.</td></tr>`;
-        fillNotaHistory([], currentUserId); // kosongkan nota juga
+        fillNotaHistory([], currentUserId);
         return;
       }
 
       // Simpan semua rows ke state (dipakai search/filter)
-      allRows = Array.isArray(rows) ? rows : [];
-
-      // Ambil user yang login (untuk highlight row-nya saja)
-      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
-      const currentUserId = currentUser.id;
+      allRows = rows;
 
       // initial render: gunakan filtered renderer
       updateFilterChipVisuals();
       updateTableHeader(); // Update header berdasarkan filter aktif sebelum render
       renderFilteredView();
     } catch (e) {
-      console.error("Gagal load history:", e);
+      console.error("❌ Gagal load history:", e);
+      console.error("❌ Error name:", e.name);
+      console.error("❌ Error message:", e.message);
+      console.error("❌ Error stack:", e.stack);
+      
       const colCount = activeFilter === "OUT" ? 7 : 8;
+      let errorMsg = "Gagal memuat data transaksi";
+      let errorDetail = "";
+      
+      if (e.name === "TypeError" && (e.message && (e.message.includes("fetch") || e.message.includes("Failed to fetch") || e.message.includes("NetworkError")))) {
+        errorMsg = "Tidak dapat terhubung ke server";
+        errorDetail = "Pastikan backend berjalan di http://localhost:3000 dan tidak ada masalah CORS";
+      } else if (e.message) {
+        errorMsg = e.message;
+        if (e.message.includes("500") || e.message.includes("Internal Server Error")) {
+          errorMsg = "Server Error (500) - Backend Error";
+          errorDetail = "Backend mengalami error saat memproses request. Kemungkinan masalah:\n- Kolom database tidak ada (misal: transaction_date)\n- Query SQL error\n- Koneksi database bermasalah\n\nCek console backend untuk detail error SQL.";
+        } else if (e.message.includes("404") || e.message.includes("Not Found")) {
+          errorMsg = "Endpoint tidak ditemukan (404)";
+          errorDetail = "Endpoint /transactions tidak ditemukan. Pastikan route sudah benar di backend";
+        } else if (e.message.includes("403") || e.message.includes("Forbidden")) {
+          errorMsg = "Akses ditolak (403)";
+          errorDetail = "Tidak memiliki izin untuk mengakses endpoint ini";
+        } else if (e.message.includes("401") || e.message.includes("Unauthorized")) {
+          errorMsg = "Tidak terautentikasi (401)";
+          errorDetail = "Silakan login ulang";
+        } else if (e.message.includes("HTTP") || e.message.includes("status")) {
+          errorDetail = "Error dari server. Status: " + e.message;
+        } else if (e.message.includes("JSON") || e.message.includes("parse")) {
+          errorMsg = "Format data tidak valid";
+          errorDetail = "Response dari server bukan format JSON yang valid";
+        }
+      } else {
+        errorMsg = "Unknown error: " + (e.toString ? e.toString() : String(e));
+      }
+      
       tbodyHist.innerHTML =
-        `<tr><td colspan="${colCount}" class="py-4 text-gray-500">Belum ada data history atau endpoint belum tersedia.</td></tr>`;
+        `<tr><td colspan="${colCount}" class="py-4 text-red-500 text-center">
+          <div class="font-semibold text-lg mb-2">⚠️ Error: ${errorMsg}</div>
+          ${errorDetail ? `<div class="text-sm text-gray-600 mb-1">${errorDetail}</div>` : ''}
+          <div class="text-xs text-gray-500 mt-1">Buka Developer Tools (F12) → Console untuk detail error</div>
+        </td></tr>`;
       fillNotaHistory([], currentUserId);
     }
   })();
+  
+  } catch (globalError) {
+    console.error("❌ Global error in transaction.js:", globalError);
+    const errorContainer = document.getElementById("historyBody") || document.querySelector("tbody");
+    if (errorContainer) {
+      errorContainer.innerHTML = `<tr><td colspan="8" class="py-4 text-red-500 text-center">
+        <div class="font-semibold">⚠️ Error: Script tidak dapat dijalankan</div>
+        <div class="text-sm text-gray-600 mt-1">${globalError.message || "Unknown error"}</div>
+      </td></tr>`;
+    }
+  }
 });

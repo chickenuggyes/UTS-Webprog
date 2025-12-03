@@ -85,6 +85,180 @@ export const transactionController = {
 
 
   /* ============================================================
+      CREATE TRANSACTION IN (dari format frontend)
+  ============================================================ */
+  async createIn(req, res) {
+    const { rows, user_id } = req.body;
+
+    if (!user_id || !rows || !Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({ message: "Data transaksi tidak lengkap" });
+    }
+
+    const conn = await pool.getConnection();
+    await conn.beginTransaction();
+
+    try {
+      const tranid = "T" + uuid().slice(0, 8).toUpperCase();
+      const supplier_id = rows[0]?.supplierId || rows[0]?.supplier_id || null;
+      const note = rows[0]?.note || null;
+
+      await conn.query(
+        `INSERT INTO transactions 
+          (tranid, user_id, supplier_id, transaction_type, note)
+         VALUES (?, ?, ?, ?, ?)`,
+        [tranid, user_id, supplier_id, "IN", note]
+      );
+
+      for (const row of rows) {
+        const itemId = row.itemId || row.product_id;
+        const qty = row.qty || row.quantity;
+        
+        if (!itemId || !qty) continue;
+
+        // Ambil harga satuan dari produk
+        const [productRows] = await conn.query(
+          "SELECT hargaSatuan FROM products WHERE id = ?",
+          [itemId]
+        );
+
+        if (productRows.length === 0) {
+          throw new Error(`Produk ${itemId} tidak ditemukan`);
+        }
+
+        const hargaSatuan = productRows[0].hargaSatuan || 0;
+        const detailId = "D" + uuid().slice(0, 8).toUpperCase();
+
+        await conn.query(
+          `INSERT INTO transaction_details
+           (id, transaction_id, product_id, quantity, hargaSatuan)
+           VALUES (?, ?, ?, ?, ?)`,
+          [detailId, tranid, itemId, qty, hargaSatuan]
+        );
+
+        const [stockRows] = await conn.query(
+          "SELECT stok FROM products WHERE id = ? FOR UPDATE",
+          [itemId]
+        );
+
+        if (stockRows.length === 0) {
+          throw new Error(`Produk ${itemId} tidak ditemukan`);
+        }
+
+        const newStok = stockRows[0].stok + qty;
+
+        await conn.query(
+          "UPDATE products SET stok = ? WHERE id = ?",
+          [newStok, itemId]
+        );
+
+        const logid = "L" + uuid().slice(0, 8).toUpperCase();
+        await conn.query(
+          `INSERT INTO stock_log
+           (stokid, product_id, change_type, quantity, transaction_id)
+           VALUES (?, ?, ?, ?, ?)`,
+          [logid, itemId, "IN", qty, tranid]
+        );
+      }
+
+      await conn.commit();
+      conn.release();
+
+      return res.json({ message: "Transaksi IN berhasil disimpan", tranid });
+
+    } catch (err) {
+      await conn.rollback();
+      conn.release();
+      console.error("TRANSACTION IN ERROR:", err);
+      res.status(500).json({ message: err.message });
+    }
+  },
+
+
+  /* ============================================================
+      CREATE TRANSACTION OUT (dari format frontend)
+  ============================================================ */
+  async createOut(req, res) {
+    const { rows, user_id } = req.body;
+
+    if (!user_id || !rows || !Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({ message: "Data transaksi tidak lengkap" });
+    }
+
+    const conn = await pool.getConnection();
+    await conn.beginTransaction();
+
+    try {
+      const tranid = "T" + uuid().slice(0, 8).toUpperCase();
+      const note = rows[0]?.note || null;
+
+      await conn.query(
+        `INSERT INTO transactions 
+          (tranid, user_id, supplier_id, transaction_type, note)
+         VALUES (?, ?, ?, ?, ?)`,
+        [tranid, user_id, null, "OUT", note]
+      );
+
+      for (const row of rows) {
+        const itemId = row.itemId || row.product_id;
+        const qty = row.qty || row.quantity;
+        
+        if (!itemId || !qty) continue;
+
+        // Ambil harga satuan dari produk
+        const [productRows] = await conn.query(
+          "SELECT hargaSatuan, stok FROM products WHERE id = ? FOR UPDATE",
+          [itemId]
+        );
+
+        if (productRows.length === 0) {
+          throw new Error(`Produk ${itemId} tidak ditemukan`);
+        }
+
+        if (productRows[0].stok < qty) {
+          throw new Error(`Stok produk ${itemId} tidak mencukupi. Stok tersedia: ${productRows[0].stok}, dibutuhkan: ${qty}`);
+        }
+
+        const hargaSatuan = productRows[0].hargaSatuan || 0;
+        const detailId = "D" + uuid().slice(0, 8).toUpperCase();
+
+        await conn.query(
+          `INSERT INTO transaction_details
+           (id, transaction_id, product_id, quantity, hargaSatuan)
+           VALUES (?, ?, ?, ?, ?)`,
+          [detailId, tranid, itemId, qty, hargaSatuan]
+        );
+
+        const newStok = productRows[0].stok - qty;
+
+        await conn.query(
+          "UPDATE products SET stok = ? WHERE id = ?",
+          [newStok, itemId]
+        );
+
+        const logid = "L" + uuid().slice(0, 8).toUpperCase();
+        await conn.query(
+          `INSERT INTO stock_log
+           (stokid, product_id, change_type, quantity, transaction_id)
+           VALUES (?, ?, ?, ?, ?)`,
+          [logid, itemId, "OUT", qty, tranid]
+        );
+      }
+
+      await conn.commit();
+      conn.release();
+
+      return res.json({ message: "Transaksi OUT berhasil disimpan", tranid });
+
+    } catch (err) {
+      await conn.rollback();
+      conn.release();
+      console.error("TRANSACTION OUT ERROR:", err);
+      res.status(500).json({ message: err.message });
+    }
+  },
+
+
+  /* ============================================================
       GET TODAY TRANSACTIONS (SUMMARY)
   ============================================================ */
   async getTodayTransactions(req, res) {
@@ -104,14 +278,84 @@ export const transactionController = {
 
 
   /* ============================================================
-      DASHBOARD SUMMARY
+      GET ALL TRANSACTIONS WITH DETAILS (FOR STOCK LOG & HISTORY)
+  ============================================================ */
+  async getAllTransactions(req, res) {
+    try {
+      const [rows] = await pool.query(`
+        SELECT 
+          sl.stokid,
+          sl.product_id,
+          sl.change_type AS tipe,
+          sl.quantity AS qty,
+          sl.transaction_id AS transaksiId,
+          t.transaction_date AS tanggal,
+          t.user_id,
+          t.supplier_id,
+          t.transaction_type AS type,
+          t.note AS catatan,
+          p.namaItem,
+          p.hargaSatuan,
+          u.username AS akun,
+          s.namaSupplier
+        FROM stock_log sl
+        LEFT JOIN transactions t ON t.tranid = sl.transaction_id
+        LEFT JOIN products p ON p.id = sl.product_id
+        LEFT JOIN users u ON u.id = t.user_id
+        LEFT JOIN suppliers s ON s.supid = t.supplier_id
+        ORDER BY t.transaction_date DESC, sl.stokid DESC
+      `);
+
+      // Format data sesuai yang diharapkan frontend
+      const transactions = rows.map(row => ({
+        transaksiId: row.transaksiId,
+        id: row.transaksiId,
+        tranid: row.transaksiId,
+        tanggal: row.tanggal ? new Date(row.tanggal).toLocaleDateString('id-ID') : '-',
+        date: row.tanggal,
+        tipe: row.tipe || row.type,
+        type: row.tipe || row.type,
+        namaItem: row.namaItem,
+        itemName: row.namaItem,
+        item: row.namaItem,
+        qty: row.qty,
+        quantity: row.qty,
+        jumlah: row.qty,
+        hargaSatuan: row.hargaSatuan,
+        harga_satuan: row.hargaSatuan,
+        product_id: row.product_id,
+        productId: row.product_id,
+        idBarang: row.product_id,
+        user_id: row.user_id,
+        userId: row.user_id,
+        username: row.akun,
+        akun: row.akun,
+        supplier_id: row.supplier_id,
+        supplierId: row.supplier_id,
+        supid: row.supplier_id,
+        catatan: row.catatan,
+        note: row.catatan,
+        namaSupplier: row.namaSupplier
+      }));
+
+      res.json({ transactions });
+    } catch (err) {
+      console.error("Error fetching all transactions:", err);
+      res.status(500).json({ message: "Gagal mengambil data transaksi" });
+    }
+  },
+
+
+  /* ============================================================
+      DASHBOARD SUMMARY (ALL TIME)
+      pemasukan = OUT (penjualan), pengeluaran = IN (pembelian)
   ============================================================ */
   async summary(req, res) {
     try {
       const [[result]] = await pool.query(`
         SELECT 
-          SUM(CASE WHEN t.transaction_type = 'IN' THEN td.quantity * td.hargaSatuan ELSE 0 END) AS pemasukan,
-          SUM(CASE WHEN t.transaction_type = 'OUT' THEN td.quantity * td.hargaSatuan ELSE 0 END) AS pengeluaran
+          SUM(CASE WHEN t.transaction_type = 'OUT' THEN td.quantity * td.hargaSatuan ELSE 0 END) AS pemasukan,
+          SUM(CASE WHEN t.transaction_type = 'IN' THEN td.quantity * td.hargaSatuan ELSE 0 END) AS pengeluaran
         FROM transaction_details td
         JOIN transactions t ON t.tranid = td.transaction_id
       `);
@@ -124,6 +368,33 @@ export const transactionController = {
 
     } catch (err) {
       res.status(500).json({ message: "Gagal fetch summary" });
+    }
+  },
+
+
+  /* ============================================================
+      DASHBOARD SUMMARY TODAY
+      pemasukan = OUT (penjualan), pengeluaran = IN (pembelian)
+  ============================================================ */
+  async summaryToday(req, res) {
+    try {
+      const [[result]] = await pool.query(`
+        SELECT 
+          SUM(CASE WHEN t.transaction_type = 'OUT' THEN td.quantity * td.hargaSatuan ELSE 0 END) AS pemasukan,
+          SUM(CASE WHEN t.transaction_type = 'IN' THEN td.quantity * td.hargaSatuan ELSE 0 END) AS pengeluaran
+        FROM transaction_details td
+        JOIN transactions t ON t.tranid = td.transaction_id
+        WHERE DATE(t.transaction_date) = CURDATE()
+      `);
+
+      const pemasukan = result.pemasukan || 0;
+      const pengeluaran = result.pengeluaran || 0;
+      const profit = pemasukan - pengeluaran;
+
+      res.json({ pemasukan, pengeluaran, profit });
+
+    } catch (err) {
+      res.status(500).json({ message: "Gagal fetch summary hari ini" });
     }
   },
 

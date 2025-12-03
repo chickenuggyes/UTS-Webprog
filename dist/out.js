@@ -132,16 +132,21 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           rows: payload,
-          username: username,
           user_id: user_id
         }),
       });
-      if (!res.ok) throw new Error(res.status + " " + res.statusText);
+      
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || res.status + " " + res.statusText);
+      }
+      
       alert("Transaksi OUT berhasil!");
       window.location.href = "transaction.html";
     } catch (e) {
       if (errorEl)
         errorEl.textContent = "Gagal submit: " + (e.message || "error");
+      console.error("Error:", e);
     }
   });
 });

@@ -16,7 +16,7 @@ async function loadTransactions() {
   const res = await fetch(`${API}/transactions${qs}`);
     if (!res.ok) throw new Error('Gagal ambil transaksi');
     const data = await res.json();
-    TRANSACTIONS = data.items || [];
+    TRANSACTIONS = data.transactions || data.items || data.data || [];
     renderTransactions();
   } catch (err) {
     console.error(err);
@@ -160,7 +160,7 @@ profileForm?.addEventListener('submit', async (e) => {
   const email = document.getElementById('editEmail')?.value.trim();
   if (!name || !email) { alert('Nama dan email wajib diisi'); return; }
   try {
-    const res = await fetch('http://localhost:3000/login/profile', {
+    const res = await fetch(`${API}/login/profile`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, username: name, email })

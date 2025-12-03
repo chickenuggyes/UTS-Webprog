@@ -114,17 +114,37 @@ window.addEventListener("DOMContentLoaded", async () => {
   await loadItem();
 
   form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  // Confirm sebelum simpan
-  if (!confirm("Yakin ingin menyimpan perubahan untuk produk ini?")) return;
-  try {
-    const fd = new FormData(form);
+    e.preventDefault();
+    // Confirm sebelum simpan
+    if (!confirm("Yakin ingin menyimpan perubahan untuk produk ini?")) return;
     
-    // Success notification
-    alert("Produk berhasil diupdate!");
-    window.location.href = "products.html";
-  } catch (err) {
-    alert(err.message || "Gagal update produk");
-  }
-});
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    const prevText = btn.textContent;
+    btn.textContent = "Menyimpan...";
+    
+    try {
+      const fd = new FormData(form);
+      
+      const res = await fetch(`${API}/items/${id}`, {
+        method: "PUT",
+        body: fd
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `Gagal update produk (status ${res.status})`);
+      }
+
+      // Success notification
+      alert("Produk berhasil diupdate!");
+      window.location.href = "products.html";
+    } catch (err) {
+      alert(err.message || "Gagal update produk");
+      console.error(err);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = prevText;
+    }
+  });
 });
