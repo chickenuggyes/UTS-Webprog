@@ -602,26 +602,38 @@ function renderNotaBlock(tx, currentUserId) {
     try {
       console.log("🔄 Loading transactions from:", `${API}/transactions`);
       const resp = await getJSON(`${API}/transactions`);
-      console.log("📥 Full API response:", resp);
+      console.log("📥 Full API response from /transactions:", resp);
+      console.log("📥 Response keys:", Object.keys(resp || {}));
       
       // Handle berbagai format response
       let rows = [];
       if (resp) {
         if (Array.isArray(resp)) {
           rows = resp;
+          console.log("✅ Response is direct array");
         } else if (resp.transactions && Array.isArray(resp.transactions)) {
           rows = resp.transactions;
+          console.log("✅ Found transactions array, length:", rows.length);
         } else if (resp.data && Array.isArray(resp.data)) {
           rows = resp.data;
+          console.log("✅ Found data array, length:", rows.length);
         } else if (resp.items && Array.isArray(resp.items)) {
           rows = resp.items;
+          console.log("✅ Found items array, length:", rows.length);
         } else {
-          console.warn("⚠️ Unexpected response format:", resp);
+          console.warn("⚠️ Unexpected response format. Response keys:", Object.keys(resp));
+          console.warn("⚠️ Response content:", JSON.stringify(resp).substring(0, 200));
+          
+          // Jika response berisi data dashboard (totalItem, totalStok, dll), berarti endpoint salah
+          if (resp.totalItem !== undefined || resp.totalStok !== undefined) {
+            throw new Error("Endpoint /transactions mengembalikan data dashboard. Pastikan backend route sudah benar.");
+          }
+          
           // Coba ambil semua property yang mungkin array
           for (const key in resp) {
             if (Array.isArray(resp[key])) {
               rows = resp[key];
-              console.log(`✅ Found array in property: ${key}`);
+              console.log(`✅ Found array in property: ${key}, length:`, rows.length);
               break;
             }
           }
@@ -629,8 +641,9 @@ function renderNotaBlock(tx, currentUserId) {
       }
       
       if (!Array.isArray(rows)) {
-        console.error("❌ Response is not an array:", typeof rows, rows);
-        throw new Error("Format data tidak valid dari server. Response: " + JSON.stringify(resp).substring(0, 100));
+        console.error("❌ Response is not an array:", typeof rows);
+        console.error("❌ Response content:", JSON.stringify(resp).substring(0, 300));
+        throw new Error("Format data tidak valid dari server. Endpoint /transactions harus mengembalikan array transaksi. Response: " + JSON.stringify(resp).substring(0, 200));
       }
 
       console.log("📊 Total rows received:", rows.length);

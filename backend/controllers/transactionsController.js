@@ -63,7 +63,7 @@ export const transactionController = {
 
         const logid = "L" + uuid().slice(0, 8).toUpperCase();
         await conn.query(
-          `INSERT INTO stock_log
+          `INSERT INTO stocklog
            (stokid, product_id, change_type, quantity, transaction_id)
            VALUES (?, ?, ?, ?, ?)`,
           [logid, item.product_id, transaction_type, item.quantity, tranid]
@@ -153,7 +153,7 @@ export const transactionController = {
 
         const logid = "L" + uuid().slice(0, 8).toUpperCase();
         await conn.query(
-          `INSERT INTO stock_log
+          `INSERT INTO stocklog
            (stokid, product_id, change_type, quantity, transaction_id)
            VALUES (?, ?, ?, ?, ?)`,
           [logid, itemId, "IN", qty, tranid]
@@ -237,7 +237,7 @@ export const transactionController = {
 
         const logid = "L" + uuid().slice(0, 8).toUpperCase();
         await conn.query(
-          `INSERT INTO stock_log
+          `INSERT INTO stocklog
            (stokid, product_id, change_type, quantity, transaction_id)
            VALUES (?, ?, ?, ?, ?)`,
           [logid, itemId, "OUT", qty, tranid]
@@ -282,6 +282,8 @@ export const transactionController = {
   ============================================================ */
   async getAllTransactions(req, res) {
     try {
+      console.log("📥 GET /transactions - Request received");
+
       const [rows] = await pool.query(`
         SELECT 
           sl.stokid,
@@ -289,7 +291,7 @@ export const transactionController = {
           sl.change_type AS tipe,
           sl.quantity AS qty,
           sl.transaction_id AS transaksiId,
-          t.transaction_date AS tanggal,
+          COALESCE(t.transaction_date, NOW()) AS tanggal,
           t.user_id,
           t.supplier_id,
           t.transaction_type AS type,
@@ -298,13 +300,15 @@ export const transactionController = {
           p.hargaSatuan,
           u.username AS akun,
           s.namaSupplier
-        FROM stock_log sl
+        FROM stocklog sl
         LEFT JOIN transactions t ON t.tranid = sl.transaction_id
         LEFT JOIN products p ON p.id = sl.product_id
         LEFT JOIN users u ON u.id = t.user_id
         LEFT JOIN suppliers s ON s.supid = t.supplier_id
-        ORDER BY t.transaction_date DESC, sl.stokid DESC
+        ORDER BY COALESCE(t.transaction_date, NOW()) DESC, sl.stokid DESC
       `);
+
+      console.log(`📊 Found ${rows.length} transaction records from stocklog`);
 
       // Format data sesuai yang diharapkan frontend
       const transactions = rows.map(row => ({
@@ -338,10 +342,26 @@ export const transactionController = {
         namaSupplier: row.namaSupplier
       }));
 
+      console.log(`✅ Sending ${transactions.length} transactions to frontend`);
       res.json({ transactions });
     } catch (err) {
       console.error("Error fetching all transactions:", err);
-      res.status(500).json({ message: "Gagal mengambil data transaksi" });
+      console.error("Error details:", {
+        message: err.message,
+        code: err.code,
+        sqlMessage: err.sqlMessage
+      });
+      
+      // Jika error karena tabel tidak ada, kembalikan array kosong
+      if (err.code === 'ER_NO_SUCH_TABLE' || err.message.includes('stocklog')) {
+        console.warn("⚠️  Table stocklog tidak ada, mengembalikan array kosong");
+        return res.json({ transactions: [] });
+      }
+      
+      res.status(500).json({ 
+        message: "Gagal mengambil data transaksi",
+        error: err.message 
+      });
     }
   },
 

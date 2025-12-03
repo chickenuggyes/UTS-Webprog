@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div>
           <label class="text-sm text-gray-500">Catatan</label>
-          <input type="text" class="input note-input" placeholder="opsional">
+          <input type="text" class="input note-input" placeholder="opsional" autocomplete="off" tabindex="0">
         </div>
       </div>
     `;
@@ -79,7 +79,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function addRow() {
     rowsContainer.insertAdjacentHTML("beforeend", rowTemplate());
-    await hydrate(rowsContainer.lastElementChild);
+    const rowEl = rowsContainer.lastElementChild;
+    await hydrate(rowEl);
+    
+    // Pastikan input catatan di row baru bisa digunakan
+    const noteInput = rowEl.querySelector('.note-input');
+    if (noteInput) {
+      noteInput.removeAttribute('disabled');
+      noteInput.removeAttribute('readonly');
+      noteInput.removeAttribute('tabindex');
+      noteInput.style.pointerEvents = 'auto';
+      noteInput.style.cursor = 'text';
+      noteInput.style.opacity = '1';
+      noteInput.style.background = '';
+      
+      // Pastikan input bisa difokuskan
+      noteInput.addEventListener('focus', function() {
+        this.style.outline = '2px solid #ec4899';
+      });
+      noteInput.addEventListener('blur', function() {
+        this.style.outline = '';
+      });
+      
+      // Test: pastikan input bisa diklik
+      noteInput.addEventListener('click', function(e) {
+        e.stopPropagation();
+        this.focus();
+      });
+    }
   }
 
   // ---------- Initial load items ----------
@@ -102,14 +129,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const payload = [];
     rowsContainer.querySelectorAll(".tx-row").forEach((row) => {
-      const itemId = row.querySelector(".item-select")?.value;
-      const qty = Number(row.querySelector(".qty-input")?.value || 0);
-      const note = row.querySelector(".note-input")?.value || "";
-      if (itemId && qty > 0) payload.push({ itemId, qty, note });
+      const itemId = row.querySelector(".item-select")?.value?.trim();
+      const qtyInput = row.querySelector(".qty-input")?.value?.trim();
+      const qty = Number(qtyInput) || 0;
+      
+      // Ambil catatan dari input field row ini, jika kosong maka string kosong (bukan null atau undefined)
+      const noteInput = row.querySelector(".note-input");
+      const note = noteInput ? (noteInput.value || "").trim() : "";
+      
+      // Hanya tambahkan ke payload jika itemId ada DAN qty > 0
+      // Row yang kosong (tidak ada itemId atau qty = 0) akan di-skip
+      if (itemId && itemId !== "" && qty > 0) {
+        payload.push({ 
+          itemId, 
+          qty, 
+          note: note || "" // Pastikan selalu string, tidak null/undefined
+        });
+      }
     });
 
     if (payload.length === 0) {
-      if (errorEl) errorEl.textContent = "Minimal 1 baris valid.";
+      if (errorEl) errorEl.textContent = "Minimal 1 baris valid (barang dan qty harus diisi).";
       return;
     }
 
@@ -126,6 +166,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       
       console.log("👤 User info:", { username, user_id });
+      
+      // Debug: cek catatan per row
+      payload.forEach((row, index) => {
+        console.log(`📝 Row ${index + 1} - itemId: ${row.itemId}, qty: ${row.qty}, note: "${row.note}"`);
+      });
       
       const res = await fetch(`${API}/transactions/out`, {
         method: "POST",
