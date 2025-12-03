@@ -363,12 +363,14 @@ async createIn(req, res) {
           p.namaItem,
           p.hargaSatuan,
           u.username AS akun,
-          s.namaSupplier
+          s.namaSupplier,
+          td.note AS catatan
         FROM stocklog sl
         LEFT JOIN transactions t ON t.tranid = sl.transaction_id
         LEFT JOIN products p ON p.id = sl.product_id
         LEFT JOIN users u ON u.id = t.user_id
         LEFT JOIN suppliers s ON s.supid = t.supplier_id
+        LEFT JOIN transaction_details td ON td.transaction_id = sl.transaction_id AND td.product_id = sl.product_id
         ORDER BY COALESCE(t.transaction_date, NOW()) DESC, sl.stokid DESC
       `);
 
