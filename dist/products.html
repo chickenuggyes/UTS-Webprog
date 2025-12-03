@@ -250,6 +250,28 @@
     </div>
   </div>
 
+  <!-- Crop Modal -->
+  <div id="cropModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[60]" style="position: fixed !important;">
+    <div class="bg-white rounded-xl p-6 w-[90vw] max-w-md shadow-2xl relative">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-pink-600">Pangkas Foto</h3>
+        <button id="cropClose" class="text-gray-600 hover:text-gray-900">✕</button>
+      </div>
+      
+      <div class="relative mb-4" style="width: 100%; padding-bottom: 100%; background: #f3f4f6; border-radius: 50%; overflow: hidden; position: relative;">
+        <div id="cropContainer" class="absolute inset-0 flex items-center justify-center" style="cursor: move; position: relative; user-select: none;">
+          <img id="cropImage" src="" alt="Crop" style="display: block; user-select: none; pointer-events: auto; position: absolute; max-width: none; max-height: none; cursor: move;">
+        </div>
+        <div id="cropOverlay" class="absolute inset-0 pointer-events-none" style="border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); z-index: 10;"></div>
+      </div>
+
+      <div class="flex gap-2">
+        <button id="cropCancel" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">Batalkan</button>
+        <button id="cropSave" class="flex-1 px-4 py-2 bg-pink-500 text-white rounded hover:bg-pink-600">Simpan</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Profile modal logic (shared)
     const profileBtn = document.getElementById('profileBtn');
@@ -416,29 +438,7 @@
       profileFotoInput?.click();
     });
 
-    // Event listener untuk menampilkan preview gambar profil
-    profileFotoInput?.addEventListener('change', function () {
-        if (this.files && this.files[0]) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            profileAvatar.src = e.target.result;
-            profileAvatar.classList.remove('hidden');
-            profilePlaceholder.classList.add('hidden');
-          };
-          reader.readAsDataURL(this.files[0]);
-        } else {
-          // Jika file dibatalkan, kembalikan ke avatar default atau yang tersimpan
-          const u = JSON.parse(localStorage.getItem('user') || '{}');
-          if (u.avatar) {
-            profileAvatar.src = `${API}/uploads/${u.avatar}`;
-            profileAvatar.classList.remove('hidden');
-            profilePlaceholder.classList.add('hidden');
-          } else {
-            profileAvatar.classList.add('hidden');
-            profilePlaceholder.classList.remove('hidden');
-          }
-        }
-      });
+    // Profile crop functionality will be handled by profileCrop.js
 
   </script>
   
@@ -482,5 +482,6 @@
       });
     }
   </script>
+  <script src="profileCrop.js"></script>
 </body>
 </html>

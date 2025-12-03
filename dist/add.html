@@ -454,33 +454,7 @@
       profileFotoInput?.click();
     });
 
-    // Event listener untuk menampilkan preview gambar profil
-    profileFotoInput?.addEventListener('change', function () {
-      if (this.files && this.files[0]) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (profileAvatar) {
-            profileAvatar.src = e.target.result;
-            profileAvatar.classList.remove('hidden');
-          }
-          if (profilePlaceholder) profilePlaceholder.classList.add('hidden');
-        };
-        reader.readAsDataURL(this.files[0]);
-      } else {
-        // Jika file dibatalkan, kembalikan ke avatar default atau yang tersimpan
-        const u = JSON.parse(localStorage.getItem('user') || '{}');
-        if (u.avatar) {
-          if (profileAvatar) {
-            profileAvatar.src = `${API}/uploads/${u.avatar}`;
-            profileAvatar.classList.remove('hidden');
-          }
-          if (profilePlaceholder) profilePlaceholder.classList.add('hidden');
-        } else {
-          if (profileAvatar) profileAvatar.classList.add('hidden');
-          if (profilePlaceholder) profilePlaceholder.classList.remove('hidden');
-        }
-      }
-    });
+    // Profile crop functionality will be handled by profileCrop.js
 
     // Load profile avatar on page load
     (function() {
@@ -494,6 +468,7 @@
   </script>
 
   <script src="addProduct.js"></script>
+  <script src="profileCrop.js"></script>
   <script>
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const sidebarUsername = document.getElementById('sidebarUsername');
