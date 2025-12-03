@@ -282,8 +282,6 @@ export const transactionController = {
   ============================================================ */
   async getAllTransactions(req, res) {
     try {
-      console.log("📥 GET /transactions - Request received");
-
       const [rows] = await pool.query(`
         SELECT 
           sl.stokid,
@@ -307,8 +305,6 @@ export const transactionController = {
         LEFT JOIN suppliers s ON s.supid = t.supplier_id
         ORDER BY COALESCE(t.transaction_date, NOW()) DESC, sl.stokid DESC
       `);
-
-      console.log(`📊 Found ${rows.length} transaction records from stocklog`);
 
       // Format data sesuai yang diharapkan frontend
       const transactions = rows.map(row => ({
@@ -342,7 +338,6 @@ export const transactionController = {
         namaSupplier: row.namaSupplier
       }));
 
-      console.log(`✅ Sending ${transactions.length} transactions to frontend`);
       res.json({ transactions });
     } catch (err) {
       console.error("Error fetching all transactions:", err);

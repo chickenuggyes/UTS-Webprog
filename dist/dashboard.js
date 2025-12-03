@@ -376,14 +376,29 @@ if (listProductsEl) {
           lowStockListEl.innerHTML = rows;
         }
       }
-
+            
       // --- Grafik Weekly (Human Friendly + 3 garis: Total, IN, OUT) ---
       if (chartWeeklyEl && typeof Chart !== "undefined") {
+
+        // Parse format tanggal DD/MM/YYYY → Date JS
+        function parseDMY(str) {
+          if (!str || typeof str !== "string") return new Date(str);
+
+          const parts = str.split("/");
+          if (parts.length !== 3) return new Date(str);
+
+          const [day, month, year] = parts.map(Number);
+          return new Date(year, month - 1, day); // month index dimulai dari 0
+        }
+
+        // Ambil range minggu (Senin — Minggu)
         function getWeekRange(date) {
           const d = new Date(date);
-          const day = d.getDay() || 7; // Minggu -> 7
+          const day = d.getDay() || 7; // Minggu = 7
+
           const start = new Date(d);
           start.setDate(d.getDate() - (day - 1)); // mundur ke Senin
+
           const end = new Date(start);
           end.setDate(start.getDate() + 6); // sampai Minggu
 
@@ -399,27 +414,32 @@ if (listProductsEl) {
 
         // weeklyObj: { labelMinggu: { total, in, out } }
         const weeklyObj = {};
+
         txRows.forEach((t) => {
-          const d = new Date(t.tanggal || t.date);
+          const rawDate = t.tanggal || t.date;
+          const d = parseDMY(rawDate);
+
           if (isNaN(d)) return;
 
-          const key  = getWeekRange(d);
+          const key = getWeekRange(d);
           const type = String(t.tipe || t.type || "").toUpperCase();
 
           if (!weeklyObj[key]) {
             weeklyObj[key] = { total: 0, in: 0, out: 0 };
           }
 
-          // kita hitung per transaksi (bukan qty) -> 1 transaksi = 1 hitungan
+          // Hitung per transaksi (bukan qty)
           weeklyObj[key].total += 1;
-          if (type === "IN")  weeklyObj[key].in  += 1;
+          if (type === "IN") weeklyObj[key].in += 1;
           if (type === "OUT") weeklyObj[key].out += 1;
         });
 
-        const sortedLabels = Object.keys(weeklyObj).sort(
-          (a, b) =>
-            new Date(a.split(" — ")[0]) - new Date(b.split(" — ")[0])
-        );
+        // Sorting minggu berdasarkan tanggal awal minggu
+        const sortedLabels = Object.keys(weeklyObj).sort((a, b) => {
+          const aDate = new Date(parseDMY(a.split(" — ")[0]));
+          const bDate = new Date(parseDMY(b.split(" — ")[0]));
+          return aDate - bDate;
+        });
 
         if (sortedLabels.length > 0) {
           new Chart(chartWeeklyEl.getContext("2d"), {
@@ -456,7 +476,7 @@ if (listProductsEl) {
             options: {
               responsive: true,
               plugins: {
-                legend: { position: "top" }, // klik legend bisa hide/show garis
+                legend: { position: "top" },
               },
               scales: {
                 y: {
@@ -468,7 +488,6 @@ if (listProductsEl) {
           });
         }
       }
-
       // --- Grafik Barang Paling Banyak IN / OUT (dipisah) ---
       if (chartPopularEl && typeof Chart !== "undefined") {
         const popularity = {};
