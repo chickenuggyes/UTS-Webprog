@@ -25,19 +25,18 @@ export const transactionController = {
 
       await conn.query(
         `INSERT INTO transactions 
-          (tranid, user_id, supplier_id, transaction_type, note)
-         VALUES (?, ?, ?, ?, ?)`,
-        [tranid, user_id, supplier_id || null, transaction_type, note || null]
+          (tranid, user_id, supplier_id, transaction_type)
+         VALUES (?, ?, ?, ?)`,
+        [tranid, user_id, supplier_id || null, transaction_type || null]
       );
 
       for (const item of items) {
         const detailId = "D" + uuid().slice(0, 8).toUpperCase();
 
         await conn.query(
-          `INSERT INTO transaction_details
-           (id, transaction_id, product_id, quantity, hargaSatuan)
-           VALUES (?, ?, ?, ?, ?)`,
-          [detailId, tranid, item.product_id, item.quantity, item.hargaSatuan]
+          `INSERT INTO transaction_details (id, transaction_id, product_id, quantity, hargaSatuan, note)
+          VALUES (?,?,?,?,?,?)`,
+          [detailId, tranid, item.product_id, item.quantity, item.hargaSatuan, item.note]
         );
 
         const [rows] = await conn.query(
@@ -87,177 +86,245 @@ export const transactionController = {
   /* ============================================================
       CREATE TRANSACTION IN (dari format frontend)
   ============================================================ */
-  async createIn(req, res) {
-    const { rows, user_id } = req.body;
+async createIn(req, res) {
+  const { rows, user_id, supplier_id } = req.body;
 
-    if (!user_id || !rows || !Array.isArray(rows) || rows.length === 0) {
-      return res.status(400).json({ message: "Data transaksi tidak lengkap" });
+  if (!user_id || !rows || !Array.isArray(rows) || rows.length === 0) {
+    return res.status(400).json({ message: "Data transaksi tidak lengkap" });
+  }
+
+  const conn = await pool.getConnection();
+  await conn.beginTransaction();
+
+  try {
+    // ================================
+    // GET LAST TRANSACTION ID
+    // ================================
+    const [[lastTran]] = await conn.query(`
+      SELECT tranid 
+      FROM transactions
+      ORDER BY tranid DESC
+      LIMIT 1
+    `);
+
+    function generateTransactionId(lastId) {
+      if (!lastId) return "T001";
+      const num = parseInt(lastId.substring(1)) + 1;
+      return "T" + num.toString().padStart(3, "0");
     }
 
-    const conn = await pool.getConnection();
-    await conn.beginTransaction();
+    const tranid = generateTransactionId(lastTran?.tranid);
 
-    try {
-      const tranid = "T" + uuid().slice(0, 8).toUpperCase();
-      const supplier_id = rows[0]?.supplierId || rows[0]?.supplier_id || null;
-      const note = rows[0]?.note || null;
+    // INSERT TRANSACTION HEADER
+    await conn.query(
+      `INSERT INTO transactions (tranid, user_id, supplier_id, transaction_type)
+       VALUES (?, ?, ?, ?)`,
+      [tranid, user_id, supplier_id || null, "IN"]
+    );
 
-      await conn.query(
-        `INSERT INTO transactions 
-          (tranid, user_id, supplier_id, transaction_type, note)
-         VALUES (?, ?, ?, ?, ?)`,
-        [tranid, user_id, supplier_id, "IN", note]
+    // ================================
+    // GET LAST DETAIL ID
+    // ================================
+    const [[lastDetail]] = await conn.query(`
+      SELECT id 
+      FROM transaction_details
+      ORDER BY id DESC
+      LIMIT 1
+    `);
+
+    function generateTransactionDetailId(lastId) {
+      if (!lastId) return "TD001";
+      const num = parseInt(lastId.substring(2)) + 1;
+      return "TD" + num.toString().padStart(3, "0");
+    }
+
+    let currentDetailId = lastDetail?.id;
+
+    // ================================
+    // INSERT EACH DETAIL ROW
+    // ================================
+    for (const row of rows) {
+      const itemId = row.itemId || row.product_id;
+      const qty = row.qty || row.quantity;
+      const note = row.note || null;
+
+      if (!itemId || !qty) continue;
+
+      // LOCK PRODUCT ROW
+      const [productRows] = await conn.query(
+        "SELECT hargaSatuan, stok FROM products WHERE id = ? FOR UPDATE",
+        [itemId]
       );
 
-      for (const row of rows) {
-        const itemId = row.itemId || row.product_id;
-        const qty = row.qty || row.quantity;
-        
-        if (!itemId || !qty) continue;
-
-        // Ambil harga satuan dari produk
-        const [productRows] = await conn.query(
-          "SELECT hargaSatuan FROM products WHERE id = ?",
-          [itemId]
-        );
-
-        if (productRows.length === 0) {
-          throw new Error(`Produk ${itemId} tidak ditemukan`);
-        }
-
-        const hargaSatuan = productRows[0].hargaSatuan || 0;
-        const detailId = "D" + uuid().slice(0, 8).toUpperCase();
-
-        await conn.query(
-          `INSERT INTO transaction_details
-           (id, transaction_id, product_id, quantity, hargaSatuan)
-           VALUES (?, ?, ?, ?, ?)`,
-          [detailId, tranid, itemId, qty, hargaSatuan]
-        );
-
-        const [stockRows] = await conn.query(
-          "SELECT stok FROM products WHERE id = ? FOR UPDATE",
-          [itemId]
-        );
-
-        if (stockRows.length === 0) {
-          throw new Error(`Produk ${itemId} tidak ditemukan`);
-        }
-
-        const newStok = stockRows[0].stok + qty;
-
-        await conn.query(
-          "UPDATE products SET stok = ? WHERE id = ?",
-          [newStok, itemId]
-        );
-
-        const logid = "L" + uuid().slice(0, 8).toUpperCase();
-        await conn.query(
-          `INSERT INTO stocklog
-           (stokid, product_id, change_type, quantity, transaction_id)
-           VALUES (?, ?, ?, ?, ?)`,
-          [logid, itemId, "IN", qty, tranid]
-        );
+      if (productRows.length === 0) {
+        throw new Error(`Produk ${itemId} tidak ditemukan`);
       }
 
-      await conn.commit();
-      conn.release();
+      const hargaSatuan = productRows[0].hargaSatuan || 0;
 
-      return res.json({ message: "Transaksi IN berhasil disimpan", tranid });
+      // GENERATE DETAIL ID
+      currentDetailId = generateTransactionDetailId(currentDetailId);
 
-    } catch (err) {
-      await conn.rollback();
-      conn.release();
-      console.error("TRANSACTION IN ERROR:", err);
-      res.status(500).json({ message: err.message });
+      await conn.query(
+        `INSERT INTO transaction_details
+         (id, transaction_id, product_id, quantity, hargaSatuan, note)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [currentDetailId, tranid, itemId, qty, hargaSatuan, note]
+      );
+
+      // UPDATE STOK (IN = TAMBAH)
+      const newStok = productRows[0].stok + qty;
+      await conn.query(
+        "UPDATE products SET stok = ? WHERE id = ?",
+        [newStok, itemId]
+      );
+
+      // INSERT STOCKLOG
+      const logid = uuid();
+      await conn.query(
+        `INSERT INTO stocklog (stokid, product_id, change_type, quantity, transaction_id)
+         VALUES (?, ?, ?, ?, ?)`,
+        [logid, itemId, "IN", qty, tranid]
+      );
     }
-  },
+
+    await conn.commit();
+    conn.release();
+
+    return res.json({ message: "Transaksi IN berhasil disimpan", tranid });
+
+  } catch (err) {
+    await conn.rollback();
+    conn.release();
+    console.error("TRANSACTION IN ERROR:", err);
+    res.status(500).json({ message: err.message });
+  }
+},
 
 
   /* ============================================================
       CREATE TRANSACTION OUT (dari format frontend)
   ============================================================ */
   async createOut(req, res) {
-    const { rows, user_id } = req.body;
+  const { rows, user_id } = req.body;
 
-    if (!user_id || !rows || !Array.isArray(rows) || rows.length === 0) {
-      return res.status(400).json({ message: "Data transaksi tidak lengkap" });
+  if (!user_id || !rows || !Array.isArray(rows) || rows.length === 0) {
+    return res.status(400).json({ message: "Data transaksi tidak lengkap" });
+  }
+
+  const conn = await pool.getConnection();
+  await conn.beginTransaction();
+
+  try {
+    // ================================
+    // GET LAST TRANSACTION ID
+    // ================================
+    const [[lastTran]] = await conn.query(`
+      SELECT tranid 
+      FROM transactions
+      ORDER BY tranid DESC
+      LIMIT 1
+    `);
+
+    function generateTransactionId(lastId) {
+      if (!lastId) return "T001";
+      const num = parseInt(lastId.substring(1)) + 1;
+      return "T" + num.toString().padStart(3, "0");
     }
 
-    const conn = await pool.getConnection();
-    await conn.beginTransaction();
+    const tranid = generateTransactionId(lastTran?.tranid);
 
-    try {
-      const tranid = "T" + uuid().slice(0, 8).toUpperCase();
-      const note = rows[0]?.note || null;
+    // INSERT TRANSACTION
+    await conn.query(
+      `INSERT INTO transactions (tranid, user_id, supplier_id, transaction_type)
+       VALUES (?, ?, ?, ?)`,
+      [tranid, user_id, null, "OUT"]
+    );
 
-      await conn.query(
-        `INSERT INTO transactions 
-          (tranid, user_id, supplier_id, transaction_type, note)
-         VALUES (?, ?, ?, ?, ?)`,
-        [tranid, user_id, null, "OUT", note]
+    // ================================
+    // GET LAST DETAIL ID
+    // ================================
+    const [[lastDetail]] = await conn.query(`
+      SELECT id 
+      FROM transaction_details
+      ORDER BY id DESC
+      LIMIT 1
+    `);
+
+    function generateTransactionDetailId(lastId) {
+      if (!lastId) return "TD001";
+      const num = parseInt(lastId.substring(2)) + 1;
+      return "TD" + num.toString().padStart(3, "0");
+    }
+
+    let currentDetailId = lastDetail?.id;
+
+    // ================================
+    // INSERT EACH ROW
+    // ================================
+    for (const row of rows) {
+      const itemId = row.itemId || row.product_id;
+      const qty = row.qty || row.quantity;
+      const note = row.note || null;
+
+      if (!itemId || !qty) continue;
+
+      // LOCK PRODUCT ROW
+      const [productRows] = await conn.query(
+        "SELECT hargaSatuan, stok FROM products WHERE id = ? FOR UPDATE",
+        [itemId]
       );
 
-      for (const row of rows) {
-        const itemId = row.itemId || row.product_id;
-        const qty = row.qty || row.quantity;
-        
-        if (!itemId || !qty) continue;
+      if (productRows.length === 0) {
+        throw new Error(`Produk ${itemId} tidak ditemukan`);
+      }
 
-        // Ambil harga satuan dari produk
-        const [productRows] = await conn.query(
-          "SELECT hargaSatuan, stok FROM products WHERE id = ? FOR UPDATE",
-          [itemId]
-        );
-
-        if (productRows.length === 0) {
-          throw new Error(`Produk ${itemId} tidak ditemukan`);
-        }
-
-        if (productRows[0].stok < qty) {
-          throw new Error(`Stok produk ${itemId} tidak mencukupi. Stok tersedia: ${productRows[0].stok}, dibutuhkan: ${qty}`);
-        }
-
-        const hargaSatuan = productRows[0].hargaSatuan || 0;
-        const detailId = "D" + uuid().slice(0, 8).toUpperCase();
-
-        await conn.query(
-          `INSERT INTO transaction_details
-           (id, transaction_id, product_id, quantity, hargaSatuan)
-           VALUES (?, ?, ?, ?, ?)`,
-          [detailId, tranid, itemId, qty, hargaSatuan]
-        );
-
-        const newStok = productRows[0].stok - qty;
-
-        await conn.query(
-          "UPDATE products SET stok = ? WHERE id = ?",
-          [newStok, itemId]
-        );
-
-        const logid = "L" + uuid().slice(0, 8).toUpperCase();
-        await conn.query(
-          `INSERT INTO stocklog
-           (stokid, product_id, change_type, quantity, transaction_id)
-           VALUES (?, ?, ?, ?, ?)`,
-          [logid, itemId, "OUT", qty, tranid]
+      if (productRows[0].stok < qty) {
+        throw new Error(
+          `Stok produk ${itemId} tidak mencukupi. Stok tersedia: ${productRows[0].stok}, dibutuhkan: ${qty}`
         );
       }
 
-      await conn.commit();
-      conn.release();
+      const hargaSatuan = productRows[0].hargaSatuan || 0;
 
-      return res.json({ message: "Transaksi OUT berhasil disimpan", tranid });
+      // GENERATE DETAIL ID
+      currentDetailId = generateTransactionDetailId(currentDetailId);
 
-    } catch (err) {
-      await conn.rollback();
-      conn.release();
-      console.error("TRANSACTION OUT ERROR:", err);
-      res.status(500).json({ message: err.message });
+      await conn.query(
+        `INSERT INTO transaction_details 
+         (id, transaction_id, product_id, quantity, hargaSatuan, note)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [currentDetailId, tranid, itemId, qty, hargaSatuan, note]
+      );
+
+      // UPDATE STOK
+      const newStok = productRows[0].stok - qty;
+      await conn.query(
+        "UPDATE products SET stok = ? WHERE id = ?",
+        [newStok, itemId]
+      );
+
+      // STOCKLOG (UUID)
+      const stocklogId = uuid();
+      await conn.query(
+        `INSERT INTO stocklog (stokid, product_id, change_type, quantity, transaction_id)
+         VALUES (?, ?, ?, ?, ?)`,
+        [stocklogId, itemId, "OUT", qty, tranid]
+      );
     }
-  },
 
+    await conn.commit();
+    conn.release();
 
+    return res.json({ message: "Transaksi OUT berhasil disimpan", tranid });
+
+  } catch (err) {
+    await conn.rollback();
+    conn.release();
+    console.error("TRANSACTION OUT ERROR:", err);
+    res.status(500).json({ message: err.message });
+  }
+},
   /* ============================================================
       GET TODAY TRANSACTIONS (SUMMARY)
   ============================================================ */
@@ -293,7 +360,6 @@ export const transactionController = {
           t.user_id,
           t.supplier_id,
           t.transaction_type AS type,
-          t.note AS catatan,
           p.namaItem,
           p.hargaSatuan,
           u.username AS akun,
