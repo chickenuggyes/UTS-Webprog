@@ -43,34 +43,39 @@
     }
   </style>
 </head>
-<body>
+<body class="font-sans">
 <div class="flex h-screen">
   <!-- Sidebar -->
-  <aside class="w-64 bg-pink-100/90 shadow-lg flex flex-col relative z-10">
+  <aside class="w-64 bg-pink-100/90 shadow-lg flex flex-col no-print relative z-10">
     <div class="p-6 flex items-center justify-between">
       <div class="flex flex-col">
         <div id="sidebarUsername" class="text-2xl font-bold text-pink-600">Loading...</div>
         <div class="text-xs text-gray-500 mt-1">Admin</div>
       </div>
-      <button id="profileBtn" class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center" title="Profile">👤</button>
+  <button id="profileBtn" class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center" title="Profile">👤</button>
     </div>
     <nav class="flex-1 px-4 space-y-2">
-      <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-        <img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5"/>Dashboard
+      <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium transition-colors">
+        <img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5" />
+        Dashboard
       </a>
-      <a href="products.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-        <img src="https://img.icons8.com/color/24/box--v1.png" class="mr-3 w-5 h-5"/>Products
+      <a href="products.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium transition-colors">
+        <img src="https://img.icons8.com/color/24/box--v1.png" class="mr-3 w-5 h-5" />
+        Products
       </a>
-      <a href="add.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-        <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5"/>Add Product
+      <a href="add.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium transition-colors">
+        <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5" />
+        Add Product
       </a>
-      <a href="transaction.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-        <img src="https://img.icons8.com/color/24/transaction-list.png" class="mr-3 w-5 h-5"/>Transactions
+      <a href="transaction.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium transition-colors">
+        <img src="https://img.icons8.com/color/24/transaction-list.png" class="mr-3 w-5 h-5" />
+        Transactions
       </a>
     </nav>
     <div class="p-4 border-t">
-      <a href="#" id="logoutBtn" class="flex items-center p-2 rounded-lg hover:bg-red-100 text-red-600 font-medium">
-        <img src="https://img.icons8.com/color/24/exit.png" class="mr-3 w-5 h-5"/>Sign Out
+      <a href="#" id="logoutBtn" class="flex items-center p-2 rounded-lg hover:bg-red-100 text-red-600 hover:text-red-700 font-medium transition-colors">
+        <img src="https://img.icons8.com/color/24/exit.png" class="mr-3 w-5 h-5" />
+        Sign Out
       </a>
     </div>
   </aside>
@@ -341,10 +346,18 @@ document.getElementById('logoutBtn')?.addEventListener('click', (e)=>{
 });
 
 const currentPage = location.pathname.split('/').pop();
-document.querySelectorAll('aside nav a').forEach(link=>{
+document.querySelectorAll('aside nav a').forEach(link => {
   const href = link.getAttribute('href');
-  if (href === currentPage) {
-    link.classList.add('bg-pink-400','text-white','shadow');
+  // Highlight Transactions menu jika halaman adalah in.html atau out.html
+  if ((currentPage === 'in.html' || currentPage === 'out.html') && href === 'transaction.html') {
+    link.classList.add('bg-pink-400', 'text-white', 'shadow');
+    link.classList.remove('text-gray-800');
+  } else if (href === currentPage) {
+    link.classList.add('bg-pink-400', 'text-white', 'shadow');
+    link.classList.remove('text-gray-800');
+  } else {
+    link.classList.remove('bg-pink-400', 'text-white', 'shadow');
+    link.classList.add('text-gray-800');
   }
 });
 </script>
