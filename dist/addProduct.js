@@ -1,84 +1,68 @@
-const API = "http://localhost:3000";
+// Jangan deklarasi const API lagi di sini,
+// API sudah didefinisikan di add.html
 
-document.getElementById("addProductForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("addProductForm");
+  if (!form) return; // jaga-jaga kalau file ini kebaca di halaman lain
 
-  const namaItem    = document.getElementById("namaBarang").value.trim();
-  const keterangan  = document.getElementById("keterangan").value.trim();
-  const hargaSatuan = document.getElementById("hargaSatuan").value.trim();
-  const stok        = document.getElementById("stok").value.trim();
-  const kategori    = document.getElementById("kategori") ? document.getElementById("kategori").value : "";
-  const foto        = document.getElementById("fotoInput").files[0];
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-const fd = new FormData();
-fd.append("namaItem", namaItem);
-fd.append("keterangan", keterangan);
-fd.append("hargaSatuan", hargaSatuan);
-fd.append("stok", stok);
-if (kategori) fd.append("catid", kategori);
-const supplier = document.getElementById("supplier") ? document.getElementById("supplier").value : "";
-if (supplier) fd.append("supid", supplier);
-if (foto) fd.append("foto", foto);
+    const namaItem    = document.getElementById("namaBarang").value.trim();
+    const keterangan  = document.getElementById("keterangan").value.trim();
+    const hargaSatuan = document.getElementById("hargaSatuan").value.trim();
+    const stok        = document.getElementById("stok").value.trim();
+    const kategoriEl  = document.getElementById("kategori");
+    const supplierEl  = document.getElementById("supplier");
+    const fotoInput   = document.getElementById("fotoInput");
 
+    const kategori = kategoriEl?.value.trim() || "";
+    const supplier = supplierEl?.value.trim() || "";
+    const foto     = fotoInput && fotoInput.files[0] ? fotoInput.files[0] : null;
 
-  const btn = e.target.querySelector('button[type="submit"]');
-  btn.disabled = true;
-  const prevText = btn.textContent;
-  btn.textContent = "Uploading...";
+    const fd = new FormData();
+    fd.append("namaItem", namaItem);
+    fd.append("keterangan", keterangan);
+    fd.append("hargaSatuan", hargaSatuan);
+    fd.append("stok", stok);
+    fd.append("catid", kategori);
+    fd.append("supid", supplier);
+    if (foto) fd.append("foto", foto);
 
-  try {
-    const res = await fetch(`${API}/items`, {
-      method: "POST",
-      body: fd 
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || `Gagal menambah produk (status ${res.status})`);
+    const btn = form.querySelector('button[type="submit"]') || form.querySelector("button");
+    let prevText = "";
+    if (btn) {
+      btn.disabled = true;
+      prevText = btn.textContent;
+      btn.textContent = "Uploading...";
     }
 
-    alert("Produk berhasil ditambahkan!");
-    window.location.href = "products.html";
-  } catch (err) {
-    alert(err.message || "Terjadi kesalahan koneksi.");
-    console.error(err);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = prevText;
-  }
-});
+    try {
+      // API diambil dari global yang sudah didefinisikan di add.html
+      const res = await fetch(`${API}/items`, {
+        method: "POST",
+        body: fd,
+      });
 
-// Variabel untuk elemen gambar profil baru
-const profileFotoInput = document.getElementById('profileFotoInput');
-const profileAvatar = document.getElementById('profileAvatar');
-const profileAvatarContainer = document.getElementById('profileAvatarContainer');
-const profilePlaceholder = document.getElementById('profileAvatarPlaceholder');
+      if (!res.ok) {
+        let errMsg = `Gagal menambah produk (status ${res.status})`;
+        try {
+          const err = await res.json();
+          if (err && err.message) errMsg = err.message;
+        } catch (_) {}
+        throw new Error(errMsg);
+      }
 
-// Event listener untuk mengklik container avatar agar membuka input file
-profileAvatarContainer?.addEventListener('click', () => {
-  profileFotoInput?.click();
-});
-
-// Event listener untuk menampilkan preview gambar profil
-profileFotoInput?.addEventListener('change', function () {
-  if (this.files && this.files[0]) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      profileAvatar.src = e.target.result;
-      profileAvatar.classList.remove('hidden');
-      profilePlaceholder.classList.add('hidden');
-    };
-    reader.readAsDataURL(this.files[0]);
-  } else {
-    // Jika file dibatalkan, kembalikan ke avatar default atau yang tersimpan
-    const u = JSON.parse(localStorage.getItem('user') || '{}');
-    if (u.avatar) {
-      profileAvatar.src = u.avatar;
-      profileAvatar.classList.remove('hidden');
-      profilePlaceholder.classList.add('hidden');
-    } else {
-      profileAvatar.classList.add('hidden');
-      profilePlaceholder.classList.remove('hidden');
+      alert("Produk berhasil ditambahkan!");
+      window.location.href = "products.html";
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Terjadi kesalahan koneksi.");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = prevText || "ADD";
+      }
     }
-  }
+  });
 });
