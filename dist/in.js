@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div>
           <label class="text-sm text-gray-500">Catatan</label>
-          <input type="text" class="input note-input" placeholder="opsional" autocomplete="off" tabindex="0">
+          <input type="text" class="input note-input" placeholder="opsional">
         </div>
       </div>
     `;
@@ -71,11 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
       itemSel.innerHTML =
         '<option value="">Pilih barang…</option>' +
         cachedItems
-          .map((it) => {
-            const id = it.id || it.itemId || it._id;
-            const name = it.namaItem || it.name || it.nama || "-";
-            return `<option value="${id}">${name}</option>`;
-          })
+          .map(it => `<option value="${it.id}">${it.namaItem}</option>`)
           .join("");
     }
 
@@ -83,149 +79,79 @@ document.addEventListener("DOMContentLoaded", () => {
       supSel.innerHTML =
         '<option value="">Pilih supplier…</option>' +
         cachedSuppliers
-          .map((s) => {
-            const id = s.id || s.supplierId || s._id;
-            const name = s.namaSupplier || s.nama || s.name || "-";
-            return `<option value="${id}">${name}</option>`;
-          })
+          .map(s => `<option value="${s.supid}">${s.namaSupplier}</option>`)
           .join("");
     }
   }
 
   async function addRow() {
     rowsContainer.insertAdjacentHTML("beforeend", rowTemplate());
-    const rowEl = rowsContainer.lastElementChild;
-    await hydrateSelects(rowEl);
-    
-    // Pastikan input catatan di row baru bisa digunakan
-    const noteInput = rowEl.querySelector('.note-input');
-    if (noteInput) {
-      noteInput.removeAttribute('disabled');
-      noteInput.removeAttribute('readonly');
-      noteInput.removeAttribute('tabindex');
-      noteInput.style.pointerEvents = 'auto';
-      noteInput.style.cursor = 'text';
-      noteInput.style.opacity = '1';
-      noteInput.style.background = '';
-      
-      // Pastikan input bisa difokuskan
-      noteInput.addEventListener('focus', function() {
-        this.style.outline = '2px solid #ec4899';
-      });
-      noteInput.addEventListener('blur', function() {
-        this.style.outline = '';
-      });
-      
-      // Test: pastikan input bisa diklik
-      noteInput.addEventListener('click', function(e) {
-        e.stopPropagation();
-        this.focus();
-      });
-    }
+    await hydrateSelects(rowsContainer.lastElementChild);
   }
 
   // ---------- Initial load: items & suppliers ----------
   (async function initOptions() {
     try {
-      const itemsRes = await getJSON(`${API}/items`);
-      cachedItems = itemsRes.items || itemsRes || [];
+      cachedItems = (await getJSON(`${API}/items`)).items || [];
+      cachedSuppliers = (await getJSON(`${API}/suppliers`)).suppliers || [];
     } catch {
       cachedItems = [];
-    }
-
-    try {
-      const supRes = await getJSON(`${API}/suppliers`);
-      cachedSuppliers = supRes.suppliers || supRes || [];
-    } catch {
       cachedSuppliers = [];
     }
 
-    addRow(); // satu baris awal
+    addRow();
   })();
 
-  // tombol tambah baris
-  document.getElementById("btnAddRow")?.addEventListener("click", () => {
-    addRow();
-  });
+  document.getElementById("btnAddRow")?.addEventListener("click", addRow);
 
-  // submit IN
+  // ---------- Submit ----------
   document.getElementById("btnSubmit")?.addEventListener("click", async () => {
     if (errorEl) errorEl.textContent = "";
 
     const payload = [];
-    rowsContainer.querySelectorAll(".tx-row").forEach((row) => {
-      const itemId = row.querySelector(".item-select")?.value?.trim();
-      const qtyInput = row.querySelector(".qty-input")?.value?.trim();
-      const qty = Number(qtyInput) || 0;
-      const supplierId = row.querySelector(".supplier-select")?.value?.trim() || null;
-      
-      // Ambil catatan dari input field row ini, jika kosong maka string kosong (bukan null atau undefined)
-      const noteInput = row.querySelector(".note-input");
-      const note = noteInput ? (noteInput.value || "").trim() : "";
+    let supplier_id = null;
 
-      // Hanya tambahkan ke payload jika itemId ada DAN qty > 0
-      // Row yang kosong (tidak ada itemId atau qty = 0) akan di-skip
-      if (itemId && itemId !== "" && qty > 0) {
-        payload.push({ 
-          itemId, 
-          qty, 
-          supplierId: supplierId && supplierId !== "" ? supplierId : null, 
-          note: note || "" // Pastikan selalu string, tidak null/undefined
-        });
-      }
+    rowsContainer.querySelectorAll(".tx-row").forEach((row, index) => {
+      const itemId = row.querySelector(".item-select")?.value?.trim();
+      const qty = Number(row.querySelector(".qty-input")?.value?.trim()) || 0;
+      const note = row.querySelector(".note-input")?.value?.trim() || "";
+      const supplier = row.querySelector(".supplier-select")?.value?.trim() || null;
+
+      if (index === 0) supplier_id = supplier;
+
+      if (itemId && qty > 0) payload.push({ itemId, qty, note });
     });
 
     if (payload.length === 0) {
-      if (errorEl) errorEl.textContent = "Minimal 1 baris valid (barang dan qty harus diisi).";
+      errorEl.textContent = "Minimal pilih 1 barang dan qty > 0.";
       return;
     }
 
+    const user_id = JSON.parse(localStorage.getItem("user") || "{}").id;
+
+    const requestBody = {
+      rows: payload,
+      user_id,
+      supplier_id
+    };
+
+    console.log("📤 Final Payload:", JSON.stringify(requestBody, null, 2));
+
     try {
-      // Ambil user info dari localStorage (username dan user_id)
-      const userStr = localStorage.getItem("user");
-      const user = JSON.parse(userStr || "{}");
-      
-      const username = user.username || null;
-      const user_id = user.id || null;
-      
-      if (!username) {
-        console.error("❌ Username tidak ditemukan di localStorage!");
-        if (errorEl) errorEl.textContent = "Username tidak ditemukan. Silakan login ulang.";
-        alert("⚠️ Username tidak ditemukan. Silakan login ulang.");
-        return;
-      }
-      
-      console.log("👤 User info:", { username, user_id });
-      
-      // Debug: cek catatan per row
-      payload.forEach((row, index) => {
-        console.log(`📝 Row ${index + 1} - itemId: ${row.itemId}, qty: ${row.qty}, note: "${row.note}"`);
-      });
-      
-      const requestBody = { 
-        rows: payload,
-        user_id: user_id
-      };
-      
-      console.log("📤 Request body JSON yang akan dikirim:", JSON.stringify(requestBody, null, 2));
-      
       const res = await fetch(`${API}/transactions/in`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
-      
+
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || res.status + " " + res.statusText);
-      }
-      
+      if (!res.ok) throw new Error(data.message);
+
       alert("Transaksi IN berhasil.");
       window.location.href = "transaction.html";
-    } catch (e) {
-      if (errorEl)
-        errorEl.textContent = "Gagal submit: " + (e.message || "error");
-      console.error("Error:", e);
+
+    } catch (err) {
+      errorEl.textContent = "Gagal submit: " + err.message;
     }
   });
 });

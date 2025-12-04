@@ -9,6 +9,8 @@ async createIn(req, res) {
   console.log("===== REQUEST BODY CREATE IN =====");
   console.log(req.body);
   const { rows, user_id, supplier_id } = req.body;
+  console.log(">> rows:", rows);
+console.log(">> supplier_id:", supplier_id);
 
   if (!user_id || !rows || !Array.isArray(rows) || rows.length === 0) {
     return res.status(400).json({ message: "Data transaksi tidak lengkap" });
