@@ -10,6 +10,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   const tabProducts  = document.getElementById("tabProducts");
   const tabSuppliers = document.getElementById("tabSuppliers");
 
+  const showAddSupplierBtn = document.getElementById("showAddSupplierBtn");
+  const supplierTools      = document.getElementById("supplierTools");
+  const addSupplierBox     = document.getElementById("addSupplierBox");
+  const addSupplierForm    = document.getElementById("addSupplierForm");
+  const addSupplierError   = document.getElementById("addSupplierError");
+  const cancelAddSupplier  = document.getElementById("cancelAddSupplier");
+
+
   const API = "http://localhost:3000";
   const rupiah = (n) =>
     new Intl.NumberFormat("id-ID", {
@@ -136,7 +144,11 @@ if (listProductsEl) {
 
       listProductsEl?.classList.remove("hidden");
       listSuppliersEl?.classList.add("hidden");
-    } else {
+
+      // alat supplier di-hide
+      supplierTools?.classList.add("hidden");
+      addSupplierBox?.classList.add("hidden");
+    } else if (tab === "suppliers") {
       // suppliers -> aktif
       tabSuppliers.classList.add(...activeAdd);
       tabSuppliers.classList.remove(...activeRemove);
@@ -146,17 +158,35 @@ if (listProductsEl) {
 
       listSuppliersEl?.classList.remove("hidden");
       listProductsEl?.classList.add("hidden");
+
+      // alat supplier hanya muncul di tab ini
+      supplierTools?.classList.remove("hidden");
+      addSupplierBox?.classList.add("hidden"); // form hanya muncul kalau tombol + diklik
     }
   }
 
+
 async function ensureSuppliersLoaded() {
   if (!listSuppliersEl) return;
-  if (cachedSuppliers !== null) return;
 
+  // Kalau data supplier sudah ada di cache, tinggal render ke UI
+  if (cachedSuppliers !== null) {
+    const suppliers = cachedSuppliers;
+
+    if (!suppliers || suppliers.length === 0) {
+      listSuppliersEl.innerHTML =
+        `<li class="text-gray-500">Belum ada data supplier.</li>`;
+    } else {
+      listSuppliersEl.innerHTML = suppliers.map(supplierRow).join("");
+    }
+    return;
+  }
+
+  // Kalau belum pernah load sama sekali, fetch ke backend
   try {
     const resp = await getJSON(`${API}/suppliers`);
     const suppliers = resp?.suppliers || resp || [];
-    cachedSuppliers = suppliers; // simpan ke cache global
+    cachedSuppliers = suppliers;
 
     if (suppliers.length === 0) {
       listSuppliersEl.innerHTML =
@@ -165,7 +195,7 @@ async function ensureSuppliersLoaded() {
       listSuppliersEl.innerHTML = suppliers.map(supplierRow).join("");
     }
   } catch (e) {
-    cachedSuppliers = []; // tandai sudah coba
+    cachedSuppliers = []; // tandai sudah coba, tapi gagal
     listSuppliersEl.innerHTML =
       `<li class="text-gray-500">
         Belum ada data supplier atau endpoint belum tersedia.
@@ -173,6 +203,73 @@ async function ensureSuppliersLoaded() {
   }
 }
 
+  showAddSupplierBtn?.addEventListener("click", () => {
+    if (!addSupplierBox) return;
+    addSupplierForm?.reset();
+    if (addSupplierError) {
+      addSupplierError.textContent = "";
+      addSupplierError.classList.add("hidden");
+    }
+    addSupplierBox.classList.remove("hidden");
+  });
+
+  cancelAddSupplier?.addEventListener("click", () => {
+    addSupplierBox?.classList.add("hidden");
+  });
+
+  addSupplierForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!addSupplierForm) return;
+
+    const formData = new FormData(addSupplierForm);
+    const payload = {
+      namaSupplier: (formData.get("namaSupplier") || "").toString().trim(),
+      kontak: (formData.get("kontak") || "").toString().trim(),
+      alamat: (formData.get("alamat") || "").toString().trim(),
+    };
+
+    if (!payload.namaSupplier) {
+      if (addSupplierError) {
+        addSupplierError.textContent = "Nama supplier wajib diisi.";
+        addSupplierError.classList.remove("hidden");
+      }
+      return;
+    }
+
+    try {
+      if (addSupplierError) addSupplierError.classList.add("hidden");
+
+      const res = await fetch(`${API}/suppliers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Gagal menambah supplier (${res.status})`);
+      }
+
+      const data = await res.json();
+      const newSupplier = data.supplier || data.data || data;
+
+      // update cache & list
+      if (!Array.isArray(cachedSuppliers)) cachedSuppliers = [];
+      cachedSuppliers.push(newSupplier);
+      if (listSuppliersEl) {
+        listSuppliersEl.innerHTML = cachedSuppliers.map(supplierRow).join("");
+      }
+
+      addSupplierForm.reset();
+      addSupplierBox?.classList.add("hidden");
+    } catch (err) {
+      console.error(err);
+      if (addSupplierError) {
+        addSupplierError.textContent =
+          err.message || "Terjadi kesalahan saat menambah supplier.";
+        addSupplierError.classList.remove("hidden");
+      }
+    }
+  });
 
   tabProducts?.addEventListener("click", () => setActiveTab("products"));
   tabSuppliers?.addEventListener("click", async () => {

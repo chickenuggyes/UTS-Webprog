@@ -2,7 +2,51 @@
 // API sudah didefinisikan di add.html
 
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("addProductForm");
+  const form          = document.getElementById("addProductForm");
+  const supplierSelect = document.getElementById("supplier");
+
+  // --- Load daftar supplier dari backend (supaya supplier baru ikut muncul) ---
+  async function loadSuppliers() {
+    if (!supplierSelect) return;
+
+    // sementara tampilkan status memuat
+    supplierSelect.innerHTML = `<option value="">Memuat daftar supplier...</option>`;
+
+    try {
+      const res = await fetch(`${API}/suppliers`, {
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) throw new Error("Gagal mengambil data supplier");
+
+      const data = await res.json();
+      const suppliers = data.suppliers || data || [];
+
+      // isi ulang options
+      supplierSelect.innerHTML = `<option value="">Pilih supplier</option>`;
+      suppliers.forEach((sup) => {
+        const opt = document.createElement("option");
+        opt.value = sup.supid; // pakai supid dari database
+        opt.textContent =
+          sup.namaSupplier || sup.nama_supplier || sup.supid;
+        supplierSelect.appendChild(opt);
+      });
+
+      // kalau tidak ada supplier sama sekali
+      if (suppliers.length === 0) {
+        supplierSelect.innerHTML =
+          `<option value="">Belum ada supplier, tambahkan dulu di Dashboard</option>`;
+      }
+    } catch (err) {
+      console.error("Error loading suppliers:", err);
+      supplierSelect.innerHTML =
+        `<option value="">Gagal memuat supplier</option>`;
+    }
+  }
+
+  // panggil saat halaman Add Product dibuka
+  loadSuppliers();
+
+  // --- Handler submit form (tetap seperti sebelumnya) ---
   if (!form) return; // jaga-jaga kalau file ini kebaca di halaman lain
 
   form.addEventListener("submit", async (e) => {
@@ -38,7 +82,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      // API diambil dari global yang sudah didefinisikan di add.html
       const res = await fetch(`${API}/items`, {
         method: "POST",
         body: fd,
