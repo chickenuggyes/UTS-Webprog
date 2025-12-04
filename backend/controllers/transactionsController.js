@@ -87,6 +87,8 @@ export const transactionController = {
       CREATE TRANSACTION IN (dari format frontend)
   ============================================================ */
 async createIn(req, res) {
+    console.log("===== REQUEST BODY CREATE IN =====");
+  console.log(req.body);
   const { rows, user_id, supplier_id } = req.body;
 
   if (!user_id || !rows || !Array.isArray(rows) || rows.length === 0) {
