@@ -149,28 +149,30 @@ if (listProductsEl) {
     }
   }
 
-  async function ensureSuppliersLoaded() {
-    if (!listSuppliersEl) return;
-    if (cachedSuppliers !== null) return; // sudah pernah load
+async function ensureSuppliersLoaded() {
+  if (!listSuppliersEl) return;
+  if (cachedSuppliers !== null) return;
 
-    try {
-      const resp = await getJSON(`${API}/suppliers`);
-      const suppliers = resp?.suppliers || resp || [];
-      cachedSuppliers = suppliers;
-      if (suppliers.length === 0) {
-        listSuppliersEl.innerHTML =
-          `<li class="text-gray-500">Belum ada data supplier.</li>`;
-      } else {
-        listSuppliersEl.innerHTML = suppliers.map(supplierRow).join("");
-      }
-    } catch (e) {
-      cachedSuppliers = []; // tandai sudah coba
+  try {
+    const resp = await getJSON(`${API}/suppliers`);
+    const suppliers = resp?.suppliers || resp || [];
+    cachedSuppliers = suppliers; // simpan ke cache global
+
+    if (suppliers.length === 0) {
       listSuppliersEl.innerHTML =
-        `<li class="text-gray-500">
-          Belum ada data supplier atau endpoint belum tersedia.
-        </li>`;
+        `<li class="text-gray-500">Belum ada data supplier.</li>`;
+    } else {
+      listSuppliersEl.innerHTML = suppliers.map(supplierRow).join("");
     }
+  } catch (e) {
+    cachedSuppliers = []; // tandai sudah coba
+    listSuppliersEl.innerHTML =
+      `<li class="text-gray-500">
+        Belum ada data supplier atau endpoint belum tersedia.
+      </li>`;
   }
+}
+
 
   tabProducts?.addEventListener("click", () => setActiveTab("products"));
   tabSuppliers?.addEventListener("click", async () => {
@@ -208,31 +210,66 @@ if (listProductsEl) {
     if (pProfit)  pProfit.textContent  = rupiah(extra.profitToday ?? 0);
   }
 
-  function buildPrintTable(items) {
-    const tbody = document.querySelector("#printTable tbody");
-    if (!tbody) return;
+function buildPrintTable(items) {
+  const tbody = document.querySelector("#printTable tbody");
+  if (!tbody) return;
 
-    tbody.innerHTML = items
-      .map((p, i) => {
-        const supplier =
-          p.namaSupplier ||
-          p.supplierName ||
-          p.supplier ||
-          "-";
-
-        return `
-          <tr>
-            <td class="border px-3 py-2">${i + 1}</td>
-            <td class="border px-3 py-2">${p.namaItem ?? "-"}</td>
-            <td class="border px-3 py-2">${p.keterangan ?? "-"}</td>
-            <td class="border px-3 py-2">${supplier}</td>
-            <td class="border px-3 py-2">${rupiah(p.hargaSatuan)}</td>
-            <td class="border px-3 py-2">${p.stok ?? 0}</td>
-          </tr>
-        `;
-      })
-      .join("");
+  // Buat map supid -> object supplier
+  const supplierMap = {};
+  if (Array.isArray(cachedSuppliers)) {
+    cachedSuppliers.forEach((s) => {
+      const key = s.supid ?? s.id ?? s.supplierId ?? s.idSupplier;
+      if (key != null) {
+        supplierMap[String(key)] = s;
+      }
+    });
   }
+
+  tbody.innerHTML = items
+    .map((p, i) => {
+      // coba pakai nama yang sudah di-join dulu (kalau memang ada)
+      let supplierName =
+        p.namaSupplier ||
+        p.supplierName ||
+        p.supplier ||
+        "";
+
+      // kalau belum ada nama, coba cari berdasarkan id supplier di item
+      if (!supplierName && Object.keys(supplierMap).length > 0) {
+        const supKey =
+          p.supid ??
+          p.supplierId ??
+          p.idSupplier ??
+          p.id_supplier ??
+          null;
+
+        if (supKey != null && supplierMap[String(supKey)]) {
+          const s = supplierMap[String(supKey)];
+          supplierName =
+            s.namaSupplier ||
+            s.nama ||
+            s.name ||
+            s.supplierName ||
+            "";
+        }
+      }
+
+      if (!supplierName) supplierName = "-";
+
+      return `
+        <tr>
+          <td class="border px-3 py-2">${i + 1}</td>
+          <td class="border px-3 py-2">${p.namaItem ?? "-"}</td>
+          <td class="border px-3 py-2">${p.keterangan ?? "-"}</td>
+          <td class="border px-3 py-2">${supplierName}</td>
+          <td class="border px-3 py-2">${rupiah(p.hargaSatuan)}</td>
+          <td class="border px-3 py-2">${p.stok ?? 0}</td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
 
   // ====== Statistik Tambahan ======
   async function loadExtraStats() {
@@ -273,10 +310,12 @@ if (listProductsEl) {
         getJSON(`${API}/transactions`).catch(() => ({ transactions: [] })),
       ]);
 
-      const items = itemsRes.items || itemsRes || [];
-      const suppliers = suppliersRes.suppliers || suppliersRes || [];
-      const txRows =
-        txRes.transactions || txRes.items || txRes.data || txRes || [];
+const items = itemsRes.items || itemsRes || [];
+const suppliers = suppliersRes.suppliers || suppliersRes || [];
+cachedSuppliers = suppliers;
+const txRows =
+  txRes.transactions || txRes.items || txRes.data || txRes || [];
+
 
       // --- Summary: kategori, supplier ---
       // Kategori sudah diambil dari /dashboard, skip jika sudah ada
@@ -578,9 +617,21 @@ if (listProductsEl) {
   loadExtraStats();
 
   // ------- Print handler -------
-  window.handlePrint = function () {
-    fillPrintSummary(dashCache, extraStatsCache);
-    buildPrintTable(cachedItems);
-    window.print();
-  };
+window.handlePrint = async function () {
+  // Pastikan data supplier sudah ada
+  if (cachedSuppliers === null) {
+    try {
+      const resp = await getJSON(`${API}/suppliers`);
+      cachedSuppliers = resp?.suppliers || resp || [];
+    } catch (e) {
+      cachedSuppliers = [];
+      console.warn("Gagal memuat supplier untuk print:", e);
+    }
+  }
+
+  fillPrintSummary(dashCache, extraStatsCache);
+  buildPrintTable(cachedItems);
+  window.print();
+};
+
 });
