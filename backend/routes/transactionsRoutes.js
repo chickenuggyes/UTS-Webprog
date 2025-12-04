@@ -3,9 +3,6 @@ import { transactionController } from "../controllers/transactionsController.js"
 
 const router = express.Router();
 
-// CREATE TRANSACTION (IN / OUT) - format backend
-router.post("/", transactionController.create);
-
 // CREATE TRANSACTION IN - format frontend
 router.post("/in", transactionController.createIn);
 
