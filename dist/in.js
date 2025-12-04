@@ -104,54 +104,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("btnAddRow")?.addEventListener("click", addRow);
 
-  // ---------- Submit ----------
-  document.getElementById("btnSubmit")?.addEventListener("click", async () => {
-    if (errorEl) errorEl.textContent = "";
-
-    const payload = [];
-    let supplier_id = null;
-
-    rowsContainer.querySelectorAll(".tx-row").forEach((row, index) => {
-      const itemId = row.querySelector(".item-select")?.value?.trim();
-      const qty = Number(row.querySelector(".qty-input")?.value?.trim()) || 0;
-      const note = row.querySelector(".note-input")?.value?.trim() || "";
-      const supplier = row.querySelector(".supplier-select")?.value?.trim() || null;
-
-      if (index === 0) supplier_id = supplier;
-
-      if (itemId && qty > 0) payload.push({ itemId, qty, note });
-    });
-
-    if (payload.length === 0) {
-      errorEl.textContent = "Minimal pilih 1 barang dan qty > 0.";
-      return;
-    }
-
-    const user_id = JSON.parse(localStorage.getItem("user") || "{}").id;
-
-    const requestBody = {
-      rows: payload,
-      user_id,
-      supplier_id
-    };
-
-    console.log("📤 Final Payload:", JSON.stringify(requestBody, null, 2));
-
-    try {
-      const res = await fetch(`${API}/transactions/in`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
-      alert("Transaksi IN berhasil.");
-      window.location.href = "transaction.html";
-
-    } catch (err) {
-      errorEl.textContent = "Gagal submit: " + err.message;
-    }
-  });
+  // Note: Submit handler is in inline script in in.html
 });

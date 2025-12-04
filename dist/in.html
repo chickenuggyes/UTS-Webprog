@@ -274,23 +274,44 @@ document.getElementById('btnAddRow').addEventListener('click', addRow);
 document.getElementById('btnSubmit').addEventListener('click', async ()=>{
   err.textContent = '';
   const payload = [];
+  let hasIncompleteRow = false;
 
-  rows.querySelectorAll('.tx-row').forEach(row=>{
-    const itemId     = row.querySelector('.item-select')?.value;
-    const qty        = Number(row.querySelector('.qty-input')?.value || 0);
-    const supplierId = row.querySelector('.supplier-id-input')?.value || null;
+  rows.querySelectorAll('.tx-row').forEach((row, index)=>{
+    const itemId     = row.querySelector('.item-select')?.value?.trim();
+    const qtyInput   = row.querySelector('.qty-input')?.value?.trim();
+    const qty        = Number(qtyInput) || 0;
+    const supplierId = row.querySelector('.supplier-id-input')?.value?.trim() || null;
     
     // Ambil catatan dari input field row ini saja, jangan ambil dari row lain
     const noteInput = row.querySelector('.note-input');
     const note = noteInput ? (noteInput.value || '').trim() : '';
 
-    if(itemId && qty > 0){
+    // Cek apakah row ini "sebagian terisi" (itemId terisi tapi qty kosong, atau sebaliknya)
+    const hasItemId = itemId && itemId !== '';
+    const hasQty = qty > 0;
+    
+    if (hasItemId && !hasQty) {
+      // ItemId terisi tapi qty kosong
+      hasIncompleteRow = true;
+    } else if (!hasItemId && hasQty) {
+      // Qty terisi tapi itemId kosong
+      hasIncompleteRow = true;
+    }
+
+    // Hanya tambahkan ke payload jika itemId ada DAN qty > 0
+    if (hasItemId && hasQty) {
       payload.push({ itemId, qty, supplierId, note });
     }
   });
 
+  // Jika ada row yang "sebagian terisi", tampilkan error
+  if (hasIncompleteRow) {
+    err.textContent = 'Semua kolom harus diisi, catatan opsional.';
+    return;
+  }
+
   if(payload.length === 0){
-    err.textContent = 'Minimal 1 baris valid.';
+    err.textContent = 'Semua kolom harus diisi, catatan opsional.';
     return;
   }
 
