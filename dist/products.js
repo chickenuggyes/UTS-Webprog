@@ -146,3 +146,296 @@ if (chipsContainer) {
 }
 
 reloadProducts();
+
+// ====== Logout Logic ======
+document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+  e.preventDefault();
+  localStorage.removeItem('user');
+  window.location.href = '../src/login.html';
+});
+
+// ====== Profile Modal Logic ======
+(function() {
+  const profileBtn = document.getElementById('profileBtn');
+  const profileModal = document.getElementById('profileModal');
+  const profileClose = document.getElementById('profileClose');
+  const profileLogout = document.getElementById('profileLogout');
+  const profileSave = document.getElementById('profileSave');
+  const profileCancel = document.getElementById('profileCancel');
+  const profileError = document.getElementById('profileError');
+  const sidebarUsername = document.getElementById('sidebarUsername');
+  const profileFotoInput = document.getElementById('profileFotoInput');
+  const profileAvatar = document.getElementById('profileAvatar');
+  const profileAvatarContainer = document.getElementById('profileAvatarContainer');
+  const profilePlaceholder = document.getElementById('profileAvatarPlaceholder');
+
+  function openProfile() {
+      if (profileError) {
+        profileError.classList.add('hidden');
+        profileError.textContent = '';
+      }
+      if (profileFotoInput) profileFotoInput.value = '';
+
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      document.getElementById('profileId').textContent = u.id || '-';
+      document.getElementById('profileUsernameInput').value = u.username || '';
+      document.getElementById('profileEmailInput').value = u.email || '';
+      document.getElementById('profilePasswordInput').value = '';
+
+      const avatarFilename = u.avatar || null;
+      const pImg = document.getElementById('profileAvatar');
+      const pPlaceholder = document.getElementById('profileAvatarPlaceholder');
+
+      if (avatarFilename) {
+        const avatarUrl = `${API}/uploads/${avatarFilename}`;
+        if (pImg) {
+          pImg.src = avatarUrl;
+          pImg.classList.remove('hidden');
+        }
+        if (pPlaceholder) pPlaceholder.classList.add('hidden');
+        const profileBtn = document.getElementById('profileBtn');
+        if (profileBtn) profileBtn.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full"/>`;
+      } else {
+        if (pImg) pImg.classList.add('hidden');
+        if (pPlaceholder) pPlaceholder.classList.remove('hidden');
+        const profileBtn = document.getElementById('profileBtn');
+        if (profileBtn) profileBtn.innerHTML = '👤';
+      }
+
+      if (profileModal) {
+        profileModal.classList.remove('hidden');
+        profileModal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+  function closeProfile() {
+    if (profileModal) {
+      profileModal.classList.add('hidden');
+      profileModal.classList.remove('flex');
+      document.body.style.overflow = '';
+    }
+  }
+
+  if (profileBtn) {
+    profileBtn.addEventListener('click', (e) => { 
+      e.preventDefault(); 
+      openProfile(); 
+    });
+  }
+  profileClose?.addEventListener('click', (e) => { e.preventDefault(); closeProfile(); });
+  profileCancel?.addEventListener('click', (e) => { e.preventDefault(); closeProfile(); });
+  profileModal?.addEventListener('click', (e) => { if (e.target === profileModal) closeProfile(); });
+
+  profileLogout?.addEventListener('click', (e) => { e.preventDefault(); localStorage.removeItem('user'); window.location.href = '../src/login.html'; });
+
+  profileSave?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    if (profileError) profileError.classList.add('hidden');
+    
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const id = currentUser.id;
+
+    const usernameVal = document.getElementById('profileUsernameInput').value.trim();
+    const emailVal = document.getElementById('profileEmailInput').value.trim();
+    const passwordVal = document.getElementById('profilePasswordInput').value;
+    const newFoto = document.getElementById('profileFotoInput').files[0];
+
+    if (!id) {
+      if (profileError) {
+        profileError.textContent = 'Error: User ID tidak ditemukan di penyimpanan lokal. Silakan coba login ulang.';
+        profileError.classList.remove('hidden');
+      }
+      return;
+    }
+
+    if (!usernameVal || !emailVal) {
+      if (profileError) {
+        profileError.textContent = 'Username dan email wajib diisi.';
+        profileError.classList.remove('hidden');
+      }
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append("id", id);
+    fd.append("username", usernameVal);
+    fd.append("email", emailVal);
+    if (passwordVal) fd.append("password", passwordVal);
+    if (newFoto) fd.append("foto", newFoto);
+
+    const profileSaveBtn = e.target;
+    const prevText = profileSaveBtn.textContent;
+    profileSaveBtn.disabled = true;
+    profileSaveBtn.textContent = 'Saving...';
+
+    try {
+      const res = await fetch(`${API}/login/profile`, {
+        method: 'PATCH',
+        body: fd
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (profileError) {
+          profileError.textContent = data.message || 'Gagal memperbarui profile.';
+          profileError.classList.remove('hidden');
+        }
+        return;
+      }
+      localStorage.setItem('user', JSON.stringify(data.user));
+      const sb = document.getElementById('sidebarUsername');
+      if (sb) sb.textContent = data.user.username;
+      
+      const profileBtn = document.getElementById('profileBtn');
+      if (profileBtn) {
+          if (data.user.avatar) {
+              const avatarUrl = `${API}/uploads/${data.user.avatar}`;
+              profileBtn.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full"/>`;
+              const pImg = document.getElementById('profileAvatar');
+              const pPlaceholder = document.getElementById('profileAvatarPlaceholder');
+              if (pImg && pPlaceholder) {
+                pImg.src = avatarUrl;
+                pImg.classList.remove('hidden');
+                pPlaceholder.classList.add('hidden');
+              }
+          } else {
+              profileBtn.innerHTML = '👤';
+          }
+      }
+      
+      alert('Profil berhasil diperbarui!');
+      closeProfile();
+    } catch (err) {
+      if (profileError) {
+        profileError.textContent = 'Terjadi kesalahan koneksi.';
+        profileError.classList.remove('hidden');
+      }
+    } finally {
+      profileSaveBtn.disabled = false;
+      profileSaveBtn.textContent = prevText;
+    }
+  });
+
+  profileAvatarContainer?.addEventListener('click', () => {
+    profileFotoInput?.click();
+  });
+})();
+
+// ====== Sidebar Username + Avatar ======
+(function() {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const sidebarUsername = document.getElementById('sidebarUsername');
+  if (sidebarUsername && user.username) {
+    sidebarUsername.textContent = user.username;
+  }
+  
+  const profileBtn = document.getElementById('profileBtn');
+  if (profileBtn && user.avatar) {
+    const avatarUrl = `${API}/uploads/${user.avatar}`;
+    profileBtn.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full"/>`;
+  }
+})();
+
+// ====== Active Link Highlight ======
+(function() {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', highlightActiveLink);
+  } else {
+    highlightActiveLink();
+  }
+  
+  function highlightActiveLink() {
+    const currentPage = location.pathname.split("/").pop();
+    const sidebarLinks = document.querySelectorAll("aside nav a");
+    sidebarLinks.forEach(link => {
+      const href = link.getAttribute("href");
+      if (href === currentPage) {
+        link.classList.add("bg-pink-400", "text-white", "shadow");
+      } else {
+        link.classList.remove("bg-pink-400", "text-white", "shadow");
+      }
+    });
+  }
+})();
+
+// ====== Mobile Menu Functionality ======
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sidebar = document.getElementById('sidebar');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+
+    if (!mobileMenuBtn || !sidebar || !mobileOverlay) {
+      console.error('Mobile menu elements not found', {mobileMenuBtn, sidebar, mobileOverlay});
+      return;
+    }
+
+    function openSidebar() {
+      if (sidebar) {
+        sidebar.classList.add('mobile-open');
+        sidebar.style.cssText = 'display: flex !important; visibility: visible !important; opacity: 1 !important; left: 0 !important; z-index: 100 !important; position: fixed !important; width: 16rem !important;';
+      }
+      if (mobileOverlay) {
+        mobileOverlay.classList.add('active');
+        mobileOverlay.style.cssText = 'pointer-events: auto !important; display: block !important; visibility: visible !important; z-index: 99 !important;';
+      }
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      if (sidebar) {
+        sidebar.classList.remove('mobile-open');
+        sidebar.style.left = '-100%';
+      }
+      if (mobileOverlay) {
+        mobileOverlay.classList.remove('active');
+        mobileOverlay.style.cssText = 'pointer-events: none !important; display: none !important; visibility: hidden !important;';
+      }
+      document.body.style.overflow = '';
+    }
+
+    if (mobileMenuBtn) {
+      mobileMenuBtn.style.cssText = 'pointer-events: auto !important; z-index: 9999 !important; position: fixed !important; touch-action: manipulation;';
+      
+      const btnClone = mobileMenuBtn.cloneNode(true);
+      mobileMenuBtn.parentNode.replaceChild(btnClone, mobileMenuBtn);
+      const btn = document.getElementById('mobileMenuBtn');
+      
+      if (btn) {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          openSidebar();
+        }, {capture: true});
+        
+        btn.addEventListener('mousedown', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          openSidebar();
+        }, {capture: true});
+        
+        btn.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          openSidebar();
+        }, {capture: true});
+      }
+    }
+
+    if (mobileOverlay) {
+      mobileOverlay.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeSidebar();
+      });
+    }
+
+    document.querySelectorAll('aside nav a').forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth <= 1024) {
+          closeSidebar();
+        }
+      });
+    });
+  }, 100);
+});

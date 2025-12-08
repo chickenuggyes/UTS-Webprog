@@ -148,3 +148,81 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   });
 });
+
+// ====== Title/Auth/Active Link ======
+(function() {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const sidebarUsername = document.getElementById('sidebarUsername');
+  if (user.username && sidebarUsername) {
+    sidebarUsername.textContent = user.username;
+    document.title = user.username + ' — Edit Product';
+  }
+
+  document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    localStorage.removeItem('user');
+    window.location.href = '../src/login.html';
+  });
+
+  const currentPage = location.pathname.split('/').pop();
+  document.querySelectorAll('aside nav a').forEach(link => {
+    const href = link.getAttribute('href');
+    if (href === currentPage) link.classList.add('bg-pink-400','text-white','shadow');
+    else link.classList.remove('bg-pink-400','text-white','shadow');
+  });
+})();
+
+// ====== Mobile Menu Functionality ======
+document.addEventListener('DOMContentLoaded', function() {
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.getElementById('sidebar');
+  const mobileOverlay = document.getElementById('mobileOverlay');
+
+  if (!mobileMenuBtn || !sidebar || !mobileOverlay) {
+    console.error('Mobile menu elements not found');
+    return;
+  }
+
+  function openSidebar() {
+    if (sidebar) {
+      sidebar.classList.add('mobile-open');
+      sidebar.style.display = 'flex';
+      sidebar.style.visibility = 'visible';
+      sidebar.style.opacity = '1';
+    }
+    if (mobileOverlay) mobileOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSidebar() {
+    if (sidebar) {
+      sidebar.classList.remove('mobile-open');
+    }
+    if (mobileOverlay) mobileOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      openSidebar();
+    });
+  }
+
+  if (mobileOverlay) {
+    mobileOverlay.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeSidebar();
+    });
+  }
+
+  document.querySelectorAll('aside nav a').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 1024) {
+        closeSidebar();
+      }
+    });
+  });
+});
