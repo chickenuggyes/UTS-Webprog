@@ -53,13 +53,61 @@
 
     .form-group input {
         width: 100%;
-        padding: 0.7rem;
+        padding: 0.85rem;
         border: none;
         border-radius: 10px;
         font-size: 1rem;
         background: rgba(255, 255, 255, 0.8); /* lebih solid */
         color: #333;
         outline: none;
+        box-sizing: border-box;
+    }
+
+    .password-wrapper {
+        position: relative;
+    }
+
+    .password-wrapper input {
+        padding-right: 50px;
+        padding-top: 0.85rem;
+        padding-bottom: 0.85rem;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #666;
+        padding: 4px;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s;
+        border-radius: 4px;
+    }
+
+    .password-toggle:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .password-toggle:hover {
+        color: #333;
+    }
+
+    .password-toggle svg {
+        width: 20px;
+        height: 20px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
     }
 
 
@@ -165,7 +213,15 @@
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" name="password" required>
+                        <button type="button" id="passwordToggle" class="password-toggle" aria-label="Toggle password visibility">
+                            <svg id="passwordToggleIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <button type="submit" class="btn">Login</button>
             </form>
@@ -185,12 +241,28 @@
                 </div>
                 <div class="form-group">
                     <label for="regPassword">Password</label>
-                    <input type="password" id="regPassword" name="regPassword" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="regPassword" name="regPassword" required>
+                        <button type="button" id="regPasswordToggle" class="password-toggle" aria-label="Toggle password visibility">
+                            <svg id="regPasswordToggleIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
                     <small class="password-hint">Password minimal 8 karakter dan harus mengandung simbol</small>
                 </div>
                 <div class="form-group">
                     <label for="regPasswordConfirm">Konfirmasi Password</label>
-                    <input type="password" id="regPasswordConfirm" name="regPasswordConfirm" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="regPasswordConfirm" name="regPasswordConfirm" required>
+                        <button type="button" id="regPasswordConfirmToggle" class="password-toggle" aria-label="Toggle password visibility">
+                            <svg id="regPasswordConfirmToggleIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <button type="submit" class="btn">Register</button>
                 <div class="signup-link" style="margin-top:0.5rem; position:relative; z-index:1;">
