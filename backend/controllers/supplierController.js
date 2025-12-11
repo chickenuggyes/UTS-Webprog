@@ -29,8 +29,11 @@ export const supplierController = {
         return res.status(400).json({ message: "Nama supplier wajib diisi" });
       }
 
-      // 🔢 Generate supid baru (misal: 1,2,3,...)
-      const nextSupid = await dbService.nextId("suppliers", "supid");
+// jika nextSupid sekarang mengembalikan "S012"
+const raw = await dbService.nextId("suppliers", "supid"); // mis: "S012"
+const numeric = parseInt(String(raw).replace(/\D/g, ''), 10) || 0; // 12
+const nextNum = numeric + 1; // 13
+const nextSupid = 'S' + String(nextNum).padStart(3, '0'); // "S013"
 
       // 💾 Insert ke DB, termasuk supid
       const [result] = await db.query(
