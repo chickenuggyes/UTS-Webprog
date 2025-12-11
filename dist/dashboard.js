@@ -513,117 +513,128 @@ const txRows =
         }
       }
             
-      // --- Grafik Weekly (Human Friendly + 3 garis: Total, IN, OUT) ---
-      if (chartWeeklyEl && typeof Chart !== "undefined") {
+// --- Grafik Weekly (Human Friendly + 3 garis: Total, IN, OUT) ---
+if (chartWeeklyEl && typeof Chart !== "undefined") {
 
-        // Parse format tanggal DD/MM/YYYY → Date JS
-        function parseDMY(str) {
-          if (!str || typeof str !== "string") return new Date(str);
+  // Parse tanggal dari backend (misal "01/12/2025" atau "2025-12-01")
+  function parseDMY(str) {
+    if (!str || typeof str !== "string") return new Date(str);
 
-          const parts = str.split("/");
-          if (parts.length !== 3) return new Date(str);
+    // coba format DD/MM/YYYY
+    const parts = str.split("/");
+    if (parts.length === 3) {
+      const [day, month, year] = parts.map(Number);
+      return new Date(year, month - 1, day);
+    }
 
-          const [day, month, year] = parts.map(Number);
-          return new Date(year, month - 1, day); // month index dimulai dari 0
-        }
+    // fallback: biarkan Date coba parse
+    return new Date(str);
+  }
 
-        // Ambil range minggu (Senin — Minggu)
-        function getWeekRange(date) {
-          const d = new Date(date);
-          const day = d.getDay() || 7; // Minggu = 7
+  // Hitung info minggu dari sebuah tanggal
+  function getWeekInfo(dateObj) {
+    const d = new Date(dateObj);
+    const day = d.getDay() || 7; // Minggu = 7
 
-          const start = new Date(d);
-          start.setDate(d.getDate() - (day - 1)); // mundur ke Senin
+    const start = new Date(d);
+    start.setDate(d.getDate() - (day - 1)); // mundur ke Senin
 
-          const end = new Date(start);
-          end.setDate(start.getDate() + 6); // sampai Minggu
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6); // sampai Minggu
 
-          const format = (dt) =>
-            dt.toLocaleDateString("id-ID", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            });
+    // key untuk sorting (ISO, aman di-sort string)
+    const isoKey = start.toISOString().slice(0, 10); // "2025-12-01"
 
-          return `${format(start)} — ${format(end)}`;
-        }
+    // label yang ditampilkan di grafik
+const monthsShort = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+const monthName = monthsShort[start.getMonth()];
+const label = `${start.getDate()}–${end.getDate()} ${monthName} ${start.getFullYear()}`;
 
-        // weeklyObj: { labelMinggu: { total, in, out } }
-        const weeklyObj = {};
+return { isoKey, label };
 
-        txRows.forEach((t) => {
-          const rawDate = t.tanggal || t.date;
-          const d = parseDMY(rawDate);
+  }
 
-          if (isNaN(d)) return;
+  // weeklyObj: { isoKey: { label, total, in, out } }
+  const weeklyObj = {};
 
-          const key = getWeekRange(d);
-          const type = String(t.tipe || t.type || "").toUpperCase();
+  txRows.forEach((t) => {
+    const rawDate = t.tanggal || t.date;
+    const d = parseDMY(rawDate);
+    if (isNaN(d)) return;
 
-          if (!weeklyObj[key]) {
-            weeklyObj[key] = { total: 0, in: 0, out: 0 };
-          }
+    const { isoKey, label } = getWeekInfo(d);
+    const type = String(t.tipe || t.type || "").toUpperCase();
 
-          // Hitung per transaksi (bukan qty)
-          weeklyObj[key].total += 1;
-          if (type === "IN") weeklyObj[key].in += 1;
-          if (type === "OUT") weeklyObj[key].out += 1;
-        });
+    if (!weeklyObj[isoKey]) {
+      weeklyObj[isoKey] = { label, total: 0, in: 0, out: 0 };
+    }
 
-        // Sorting minggu berdasarkan tanggal awal minggu
-        const sortedLabels = Object.keys(weeklyObj).sort((a, b) => {
-          const aDate = new Date(parseDMY(a.split(" — ")[0]));
-          const bDate = new Date(parseDMY(b.split(" — ")[0]));
-          return aDate - bDate;
-        });
+    weeklyObj[isoKey].total += 1; // hitung per transaksi
+    if (type === "IN")  weeklyObj[isoKey].in  += 1;
+    if (type === "OUT") weeklyObj[isoKey].out += 1;
+  });
 
-        if (sortedLabels.length > 0) {
-          new Chart(chartWeeklyEl.getContext("2d"), {
-            type: "line",
-            data: {
-              labels: sortedLabels,
-              datasets: [
-                {
-                  label: "Total Transaksi",
-                  data: sortedLabels.map((lb) => weeklyObj[lb].total),
-                  borderColor: "#ec4899",
-                  backgroundColor: "#ec489940",
-                  borderWidth: 2,
-                  tension: 0.3,
-                },
-                {
-                  label: "Transaksi IN",
-                  data: sortedLabels.map((lb) => weeklyObj[lb].in),
-                  borderColor: "#22c55e",
-                  backgroundColor: "#22c55e40",
-                  borderWidth: 2,
-                  tension: 0.3,
-                },
-                {
-                  label: "Transaksi OUT",
-                  data: sortedLabels.map((lb) => weeklyObj[lb].out),
-                  borderColor: "#ef4444",
-                  backgroundColor: "#ef444440",
-                  borderWidth: 2,
-                  tension: 0.3,
-                },
-              ],
-            },
-            options: {
-              responsive: true,
-              plugins: {
-                legend: { position: "top" },
-              },
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  ticks: { precision: 0 },
-                },
-              },
-            },
-          });
-        }
-      }
+  // Urutkan berdasarkan tanggal awal minggu (ISO asc → minggu paling awal di kiri)
+  const sortedKeys = Object.keys(weeklyObj).sort(); // "2025-12-01", "2025-12-08", ...
+
+  if (sortedKeys.length > 0) {
+    const labels = sortedKeys.map((k) => weeklyObj[k].label);
+
+    new Chart(chartWeeklyEl.getContext("2d"), {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Total Transaksi",
+            data: sortedKeys.map((k) => weeklyObj[k].total),
+            borderColor: "#ec4899",
+            backgroundColor: "#ec489940",
+            borderWidth: 2,
+            tension: 0.3,
+          },
+          {
+            label: "Transaksi IN",
+            data: sortedKeys.map((k) => weeklyObj[k].in),
+            borderColor: "#22c55e",
+            backgroundColor: "#22c55e40",
+            borderWidth: 2,
+            tension: 0.3,
+          },
+          {
+            label: "Transaksi OUT",
+            data: sortedKeys.map((k) => weeklyObj[k].out),
+            borderColor: "#ef4444",
+            backgroundColor: "#ef444440",
+            borderWidth: 2,
+            tension: 0.3,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: "top" },
+        },
+        scales: {
+x: {
+  ticks: {
+    autoSkip: false,     // jangan skip label, tampilin semua
+    maxRotation: 0,
+    minRotation: 0,
+  },
+},
+
+          y: {
+            beginAtZero: true,
+            ticks: { precision: 0 },
+          },
+        },
+      },
+    });
+  }
+}
+
       // --- Grafik Barang Paling Banyak IN / OUT (dipisah) ---
       if (chartPopularEl && typeof Chart !== "undefined") {
         const popularity = {};
