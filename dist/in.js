@@ -255,8 +255,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// ====== Profile Modal + Mobile Menu ======
-(function() {
+// ====== Profile Modal Logic ======
+document.addEventListener('DOMContentLoaded', function() {
   const API = "http://localhost:3000";
   const profileBtn = document.getElementById('profileBtn');
   const profileModal = document.getElementById('profileModal');
@@ -278,10 +278,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (profileFotoInput) profileFotoInput.value = '';
 
     const u = JSON.parse(localStorage.getItem('user') || '{}');
-    document.getElementById('profileId').textContent = u.id || '-';
-    document.getElementById('profileUsernameInput').value = u.username || '';
-    document.getElementById('profileEmailInput').value = u.email || '';
-    document.getElementById('profilePasswordInput').value = '';
+    const profileIdEl = document.getElementById('profileId');
+    const profileUsernameInputEl = document.getElementById('profileUsernameInput');
+    const profileEmailInputEl = document.getElementById('profileEmailInput');
+    const profilePasswordInputEl = document.getElementById('profilePasswordInput');
+
+    if (profileIdEl) profileIdEl.textContent = u.id || '-';
+    if (profileUsernameInputEl) profileUsernameInputEl.value = u.username || '';
+    if (profileEmailInputEl) profileEmailInputEl.value = u.email || '';
+    if (profilePasswordInputEl) profilePasswordInputEl.value = '';
 
     const avatarFilename = u.avatar || null;
     const pImg = document.getElementById('profileAvatar');
@@ -416,6 +421,7 @@ document.addEventListener("DOMContentLoaded", () => {
     profileFotoInput?.click();
   });
 
+  // Load profile avatar on page load
   (function() {
     const u = JSON.parse(localStorage.getItem('user') || '{}');
     const profileBtn = document.getElementById('profileBtn');
@@ -424,7 +430,7 @@ document.addEventListener("DOMContentLoaded", () => {
       profileBtn.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full"/>`;
     }
   })();
-})();
+});
 
 // ====== Mobile Menu Functionality ======
 window.addEventListener('load', function() {
