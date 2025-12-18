@@ -155,7 +155,8 @@ document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
 });
 
 // ====== Profile Modal Logic ======
-(function() {
+document.addEventListener('DOMContentLoaded', function() {
+  const API = "http://localhost:3000";
   const profileBtn = document.getElementById('profileBtn');
   const profileModal = document.getElementById('profileModal');
   const profileClose = document.getElementById('profileClose');
@@ -170,44 +171,49 @@ document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
   const profilePlaceholder = document.getElementById('profileAvatarPlaceholder');
 
   function openProfile() {
-      if (profileError) {
-        profileError.classList.add('hidden');
-        profileError.textContent = '';
-      }
-      if (profileFotoInput) profileFotoInput.value = '';
-
-      const u = JSON.parse(localStorage.getItem('user') || '{}');
-      document.getElementById('profileId').textContent = u.id || '-';
-      document.getElementById('profileUsernameInput').value = u.username || '';
-      document.getElementById('profileEmailInput').value = u.email || '';
-      document.getElementById('profilePasswordInput').value = '';
-
-      const avatarFilename = u.avatar || null;
-      const pImg = document.getElementById('profileAvatar');
-      const pPlaceholder = document.getElementById('profileAvatarPlaceholder');
-
-      if (avatarFilename) {
-        const avatarUrl = `${API}/uploads/${avatarFilename}`;
-        if (pImg) {
-          pImg.src = avatarUrl;
-          pImg.classList.remove('hidden');
-        }
-        if (pPlaceholder) pPlaceholder.classList.add('hidden');
-        const profileBtn = document.getElementById('profileBtn');
-        if (profileBtn) profileBtn.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full"/>`;
-      } else {
-        if (pImg) pImg.classList.add('hidden');
-        if (pPlaceholder) pPlaceholder.classList.remove('hidden');
-        const profileBtn = document.getElementById('profileBtn');
-        if (profileBtn) profileBtn.innerHTML = '👤';
-      }
-
-      if (profileModal) {
-        profileModal.classList.remove('hidden');
-        profileModal.classList.add('flex');
-        document.body.style.overflow = 'hidden';
-      }
+    if (profileError) {
+      profileError.classList.add('hidden');
+      profileError.textContent = '';
     }
+    if (profileFotoInput) profileFotoInput.value = '';
+
+    const u = JSON.parse(localStorage.getItem('user') || '{}');
+    const profileIdEl = document.getElementById('profileId');
+    const profileUsernameInputEl = document.getElementById('profileUsernameInput');
+    const profileEmailInputEl = document.getElementById('profileEmailInput');
+    const profilePasswordInputEl = document.getElementById('profilePasswordInput');
+
+    if (profileIdEl) profileIdEl.textContent = u.id || '-';
+    if (profileUsernameInputEl) profileUsernameInputEl.value = u.username || '';
+    if (profileEmailInputEl) profileEmailInputEl.value = u.email || '';
+    if (profilePasswordInputEl) profilePasswordInputEl.value = '';
+
+    const avatarFilename = u.avatar || null;
+    const pImg = document.getElementById('profileAvatar');
+    const pPlaceholder = document.getElementById('profileAvatarPlaceholder');
+
+    if (avatarFilename) {
+      const avatarUrl = `${API}/uploads/${avatarFilename}`;
+      if (pImg) {
+        pImg.src = avatarUrl;
+        pImg.classList.remove('hidden');
+      }
+      if (pPlaceholder) pPlaceholder.classList.add('hidden');
+      const profileBtn = document.getElementById('profileBtn');
+      if (profileBtn) profileBtn.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full"/>`;
+    } else {
+      if (pImg) pImg.classList.add('hidden');
+      if (pPlaceholder) pPlaceholder.classList.remove('hidden');
+      const profileBtn = document.getElementById('profileBtn');
+      if (profileBtn) profileBtn.innerHTML = '👤';
+    }
+
+    if (profileModal) {
+      profileModal.classList.remove('hidden');
+      profileModal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+    }
+  }
 
   function closeProfile() {
     if (profileModal) {
@@ -217,12 +223,7 @@ document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
     }
   }
 
-  if (profileBtn) {
-    profileBtn.addEventListener('click', (e) => { 
-      e.preventDefault(); 
-      openProfile(); 
-    });
-  }
+  profileBtn?.addEventListener('click', (e) => { e.preventDefault(); openProfile(); });
   profileClose?.addEventListener('click', (e) => { e.preventDefault(); closeProfile(); });
   profileCancel?.addEventListener('click', (e) => { e.preventDefault(); closeProfile(); });
   profileModal?.addEventListener('click', (e) => { if (e.target === profileModal) closeProfile(); });
@@ -319,20 +320,24 @@ document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
   profileAvatarContainer?.addEventListener('click', () => {
     profileFotoInput?.click();
   });
-})();
 
-// ====== Sidebar Username + Avatar ======
+  // Load profile avatar on page load
+  (function() {
+    const u = JSON.parse(localStorage.getItem('user') || '{}');
+    const profileBtn = document.getElementById('profileBtn');
+    if (profileBtn && u.avatar) {
+      const avatarUrl = `${API}/uploads/${u.avatar}`;
+      profileBtn.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full"/>`;
+    }
+  })();
+});
+
+// ====== Sidebar Username ======
 (function() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const sidebarUsername = document.getElementById('sidebarUsername');
   if (sidebarUsername && user.username) {
     sidebarUsername.textContent = user.username;
-  }
-  
-  const profileBtn = document.getElementById('profileBtn');
-  if (profileBtn && user.avatar) {
-    const avatarUrl = `${API}/uploads/${user.avatar}`;
-    profileBtn.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full"/>`;
   }
 })();
 

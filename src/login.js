@@ -164,28 +164,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 if (response.ok) {
-                    console.log('Register successful, attempting auto-login...');
-                    // auto-login using the newly created username as identifier
-                    const loginResponse = await fetch('http://localhost:3000/login', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ identifier: username, password })
-                    });
-                    if (loginResponse.ok) {
-                        const loginData = await loginResponse.json();
-                        // Store user data in localStorage
-                        localStorage.setItem('user', JSON.stringify(loginData.user));
-                        window.location.href = '../dist/dashboard.html';
-                    } else {
-                        const loginError = await loginResponse.json().catch(() => ({}));
-                        console.error('Auto-login failed:', loginError);
-                        if (errorDiv) {
-                            errorDiv.textContent = 'Registrasi berhasil, tapi gagal login: ' + (loginError.message || 'Unknown error');
-                            errorDiv.style.display = 'block';
-                        }
+                    console.log('Register successful');
+                    // Tampilkan pesan sukses dan switch ke form login
+                    if (errorDiv) {
+                        errorDiv.textContent = 'Registrasi berhasil! Silakan login dengan akun Anda.';
+                        errorDiv.style.display = 'block';
+                        errorDiv.style.color = 'green';
+                        errorDiv.style.backgroundColor = '#d4edda';
+                        errorDiv.style.borderColor = '#c3e6cb';
                     }
+                    
+                    // Switch ke form login
+                    document.getElementById('registerForm').style.display = 'none';
+                    document.getElementById('loginForm').style.display = 'block';
+                    document.querySelector('.signup-link').style.display = 'block';
+                    
+                    // Kosongkan form register
+                    registerForm.reset();
+                    
+                    // Setelah 3 detik, hilangkan pesan sukses
+                    setTimeout(() => {
+                        if (errorDiv) {
+                            errorDiv.style.display = 'none';
+                            errorDiv.style.color = '';
+                            errorDiv.style.backgroundColor = '';
+                            errorDiv.style.borderColor = '';
+                        }
+                    }, 3000);
                 } else {
                     console.error('Register failed:', data);
                     if (errorDiv) {

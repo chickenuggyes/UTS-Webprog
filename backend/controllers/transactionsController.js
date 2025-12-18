@@ -237,7 +237,7 @@ export const transactionController = {
           p.namaItem,
           p.hargaSatuan,
           
-          -- FIX: harus username, bukan ID
+          -- FIX: harus username, bukan ID - join dengan id user karena t.user_id adalah ID
           u.username AS akun,
 
           s.namaSupplier,
@@ -245,7 +245,7 @@ export const transactionController = {
         FROM stocklog sl
         LEFT JOIN transactions t ON t.tranid = sl.transaction_id
         LEFT JOIN products p ON p.id = sl.product_id
-        LEFT JOIN users u ON u.username = t.user_id
+        LEFT JOIN users u ON u.id = t.user_id
         LEFT JOIN suppliers s ON s.supid = t.supplier_id
         LEFT JOIN transaction_details td 
           ON td.transaction_id = sl.transaction_id 
