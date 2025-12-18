@@ -51,7 +51,7 @@
     const cropSave = document.getElementById('cropSave');
     const profileAvatar = document.getElementById('profileAvatar');
     const profilePlaceholder = document.getElementById('profileAvatarPlaceholder');
-    const API = import.meta.env.VITE_API_URL;
+    const API = window.API || "http://localhost:3000";
     
     function createCropModal() {
       const modalHTML = `
@@ -423,4 +423,3 @@
     });
   }
 })();
-
