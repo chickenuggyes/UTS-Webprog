@@ -54,19 +54,163 @@
       color: #858383;
       text-shadow: 0 1px 3px rgba(56, 52, 52, 0.4);
     }
+
+    /* ---------- RESPONSIVE STYLES ---------- */
+    @media (max-width: 1024px) {
+      .flex.h-screen {
+        position: relative;
+      }
+
+      aside {
+        position: fixed !important;
+        left: -100%;
+        top: 0;
+        height: 100vh;
+        z-index: 100 !important;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+        width: 16rem !important;
+      }
+      
+      aside.mobile-open {
+        left: 0 !important;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+
+      main {
+        margin-left: 0 !important;
+        margin: 0.5rem !important;
+        padding: 1rem !important;
+        width: 100% !important;
+        z-index: 0 !important;
+      }
+
+      .header-title {
+        font-size: 20px;
+      }
+
+      .header-store {
+        font-size: 16px;
+      }
+
+      .header-box {
+        padding: 8px 15px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        background-attachment: scroll;
+      }
+
+      main {
+        margin: 0.25rem !important;
+        padding: 0.75rem !important;
+      }
+
+      .header-title {
+        font-size: 18px;
+      }
+
+      .header-store {
+        font-size: 14px;
+      }
+
+      .header-box {
+        padding: 6px 12px;
+      }
+
+      .grid {
+        gap: 0.75rem !important;
+      }
+    }
+
+    @media (max-width: 640px) {
+      main {
+        margin: 0.15rem !important;
+        padding: 0.5rem !important;
+      }
+
+      .header-box {
+        padding: 5px 10px;
+        font-size: 14px;
+      }
+
+      .header-title {
+        font-size: 16px;
+      }
+
+      .header-store {
+        font-size: 12px;
+      }
+    }
+
+    /* Mobile menu button */
+    .mobile-menu-btn {
+      display: none;
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 101;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      border-radius: 8px;
+      padding: 0.5rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s;
+    }
+
+    .mobile-menu-btn:hover {
+      background: rgba(255, 255, 255, 1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (max-width: 1024px) {
+      .mobile-menu-btn {
+        display: block;
+      }
+    }
+
+    /* Overlay for mobile menu */
+    .mobile-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 99 !important;
+      backdrop-filter: blur(2px);
+    }
+
+    .mobile-overlay.active {
+      display: block !important;
+      z-index: 99 !important;
+    }
   </style>
 </head>
 
 <body class="font-sans">
+  <!-- Mobile Menu Button -->
+  <button class="mobile-menu-btn no-print" id="mobileMenuBtn" aria-label="Toggle menu">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  </button>
+
+  <!-- Mobile Overlay -->
+  <div class="mobile-overlay no-print" id="mobileOverlay"></div>
+
   <div class="flex h-screen relative">
     <!-- Sidebar -->
-    <aside class="w-64 bg-pink-100/90 shadow-lg flex flex-col relative z-10">
+    <aside id="sidebar" class="w-64 bg-pink-100/90 shadow-lg flex flex-col relative z-10 lg:relative">
       <div class="p-6 flex items-center justify-between">
         <div class="flex flex-col">
           <div id="sidebarUsername" class="text-2xl font-bold text-pink-600">Olin</div>
           <div class="text-xs text-gray-500 mt-1">Admin</div>
         </div>
-        <button class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center">👤</button>
+        <button id="profileBtn" class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center" title="Profile">👤</button>
       </div>
 
       <nav class="flex-1 px-4 space-y-2">
@@ -82,25 +226,28 @@
           <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5" />
           Add Product
         </a>
+        <a href="transaction.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+          <img src="https://img.icons8.com/color/24/transaction-list.png" class="mr-3 w-5 h-5"/>Transactions
+        </a>
       </nav>
 
       <div class="p-4 border-t">
-        <a href="#" class="flex items-center text-red-600 hover:underline">
+        <a href="#" id="logoutBtn" class="flex items-center text-red-600 hover:underline">
           <img src="https://img.icons8.com/color/24/exit.png" class="mr-3 w-5 h-5" />
           Sign Out
-        </a>
+      </a>
       </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 p-6 overflow-y-auto bg-overlay rounded-2xl shadow-md border border-pink-200 m-6 relative z-10">
+    <main class="flex-1 p-6 overflow-y-auto bg-overlay rounded-2xl shadow-md border border-pink-200 m-6 relative z-0">
       <!-- Header -->
       <div class="flex justify-between items-center mb-6">
         <div class="header-box">
           <h1 class="header-title">Edit Product</h1>
         </div>
-        <div class="header-box header-store-box">
-          <span class="header-store">Nama Toko</span>
+        <div class="header-box header-store-box ml-auto">
+          <span class="header-store">Toko Gembira</span>
         </div>
       </div>
 
@@ -108,32 +255,53 @@
       <div class="bg-white/70 rounded-2xl shadow-md border border-pink-200 p-6">
         <form id="editForm" class="grid lg:grid-cols-3 gap-6">
           <!-- Left fields -->
-          <div class="lg:col-span-2 space-y-4">
-            <div>
-              <label class="block text-sm font-semibold mb-1 text-pink-800">Nama Barang</label>
-              <input id="namaBarang" name="namaBarang" type="text"
-                class="w-full h-11 rounded-xl border border-pink-300 px-3 bg-white/70 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-                required>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold mb-1 text-pink-800">Keterangan</label>
-              <input id="keterangan" name="keterangan" type="text"
-                class="w-full h-11 rounded-xl border border-pink-300 px-3 bg-white/70 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-                required>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold mb-1 text-pink-800">Harga Satuan</label>
-              <input id="hargaSatuan" name="hargaSatuan" type="number"
-                class="w-full h-11 rounded-xl border border-pink-300 px-3 bg-white/70 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-                required>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold mb-1 text-pink-800">Stok</label>
-              <input id="stok" name="stok" type="number"
-                class="w-full h-11 rounded-xl border border-pink-300 px-3 bg-white/70 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-                required>
-            </div>
-          </div>
+<div class="lg:col-span-2 space-y-4">
+  <div>
+    <label class="block text-sm font-semibold mb-1 text-pink-800">Nama Barang</label>
+    <input id="namaBarang" name="namaItem" type="text"
+      class="w-full h-11 rounded-xl border border-pink-300 px-3 bg-white/70 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+      required>
+  </div>
+
+  <div>
+    <label class="block text-sm font-semibold mb-1 text-pink-800">Keterangan</label>
+    <input id="keterangan" name="keterangan" type="text"
+      class="w-full h-11 rounded-xl border border-pink-300 px-3 bg-white/70 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+      required>
+  </div>
+
+  <!-- KATEGORI (hanya tampil dari database, tidak bisa diubah) -->
+  <div>
+    <label class="block text-sm font-semibold mb-1 text-pink-800">Kategori</label>
+    <input id="kategori" type="text" readonly
+      class="w-full h-11 rounded-xl border border-pink-300 px-3 bg-gray-100 cursor-not-allowed">
+  </div>
+
+  <!-- SUPPLIER (drop-down dari database) -->
+  <div>
+    <label class="block text-sm font-semibold mb-1 text-pink-800">Supplier</label>
+    <select id="supplier" name="supid"
+      class="w-full h-11 rounded-xl border border-pink-300 px-3 bg-white/70 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500">
+      <option value="">Memuat daftar supplier...</option>
+    </select>
+  </div>
+
+  <div>
+    <label class="block text-sm font-semibold mb-1 text-pink-800">Harga Satuan</label>
+    <input id="hargaSatuan" name="hargaSatuan" type="number"
+      class="w-full h-11 rounded-xl border border-pink-300 px-3 bg-white/70 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+      required>
+  </div>
+
+  <!-- STOK (ditampilkan saja, tidak bisa diubah) -->
+  <div>
+    <label class="block text-sm font-semibold mb-1 text-pink-800">Stok</label>
+    <input id="stok" type="number" readonly placeholder="-"
+      class="w-full h-11 rounded-xl border border-pink-300 px-3 bg-gray-100 cursor-not-allowed">
+  </div>
+
+</div>
+
 
           <!-- Right fields -->
           <div>
@@ -161,26 +329,63 @@
     </main>
   </div>
 
+  <!-- Profile Modal -->
+  <div id="profileModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 w-80 shadow-lg relative">
+      <button id="profileClose" class="absolute top-3 right-3 text-gray-600 hover:text-gray-900">✕</button>
+      <h3 class="text-lg font-semibold text-pink-600 mb-3">Profile</h3>
+      <div id="profileError" class="text-sm text-red-600 mb-2 hidden"></div>
+      <form id="profileForm" class="text-sm text-gray-700 space-y-3">
+        <div class="flex flex-col items-center mb-3">
+          <div id="profileAvatarContainer" class="relative w-24 h-24 mb-3 group">
+            <div id="profileAvatarPlaceholder"
+              class="w-full h-full rounded-full bg-pink-500 text-white grid place-items-center text-3xl cursor-pointer"
+              title="Unggah foto profile">👤</div>
+            <img id="profileAvatar" src="" alt="avatar"
+              class="w-full h-full rounded-full object-cover hidden cursor-pointer" title="Unggah foto profile" />
+            <input type="file" id="profileFotoInput" accept="image/*" class="hidden">
+            <div
+              class="absolute inset-0 rounded-full bg-black/40 text-white grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.218A2 2 0 0110.74 4h2.52a2 2 0 011.664.89l.812 1.218A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+          </div>
+          <div class="text-xs text-gray-500">ID</div>
+          <div class="font-mono text-sm text-gray-800 mb-3" id="profileId">-</div>
+        </div>
+
+        <div>
+          <label class="text-xs text-gray-500">Username</label>
+          <input id="profileUsernameInput" class="w-full border rounded px-2 py-1" type="text" />
+        </div>
+
+        <div>
+          <label class="text-xs text-gray-500">Email</label>
+          <input id="profileEmailInput" class="w-full border rounded px-2 py-1" type="email" />
+        </div>
+
+        <div>
+          <label class="text-xs text-gray-500">Password (kosongkan jika tidak ingin mengubah)</label>
+          <input id="profilePasswordInput" class="w-full border rounded px-2 py-1" type="password" />
+        </div>
+
+        <div class="mt-2 flex justify-between">
+          <button id="profileLogout" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">Sign out</button>
+          <div class="flex gap-2">
+            <button id="profileCancel" class="px-3 py-1 bg-gray-200 rounded">Cancel</button>
+            <button id="profileSave" class="px-3 py-1 bg-pink-500 text-white rounded">Save</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Script -->
   <script src="edit.js"></script>
-  <script>
-    // Optional: image preview logic like add.html
-    const fotoInput = document.getElementById('fotoInput');
-    const photoBox = document.getElementById('photoBox');
-    if (fotoInput && photoBox) {
-      fotoInput.addEventListener('change', function () {
-        if (this.files && this.files[0]) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            photoBox.innerHTML =
-              '<img src="' + e.target.result + '" alt="Preview" class="w-full h-full object-cover rounded-2xl"/>';
-          };
-          reader.readAsDataURL(this.files[0]);
-        } else {
-          photoBox.textContent = 'Foto';
-        }
-      });
-    }
-  </script>
+  <script src="profileCrop.js"></script>
 </body>
 </html>

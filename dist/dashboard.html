@@ -87,19 +87,195 @@
       color: #858383;
       text-shadow: 0 1px 3px rgba(56, 52, 52, 0.4);
     }
+
+    /* ---------- RESPONSIVE STYLES ---------- */
+    @media (max-width: 1024px) {
+      .flex.h-screen {
+        position: relative;
+      }
+
+      aside {
+        position: fixed !important;
+        left: -100%;
+        top: 0;
+        height: 100vh;
+        z-index: 100 !important;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+        width: 16rem !important;
+      }
+      
+      aside.mobile-open {
+        left: 0 !important;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+
+      main {
+        margin-left: 0 !important;
+        margin: 0.5rem !important;
+        padding: 1rem !important;
+        width: 100% !important;
+        z-index: 0 !important;
+      }
+
+      .header-title {
+        font-size: 20px;
+      }
+
+      .header-store {
+        font-size: 16px;
+      }
+
+      .header-box {
+        padding: 8px 15px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        background-attachment: scroll;
+      }
+
+      main {
+        margin: 0.25rem !important;
+        padding: 0.75rem !important;
+      }
+
+      .header-title {
+        font-size: 18px;
+      }
+
+      .header-store {
+        font-size: 14px;
+      }
+
+      .header-box {
+        padding: 6px 12px;
+      }
+
+      #totalItem, #totalStok, #totalHarga,
+      #statKategori, #statSupplier, #statTxToday,
+      #statIncomeToday, #statOutcomeToday, #statProfitToday {
+        font-size: 1.5rem !important;
+      }
+
+      .grid {
+        gap: 0.75rem !important;
+      }
+    }
+
+    @media (max-width: 640px) {
+      main {
+        margin: 0.15rem !important;
+        padding: 0.5rem !important;
+      }
+
+      .header-box {
+        padding: 5px 10px;
+        font-size: 14px;
+      }
+
+      .header-title {
+        font-size: 16px;
+      }
+
+      .header-store {
+        font-size: 12px;
+      }
+
+      #totalItem, #totalStok, #totalHarga,
+      #statKategori, #statSupplier, #statTxToday,
+      #statIncomeToday, #statOutcomeToday, #statProfitToday {
+        font-size: 1.25rem !important;
+      }
+    }
+
+    /* Mobile menu button */
+    .mobile-menu-btn {
+      display: none;
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 101 !important;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      border-radius: 8px;
+      padding: 0.5rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s;
+      pointer-events: auto !important;
+      user-select: none;
+    }
+
+    .mobile-menu-btn:hover {
+      background: rgba(255, 255, 255, 1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (max-width: 1024px) {
+      .mobile-menu-btn {
+        display: block;
+      }
+    }
+
+    /* Overlay for mobile menu */
+    .mobile-overlay {
+      display: none !important;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 99 !important;
+      backdrop-filter: blur(2px);
+      pointer-events: none !important;
+      visibility: hidden;
+    }
+
+    .mobile-overlay.active {
+      display: block !important;
+      z-index: 99 !important;
+      pointer-events: auto !important;
+      visibility: visible;
+    }
+
+    /* Responsive charts */
+    #chartWeekly, #chartPopular {
+      max-width: 100%;
+      height: auto !important;
+    }
+
+    @media (max-width: 768px) {
+      #chartWeekly, #chartPopular {
+        max-height: 250px;
+      }
+    }
   </style>
 </head>
 
 <body class="font-sans">
+  <!-- Mobile Menu Button -->
+  <button class="mobile-menu-btn no-print" id="mobileMenuBtn" aria-label="Toggle menu" style="pointer-events: auto !important; z-index: 101 !important; position: fixed !important;">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="pointer-events: none;">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  </button>
+
+  <!-- Mobile Overlay -->
+  <div class="mobile-overlay no-print" id="mobileOverlay"></div>
+
   <div class="flex h-screen">
     <!-- Sidebar -->
-    <aside class="w-64 bg-pink-100/90 shadow-lg flex flex-col no-print relative z-10">
+    <aside id="sidebar" class="w-64 bg-pink-100/90 shadow-lg flex flex-col no-print relative z-10 lg:relative">
       <div class="p-6 flex items-center justify-between">
         <div class="flex flex-col">
           <div id="sidebarUsername" class="text-2xl font-bold text-pink-600">Loading...</div>
           <div class="text-xs text-gray-500 mt-1">Admin</div>
         </div>
-        <button class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center" title="Profile">👤</button>
+        <div class="flex items-center gap-2">
+          <button id="profileBtn" class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center" title="Profile">👤</button>
+        </div>
       </div>
       <nav class="flex-1 px-4 space-y-2">
         <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
@@ -114,6 +290,10 @@
           <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5" />
           Add Product
         </a>
+        <a href="transaction.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+          <img src="https://img.icons8.com/color/24/transaction-list.png" class="mr-3 w-5 h-5" />
+          Transactions
+        </a>
       </nav>
       <div class="p-4 border-t">
         <a href="#" id="logoutBtn" class="flex items-center p-2 rounded-lg hover:bg-red-100 text-red-600 hover:text-red-700 font-medium transition-colors">
@@ -124,13 +304,13 @@
     </aside>
 
     <!-- Main Content (glass overlay container) -->
-    <main class="flex-1 p-6 overflow-y-auto bg-overlay rounded-2xl shadow-md border border-pink-200 m-6 relative z-10">
+    <main class="flex-1 p-6 overflow-y-auto bg-overlay rounded-2xl shadow-md border border-pink-200 m-6 relative z-0">
       <!-- Header -->
-      <div class="flex justify-between items-center mb-6 no-print">
+      <div class="flex flex-row justify-between items-center mb-6 no-print">
         <div class="header-box">
           <h1 class="header-title">Dashboard</h1>
         </div>
-        <div class="header-box header-store-box">
+        <div class="header-box header-store-box ml-auto">
           <span class="header-store">Toko Gembira</span>
         </div>
       </div>
@@ -154,11 +334,89 @@
         </div>
       </div>
 
-      <!-- Products header + Print button -->
-      <div class="mt-10 mb-3 flex items-center justify-between no-print">
-        <h2 class="text-lg font-semibold">Products</h2>
+
+<!-- 📊 Statistik Tambahan -->
+<section id="statContainer" class="mt-10 space-y-8">
+
+<!-- Summary Block -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
+  <div class="bg-white/80 p-4 rounded-lg shadow">
+    <p class="text-gray-500">Total Kategori</p>
+    <h2 id="statKategori" class="text-3xl font-bold">...</h2>
+  </div>
+  <div class="bg-white/80 p-4 rounded-lg shadow">
+    <p class="text-gray-500">Total Supplier</p>
+    <h2 id="statSupplier" class="text-3xl font-bold">...</h2>
+  </div>
+  <div class="bg-white/80 p-4 rounded-lg shadow">
+    <p class="text-gray-500">Transaksi Hari Ini</p>
+    <h2 id="statTxToday" class="text-3xl font-bold">...</h2>
+  </div>
+</div>
+
+<!-- Summary Keuangan Harian -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
+  <div class="bg-white/80 p-4 rounded-lg shadow">
+    <p class="text-gray-500">Total Pemasukan Hari Ini</p>
+    <h2 id="statIncomeToday" class="text-3xl font-bold">—</h2>
+  </div>
+  <div class="bg-white/80 p-4 rounded-lg shadow">
+    <p class="text-gray-500">Total Pengeluaran Hari Ini</p>
+    <h2 id="statOutcomeToday" class="text-3xl font-bold">—</h2>
+  </div>
+  <div class="bg-white/80 p-4 rounded-lg shadow">
+    <p class="text-gray-500">Laba Hari Ini</p>
+    <h2 id="statProfitToday" class="text-3xl font-bold">—</h2>
+  </div>
+</div>
+
+
+  <!-- ⚠️ Alert stok rendah -->
+  <div id="stockAlert"
+       class="hidden bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg">
+    ⚠️ Beberapa barang stoknya &lt; 5. Mohon lakukan restock.
+  </div>
+
+  <!-- 📉 Daftar barang dengan stok < 5 -->
+  <div class="bg-white/80 p-4 rounded-lg shadow">
+    <p class="font-semibold mb-2">Barang dengan Stok &lt; 5</p>
+    <ul id="lowStockList" class="space-y-2 text-sm text-gray-700">
+      <li class="text-gray-500">Memuat data...</li>
+    </ul>
+  </div>
+
+  <!-- 📈 + 📊 Grafik: 2 kolom (kiri-kanan) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Grafik transaksi per minggu -->
+    <div class="bg-white/80 p-4 rounded-lg shadow">
+      <p class="font-semibold mb-2">Grafik Transaksi Per Minggu</p>
+      <canvas id="chartWeekly"></canvas>
+    </div>
+
+    <!-- Grafik barang paling banyak IN / OUT -->
+    <div class="bg-white/80 p-4 rounded-lg shadow">
+      <p class="font-semibold mb-2">Barang Paling Banyak IN / OUT</p>
+      <canvas id="chartPopular"></canvas>
+    </div>
+  </div>
+</section>
+
+
+            <!-- Tabs + Print -->
+      <div class="mt-10 mb-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 no-print">
+        <!-- Tabs -->
+        <div class="inline-flex rounded-lg bg-white/60 p-1 shadow border border-pink-100 w-full sm:w-auto">
+          <button id="tabProducts"
+                  class="flex-1 sm:flex-none px-4 py-2 rounded-md font-semibold bg-pink-500 text-white transition text-sm sm:text-base">
+            Products
+          </button>
+          <button id="tabSuppliers"
+                  class="flex-1 sm:flex-none px-4 py-2 rounded-md font-semibold text-pink-600 hover:bg-pink-50 transition text-sm sm:text-base">
+            Suppliers
+          </button>
+        </div>
         <button onclick="handlePrint()"
-                class="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 shadow">
+                class="w-full sm:w-auto px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 shadow text-sm sm:text-base">
           Print
         </button>
       </div>
@@ -166,39 +424,129 @@
       <!-- List (screen only) -->
       <ul id="listProducts" class="space-y-3 no-print"></ul>
 
+      <!-- Tombol + Form Tambah Supplier (muncul hanya di tab Suppliers) -->
+      <div class="no-print space-y-3 mb-6 hidden" id="supplierTools">
+        <button id="showAddSupplierBtn"
+                class="px-3 py-1.5 border border-pink-400 text-pink-600 rounded-md text-sm hover:bg-pink-50">
+          + Tambah Supplier
+        </button>
+
+        <div id="addSupplierBox"
+             class="bg-white/80 p-4 rounded-lg shadow border border-pink-100 hidden">
+          <form id="addSupplierForm" class="space-y-3">
+            <p class="font-semibold text-pink-600 text-sm">Tambah Supplier</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">
+                  Nama Supplier<span class="text-red-500">*</span>
+                </label>
+                <input type="text" name="namaSupplier" required
+                       class="w-full border rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-pink-400">
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">
+                  Kontak / Telepon
+                </label>
+                <input type="text" name="kontak"
+                       class="w-full border rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-pink-400">
+              </div>
+
+              <div class="sm:col-span-2 lg:col-span-1">
+                <label class="block text-xs font-medium text-gray-600 mb-1">
+                  Alamat
+                </label>
+                <input type="text" name="alamat"
+                       class="w-full border rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-pink-400">
+              </div>
+            </div>
+
+            <p id="addSupplierError"
+               class="text-xs text-red-600 hidden"></p>
+
+            <div class="flex justify-end gap-2">
+              <button type="button" id="cancelAddSupplier"
+                      class="px-3 py-1.5 text-xs border rounded-md hover:bg-gray-50">
+                Batal
+              </button>
+              <button type="submit"
+                      class="px-3 py-1.5 text-xs bg-pink-500 text-white rounded-md hover:bg-pink-600">
+                Simpan
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <ul id="listSuppliers" class="space-y-3 no-print hidden"></ul>
+
       <!-- PRINT-ONLY AREA -->
+
       <section id="printArea" class="hidden">
         <h1 class="text-xl font-bold mb-2">Daftar Produk — Toko Gembira</h1>
 
-        <!-- Summary -->
-        <table class="w-full border-collapse mb-4">
-          <tbody>
-            <tr>
-              <th class="border px-3 py-2 text-left">Total Item</th>
-              <td id="pTotalItem" class="border px-3 py-2">-</td>
-            </tr>
-            <tr>
-              <th class="border px-3 py-2 text-left">Total Stok</th>
-              <td id="pTotalStok" class="border px-3 py-2">-</td>
-            </tr>
-            <tr>
-              <th class="border px-3 py-2 text-left">Total Harga</th>
-              <td id="pTotalHarga" class="border px-3 py-2">-</td>
-            </tr>
-          </tbody>
-        </table>
+
+<!-- Summary -->
+<table class="w-full border-collapse mb-4">
+  <tbody>
+    <tr>
+      <th class="border px-3 py-2 text-left">Total Item</th>
+      <td id="pTotalItem" class="border px-3 py-2">-</td>
+    </tr>
+    <tr>
+      <th class="border px-3 py-2 text-left">Total Stok</th>
+      <td id="pTotalStok" class="border px-3 py-2">-</td>
+    </tr>
+    <tr>
+      <th class="border px-3 py-2 text-left">Total Harga</th>
+      <td id="pTotalHarga" class="border px-3 py-2">-</td>
+    </tr>
+    <tr>
+      <th class="border px-3 py-2 text-left">Total Kategori</th>
+      <td id="pTotalKategori" class="border px-3 py-2">-</td>
+    </tr>
+    <tr>
+      <th class="border px-3 py-2 text-left">Total Supplier</th>
+      <td id="pTotalSupplier" class="border px-3 py-2">-</td>
+    </tr>
+    <tr>
+      <th class="border px-3 py-2 text-left">Transaksi Hari Ini</th>
+      <td id="pTxToday" class="border px-3 py-2">-</td>
+    </tr>
+
+    <!-- Tambahan baru -->
+    <tr>
+      <th class="border px-3 py-2 text-left">Pemasukan Hari Ini</th>
+      <td id="pIncomeToday" class="border px-3 py-2">-</td>
+    </tr>
+    <tr>
+      <th class="border px-3 py-2 text-left">Pengeluaran Hari Ini</th>
+      <td id="pOutcomeToday" class="border px-3 py-2">-</td>
+    </tr>
+    <tr>
+      <th class="border px-3 py-2 text-left">Laba Hari Ini</th>
+      <td id="pProfitToday" class="border px-3 py-2">-</td>
+    </tr>
+
+  </tbody>
+</table>
+
+
 
         <!-- Products Table -->
         <table id="printTable" class="w-full border-collapse">
-          <thead>
-            <tr>
-              <th class="border px-3 py-2 text-left">No</th>
-              <th class="border px-3 py-2 text-left">Nama</th>
-              <th class="border px-3 py-2 text-left">Keterangan</th>
-              <th class="border px-3 py-2 text-left">Harga</th>
-              <th class="border px-3 py-2 text-left">Stok</th>
-            </tr>
-          </thead>
+<thead>
+  <tr>
+    <th class="border px-3 py-2 text-left">No</th>
+    <th class="border px-3 py-2 text-left">Nama</th>
+    <th class="border px-3 py-2 text-left">Keterangan</th>
+    <th class="border px-3 py-2 text-left">Supplier</th>
+    <th class="border px-3 py-2 text-left">Harga</th>
+    <th class="border px-3 py-2 text-left">Stok</th>
+  </tr>
+</thead>
+
           <tbody></tbody>
         </table>
       </section>
@@ -208,27 +556,64 @@
   <!-- Main script -->
   <script src="dashboard.js"></script>
 
-  <!-- Small scripts: title/auth/active link -->
-  <script>
-    const userTitle = JSON.parse(localStorage.getItem('user') || '{}');
-    if (userTitle.username) document.title = userTitle.username + ' Dashboard';
+  <!-- Profile modal -->
+  <div id="profileModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl p-4 sm:p-6 w-full max-w-sm shadow-lg relative max-h-[90vh] overflow-y-auto">
+      <button id="profileClose" class="absolute top-3 right-3 text-gray-600 hover:text-gray-900">✕</button>
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-pink-600 mb-3">Profile</h3>
+      </div>
+      <div id="profileError" class="text-sm text-red-600 mb-2 hidden"></div>
+      <form id="profileForm" class="text-sm text-gray-700 space-y-3">
+        <div class="flex flex-col items-center mb-3">
+          <div id="profileAvatarContainer" class="relative w-24 h-24 mb-3 group">
+            <div id="profileAvatarPlaceholder"
+              class="w-full h-full rounded-full bg-pink-500 text-white grid place-items-center text-3xl cursor-pointer"
+              title="Unggah foto profile">👤</div>
+            <img id="profileAvatar" src="" alt="avatar"
+              class="w-full h-full rounded-full object-cover hidden cursor-pointer" title="Unggah foto profile" />
+            <input type="file" id="profileFotoInput" accept="image/*" class="hidden">
+            <div
+              class="absolute inset-0 rounded-full bg-black/40 text-white grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.218A2 2 0 0110.74 4h2.52a2 2 0 011.664.89l.812 1.218A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+          </div>
+          <div class="text-xs text-gray-500">ID</div>
+          <div class="font-mono text-sm text-gray-800 mb-3" id="profileId">-</div>
+        </div>
 
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const sidebarUsername = document.getElementById('sidebarUsername');
-    if (sidebarUsername && user.username) sidebarUsername.textContent = user.username;
+        <div>
+          <label class="text-xs text-gray-500">Username</label>
+          <input id="profileUsernameInput" class="w-full border rounded px-2 py-1" type="text" />
+        </div>
 
-    document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      localStorage.removeItem('user');
-      window.location.href = '../src/login.html';
-    });
+        <div>
+          <label class="text-xs text-gray-500">Email</label>
+          <input id="profileEmailInput" class="w-full border rounded px-2 py-1" type="email" />
+        </div>
 
-    const currentPage = location.pathname.split("/").pop();
-    document.querySelectorAll("aside nav a").forEach(link => {
-      const href = link.getAttribute("href");
-      if (href === currentPage) link.classList.add("bg-pink-400","text-white","shadow");
-      else link.classList.remove("bg-pink-400","text-white","shadow");
-    });
-  </script>
+        <div>
+          <label class="text-xs text-gray-500">Password (kosongkan jika tidak ingin mengubah)</label>
+          <input id="profilePasswordInput" class="w-full border rounded px-2 py-1" type="password" />
+        </div>
+
+        <div class="mt-2 flex justify-between">
+          <button id="profileLogout" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">Sign out</button>
+          <div class="flex gap-2">
+            <button id="profileCancel" class="px-3 py-1 bg-gray-200 rounded">Cancel</button>
+            <button id="profileSave" class="px-3 py-1 bg-pink-500 text-white rounded">Save</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="profileCrop.js"></script>
 </body>
 </html>

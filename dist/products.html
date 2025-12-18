@@ -67,52 +67,242 @@
       transform: translateY(-3px);
       box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
     }
+    /* --- Filter chip (category) --- */
+    .filter-chip {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      border: 1px solid rgba(236,72,153,0.18);
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      font-size: 14px;
+      color: #111827;
+    }
+    .filter-chip:focus { outline: none; box-shadow: 0 0 0 3px rgba(236,72,153,0.08); }
+  .filter-chip-wrapper { display: inline-block; position: relative; }
+  .filter-chip-wrapper svg { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+  /* dropdown panel */
+  /* position dropdown to the right of the chip and render items in two columns */
+    /* --- Filter chip (inline) --- */
+    .chip {
+      padding: 8px 14px;
+      border-radius: 9999px;
+      border: 1px solid rgba(236,72,153,0.18);
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      font-size: 14px;
+      color: #111827;
+      cursor: pointer;
+      transition: background .12s, color .12s, transform .06s;
+    }
+    .chip:hover { transform: translateY(-1px); }
+    .chip.selected { background: #1e40af; color: #fff; border-color: rgba(30,64,175,0.9); }
+    .chip:focus { outline: none; box-shadow: 0 0 0 3px rgba(236,72,153,0.08); }
+
+    /* ---------- RESPONSIVE STYLES ---------- */
+    @media (max-width: 1024px) {
+      .flex.h-screen {
+        position: relative;
+      }
+
+      aside {
+        position: fixed !important;
+        left: -100%;
+        top: 0;
+        height: 100vh;
+        z-index: 100 !important;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+        width: 16rem !important;
+      }
+      
+      aside.mobile-open {
+        left: 0 !important;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+
+      main {
+        margin-left: 0 !important;
+        margin: 0.5rem !important;
+        padding: 1rem !important;
+        width: 100% !important;
+        z-index: 1 !important;
+        position: relative;
+      }
+
+      .header-title {
+        font-size: 20px;
+      }
+
+      .header-store {
+        font-size: 16px;
+      }
+
+      .header-box {
+        padding: 8px 15px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        background-attachment: scroll;
+      }
+
+      main {
+        margin: 0.25rem !important;
+        padding: 0.75rem !important;
+      }
+
+      .header-title {
+        font-size: 18px;
+      }
+
+      .header-store {
+        font-size: 14px;
+      }
+
+      .header-box {
+        padding: 6px 12px;
+      }
+
+      .grid {
+        gap: 0.75rem !important;
+      }
+    }
+
+    @media (max-width: 640px) {
+      main {
+        margin: 0.15rem !important;
+        padding: 0.5rem !important;
+      }
+
+      .header-box {
+        padding: 5px 10px;
+        font-size: 14px;
+      }
+
+      .header-title {
+        font-size: 16px;
+      }
+
+      .header-store {
+        font-size: 12px;
+      }
+    }
+
+    /* Mobile menu button */
+    .mobile-menu-btn {
+      display: none;
+      position: fixed !important;
+      top: 1rem;
+      left: 1rem;
+      z-index: 9999 !important;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      border-radius: 8px;
+      padding: 0.5rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s;
+      pointer-events: auto !important;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .mobile-menu-btn:hover {
+      background: rgba(255, 255, 255, 1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (max-width: 1024px) {
+      .mobile-menu-btn {
+        display: block;
+      }
+    }
+
+    /* Overlay for mobile menu */
+    .mobile-overlay {
+      display: none !important;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 99 !important;
+      backdrop-filter: blur(2px);
+      pointer-events: none !important;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .mobile-overlay.active {
+      display: block !important;
+      z-index: 99 !important;
+      pointer-events: auto !important;
+      opacity: 1;
+      visibility: visible;
+    }
   </style>
 </head>
 
 <body class="font-sans">
+  <!-- Mobile Menu Button -->
+  <button class="mobile-menu-btn no-print" id="mobileMenuBtn" aria-label="Toggle menu" style="pointer-events: auto !important; z-index: 9999 !important; position: fixed !important; touch-action: manipulation;">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="pointer-events: none;">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  </button>
+
+  <!-- Mobile Overlay -->
+  <div class="mobile-overlay no-print" id="mobileOverlay"></div>
+
   <div class="flex h-screen relative">
     <!-- Sidebar -->
-    <aside class="w-64 bg-pink-100/90 shadow-lg flex flex-col relative z-10">
+    <aside id="sidebar" class="w-64 bg-pink-100/90 shadow-lg flex flex-col no-print relative z-10 lg:relative">
       <div class="p-6 flex items-center justify-between">
         <div class="flex flex-col">
           <div id="sidebarUsername" class="text-2xl font-bold text-pink-600">Loading...</div>
           <div class="text-xs text-gray-500 mt-1">Admin</div>
         </div>
-        <button class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center" title="Profile">👤</button>
+  <button id="profileBtn" class="w-10 h-10 rounded-full bg-pink-500 text-white grid place-items-center" title="Profile">👤</button>
       </div>
-
       <nav class="flex-1 px-4 space-y-2">
         <a href="dashboard.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-          <img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5"/>
+          <img src="https://img.icons8.com/color/24/combo-chart--v1.png" class="mr-3 w-5 h-5" />
           Dashboard
         </a>
         <a href="products.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-          <img src="https://img.icons8.com/color/24/box--v1.png" class="mr-3 w-5 h-5"/>
+          <img src="https://img.icons8.com/color/24/box--v1.png" class="mr-3 w-5 h-5" />
           Products
         </a>
         <a href="add.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
-          <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5"/>
+          <img src="https://img.icons8.com/color/24/plus.png" class="mr-3 w-5 h-5" />
           Add Product
         </a>
+        <a href="transaction.html" class="flex items-center p-2 rounded-lg hover:bg-pink-200 text-gray-800 font-medium">
+          <img src="https://img.icons8.com/color/24/transaction-list.png" class="mr-3 w-5 h-5" />
+          Transactions
+        </a>
       </nav>
-
       <div class="p-4 border-t">
         <a href="#" id="logoutBtn" class="flex items-center p-2 rounded-lg hover:bg-red-100 text-red-600 hover:text-red-700 font-medium transition-colors">
-          <img src="https://img.icons8.com/color/24/exit.png" class="mr-3 w-5 h-5"/>
+          <img src="https://img.icons8.com/color/24/exit.png" class="mr-3 w-5 h-5" />
           Sign Out
         </a>
       </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 p-6 overflow-y-auto bg-overlay rounded-2xl shadow-md border border-pink-200 m-6 relative z-10">
+    <main class="flex-1 p-6 overflow-y-auto bg-overlay rounded-2xl shadow-md border border-pink-200 m-6 relative z-0" style="z-index: 1;">
       <!-- Header -->
       <div class="flex justify-between items-center mb-6">
         <div class="header-box">
           <h1 class="header-title">Products</h1>
         </div>
-        <div class="header-box header-store-box">
+        <div class="header-box header-store-box ml-auto">
           <span class="header-store">Toko Gembira</span>
         </div>
       </div>
@@ -125,6 +315,19 @@
             class="w-full pl-9 pr-3 py-2 rounded-xl border border-pink-300 bg-white/80 shadow focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400"/>
         </div>
       </div>
+      <!-- Category Filter (inline chips) -->
+      <div class="mb-6">
+        <div id="categoryChips" class="flex items-center gap-2 flex-wrap">
+          <button class="chip" data-value="K001">Alat Tulis</button>
+          <button class="chip" data-value="K002">Kertas & Buku</button>
+          <button class="chip" data-value="K003">Perlengkapan Kantor</button>
+          <button class="chip" data-value="K004">Peralatan Gambar</button>
+          <button class="chip" data-value="K005">Produk Arsip</button>
+          <button class="chip" data-value="K006">Aksesoris Kantor</button>
+          <button class="chip" data-value="K007">Produk Kebersihan</button>
+          <button class="chip" data-value="K008">Lain-lain</button>
+        </div>
+      </div>
 
       <!-- Products Grid -->
       <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -135,39 +338,83 @@
 
   <!-- Page Script -->
   <script src="products.js"></script>
+  <!-- Profile modal (copied from dashboard) -->
+  <div id="profileModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 w-80 shadow-lg relative">
+      <button id="profileClose" class="absolute top-3 right-3 text-gray-600 hover:text-gray-900">✕</button>
+      <h3 class="text-lg font-semibold text-pink-600 mb-3">Profile</h3>
+      <div id="profileError" class="text-sm text-red-600 mb-2 hidden"></div>
+      <form id="profileForm" class="text-sm text-gray-700 space-y-3">
+        <div class="flex flex-col items-center mb-3">
+          <div id="profileAvatarContainer" class="relative w-24 h-24 mb-3 group">
+            <div id="profileAvatarPlaceholder"
+              class="w-full h-full rounded-full bg-pink-500 text-white grid place-items-center text-3xl cursor-pointer"
+              title="Unggah foto profile">👤</div>
+            <img id="profileAvatar" src="" alt="avatar"
+              class="w-full h-full rounded-full object-cover hidden cursor-pointer" title="Unggah foto profile" />
+            <input type="file" id="profileFotoInput" accept="image/*" class="hidden">
+            <div
+              class="absolute inset-0 rounded-full bg-black/40 text-white grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.218A2 2 0 0110.74 4h2.52a2 2 0 011.664.89l.812 1.218A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+          </div>
+          <div class="text-xs text-gray-500">ID</div>
+          <div class="font-mono text-sm text-gray-800 mb-3" id="profileId">-</div>
+        </div>
 
-  <script>
-    // Update page title with username
-    const userTitle = JSON.parse(localStorage.getItem('user') || '{}');
-    if (userTitle.username) {
-      document.title = userTitle.username + ' Products';
-    }
+        <div>
+          <label class="text-xs text-gray-500">Username</label>
+          <input id="profileUsernameInput" class="w-full border rounded px-2 py-1" type="text" />
+        </div>
 
-    // Display username in sidebar
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const sidebarUsername = document.getElementById('sidebarUsername');
-    if (sidebarUsername && user.username) {
-      sidebarUsername.textContent = user.username;
-    }
+        <div>
+          <label class="text-xs text-gray-500">Email</label>
+          <input id="profileEmailInput" class="w-full border rounded px-2 py-1" type="email" />
+        </div>
 
-    // Logout logic
-    document.getElementById('logoutBtn').addEventListener('click', function(e) {
-      e.preventDefault();
-      localStorage.removeItem('user');
-      window.location.href = '../src/login.html';
-    });
+        <div>
+          <label class="text-xs text-gray-500">Password (kosongkan jika tidak ingin mengubah)</label>
+          <input id="profilePasswordInput" class="w-full border rounded px-2 py-1" type="password" />
+        </div>
 
-    // Active link highlight
-    const currentPage = location.pathname.split("/").pop(); 
-    const sidebarLinks = document.querySelectorAll("aside nav a");
-    sidebarLinks.forEach(link => {
-      const href = link.getAttribute("href");
-      if (href === currentPage) {
-        link.classList.add("bg-pink-400", "text-white", "shadow");
-      } else {
-        link.classList.remove("bg-pink-400", "text-white", "shadow");
-      }
-    });
-  </script>
+        <div class="mt-2 flex justify-between">
+          <button id="profileLogout" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">Sign out</button>
+          <div class="flex gap-2">
+            <button id="profileCancel" class="px-3 py-1 bg-gray-200 rounded">Cancel</button>
+            <button id="profileSave" class="px-3 py-1 bg-pink-500 text-white rounded">Save</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Crop Modal -->
+  <div id="cropModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[60]" style="position: fixed !important;">
+    <div class="bg-white rounded-xl p-6 w-[90vw] max-w-md shadow-2xl relative">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-pink-600">Pangkas Foto</h3>
+        <button id="cropClose" class="text-gray-600 hover:text-gray-900">✕</button>
+      </div>
+      
+      <div class="relative mb-4" style="width: 100%; padding-bottom: 100%; background: #f3f4f6; border-radius: 50%; overflow: hidden; position: relative;">
+        <div id="cropContainer" class="absolute inset-0 flex items-center justify-center" style="cursor: move; position: relative; user-select: none;">
+          <img id="cropImage" src="" alt="Crop" style="display: block; user-select: none; pointer-events: auto; position: absolute; max-width: none; max-height: none; cursor: move;">
+        </div>
+        <div id="cropOverlay" class="absolute inset-0 pointer-events-none" style="border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); z-index: 10;"></div>
+      </div>
+
+      <div class="flex gap-2">
+        <button id="cropCancel" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">Batalkan</button>
+        <button id="cropSave" class="flex-1 px-4 py-2 bg-pink-500 text-white rounded hover:bg-pink-600">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="profileCrop.js"></script>
 </body>
 </html>
