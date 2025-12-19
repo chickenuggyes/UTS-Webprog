@@ -17,6 +17,11 @@ import transactionsRoutes from "./routes/transactionsRoutes.js"; // ✅ Tambah i
 
 dotenv.config();
 
+console.log("Cloudinary:", {
+  name: process.env.CLOUD_NAME,
+  key: process.env.CLOUD_KEY ? "OK" : "MISSING",
+});
+
 // __dirname untuk ESModule
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
